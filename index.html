@@ -17,14 +17,12 @@
 <div id="app">
   <header class="topbar">
     <div>
-      <div class="eyebrow">CRYPTO RECA v3.0</div>
+      <div class="eyebrow">CRYPTO RECA v3.0 · APP 0.3</div>
       <h1 id="screenTitle">Dashboard</h1>
     </div>
-    <div class="live-dot" title="App local"><span></span>LOCAL</div>
+    <div id="syncBadge" class="live-dot warn" title="Estado de sincronización"><span></span>PENDIENTE</div>
   </header>
-
-  <main id="content" class="content"></main>
-
+  <main id="content" class="content"><div class="empty card">Cargando Crypto Reca…</div></main>
   <nav class="bottom-nav" aria-label="Navegación principal">
     <button class="nav-btn active" data-screen="dashboard" aria-label="Dashboard"><span>⌂</span><small>Inicio</small></button>
     <button class="nav-btn" data-screen="radar" aria-label="Radar"><span>◎</span><small>Radar</small></button>
@@ -36,7 +34,12 @@
 <script src="app.js"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      reg.update();
+    } catch (_) {}
+  });
 }
 </script>
 </body>
