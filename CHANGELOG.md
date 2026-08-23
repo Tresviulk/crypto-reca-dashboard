@@ -2,6 +2,17 @@
 
 All material changes to Crypto Reca Dashboard are recorded here.
 
+## [0.4.8] — 2026-08-23
+
+### Fixed
+- Radar now prints the **exact Crypto Reca indicator timestamp including seconds** in the Radar header and on every asset card; Coinbase live-price refresh time remains visibly separate.
+- BTC price charts now mark the user's confirmed real entry with an on-chart point, dashed entry level and entry legend when the entry lies inside the displayed series window.
+- Positions and Position Risk now use the same current public Coinbase price for the **live gross P/L** shown to the user.
+- The Position Risk snapshot P/L is no longer presented as if it were current; it remains internal contemporaneous risk context only.
+- `19.31 USDC`-style modeled figures are now explicitly labelled **risk potential to technical invalidation**, not current loss, preventing confusion with live P/L.
+- Risk Dashboard now shows both live gross P/L and modeled invalidation risk as separate concepts.
+- Visible app/cache version aligned to `0.4.8`.
+
 ## [0.4.5] — 2026-08-23
 
 ### Structural hardening

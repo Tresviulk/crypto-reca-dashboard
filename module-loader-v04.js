@@ -1,4 +1,4 @@
-// Crypto Reca v0.4.5 — modular data + single screen/action registry
+// Crypto Reca v0.4.8 — modular data + single screen/action registry
 (function(){
 'use strict';
 const urls={radar:'./data/radar-state.json',positions:'./data/positions-state.json',risk:'./data/position-risk.json',intelligence:'./data/intelligence.json',external:'./data/external-signals.json'};
@@ -31,7 +31,7 @@ function navigate(name){oldShow(name);if(titles[name])title.textContent=titles[n
 function on(name,fn){actions[name]=fn}
 const CR4=window.CR4={modules:{},meta,registerScreen,navigate,on,health,healthStatus,loadModules,num,a};
 registerScreen('health','System Health',healthScreen);titles.health='System Health';
-const baseDash=screens.dashboard;screens.dashboard=()=>healthCard()+`<div class="command-card cr4-hub"><div class="eyebrow">DECISION COCKPIT</div><div class="action-grid"><button class="btn-lite" data-cr4="matrix">Decision Matrix</button><button class="btn-lite" data-cr4="protection">Protection</button><button class="btn-lite" data-cr4="external">Gurús</button><button class="btn-lite" data-cr4="shadow">Shadow</button><button class="btn-lite" data-cr4="correlation">Correlación</button></div></div>`+baseDash().replace('App 0.3.0','App 0.4.5');
+const baseDash=screens.dashboard;screens.dashboard=()=>healthCard()+`<div class="command-card cr4-hub"><div class="eyebrow">DECISION COCKPIT</div><div class="action-grid"><button class="btn-lite" data-cr4="matrix">Decision Matrix</button><button class="btn-lite" data-cr4="protection">Protection</button><button class="btn-lite" data-cr4="external">Gurús</button><button class="btn-lite" data-cr4="shadow">Shadow</button><button class="btn-lite" data-cr4="correlation">Correlación</button></div></div>`+baseDash().replace('App 0.3.0','App 0.4.8').replace('App 0.4.5','App 0.4.8');
 show=function(name){navigate(name)};
 content.addEventListener('click',e=>{const el=e.target.closest('[data-cr4]');if(!el)return;const k=el.dataset.cr4;if(actions[k])actions[k](el,e);else if(screens[k])navigate(k)});
 loadModules().then(()=>{updateBadge();oldShow(currentScreen)});setInterval(()=>loadModules().then(()=>{updateBadge();oldShow(currentScreen)}),60000);
