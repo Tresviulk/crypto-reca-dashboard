@@ -19,8 +19,8 @@ All material changes to Crypto Reca Dashboard are recorded here.
 
 ### Changed
 - App data is no longer hard-coded as the intended operational source.
-- Service worker upgraded to `crypto-reca-app-v0.3.0`.
-- Data file uses network-first/no-store behavior with offline fallback.
+- Service worker upgraded to cache generation `crypto-reca-app-v0.3.1`.
+- Data file uses network-first/no-store behavior with canonical offline fallback.
 - Navigation requests use network-first behavior to reduce stale PWA versions.
 - PWA metadata no longer describes the public GitHub Pages site as private.
 
