@@ -18,6 +18,8 @@
 - `ledger`: user-confirmed real fills/transactions only.
 - `audits`: contemporaneous audit records.
 - `history`: compact scan history.
+- `alerts` (optional): explicit app-facing alerts created contemporaneously by the scan writer.
+- `journal` (optional): structured notes/events that have a real contemporaneous source.
 
 ## `scan`
 
@@ -39,7 +41,7 @@ Do not invent a scan ID or timestamp. Missing run = missing run.
 
 ## `radar[]`
 
-Each asset may include:
+Minimum supported structure:
 
 ```json
 {
@@ -54,10 +56,44 @@ Each asset may include:
 }
 ```
 
+Optional detailed fields may be included only when they were calculated contemporaneously in that same scan:
+
+```json
+{
+  "indicators": {
+    "ema20_1h": 0,
+    "ema50_1h": 0,
+    "ema200_1h": 0,
+    "vwap_1h": 0,
+    "rsi14_1h": 0,
+    "atr14_1h": 0,
+    "macd_1h": "bullish / bearish / improving / ...",
+    "rvol_1h": 0
+  },
+  "structure": {
+    "location": "GOOD LOCATION | NEUTRAL | CHASE | ...",
+    "support": "...",
+    "resistance": "...",
+    "trigger": "...",
+    "invalidation": "...",
+    "setup": "..."
+  },
+  "entryDimensions": {
+    "trend": true,
+    "location": true,
+    "momentum": true,
+    "volume": false,
+    "trigger": true
+  }
+}
+```
+
 Rules:
 
 - `ers` must be numeric only if contemporaneously calculated.
 - `entryConfirmation` is `0..5` or `null` if unavailable/partial.
+- Indicator values must never be reconstructed after the scan.
+- `entryDimensions` must reflect the five binary Entry Engine dimensions from that run, or use `null`/omit when unavailable.
 - Do not use a market price copied from the frontend as a scan decision variable after the fact.
 - The frontend obtains its own public display price separately.
 
@@ -78,6 +114,7 @@ Real positions only. Example:
   "entry": 77340.93,
   "fee": 1.17095282,
   "recommendedStop": 75300,
+  "actualStop": null,
   "openedEuropeMadrid": "2026-08-22 18:58"
 }
 ```
@@ -110,18 +147,27 @@ Compact rolling history. Recommended structure:
 
 Default retention target: latest 168 hourly scans. Longer-term audit archives may later move to a dedicated historical file/database.
 
+## `alerts[]` (optional)
+
+May contain explicit contemporaneous alerts such as a new PREPARE/STRONG state, material deterioration, or risk warning. The frontend also derives local alerts from the current state. Do not store duplicate alerts every hour if nothing changed materially.
+
+## `journal[]` (optional)
+
+May contain structured contemporaneous events such as user-confirmed order actions, protection changes, or explicit system decisions. It must never be used to hindsight-create a trade narrative that did not exist at the time.
+
 ## Merge/write rules
 
 A radar automation updating the file must:
 
 1. read current JSON first;
-2. preserve `positions`, `ledger`, and existing `audits` unless it has contemporaneous authority to change them;
+2. preserve `positions`, `ledger`, `journal`, and existing `audits` unless it has contemporaneous authority to change them;
 3. replace `scan` and `radar` with the current run;
 4. append one `history` record;
 5. deduplicate by scan ID;
 6. cap rolling history to 168 records;
-7. write valid JSON atomically through one GitHub file update;
-8. if write fails, report sync failure but never fabricate success.
+7. preserve any optional detailed radar fields only when they are contemporaneously generated in the current run;
+8. write valid JSON atomically through one GitHub file update;
+9. if write fails, report sync failure but never fabricate success.
 
 ## Security
 
