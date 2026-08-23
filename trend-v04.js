@@ -2,7 +2,6 @@
 (function(){
   const cache={};
   const inflight={};
-  const TF={m15:{label:'15m',granularity:900},h1:{label:'1H',granularity:3600},d1:{label:'1D',granularity:86400}};
 
   function ema(values,period){
     if(values.length<period)return null;
@@ -74,10 +73,12 @@
     if(!force&&cache[key]&&Date.now()-cache[key].loadedAt<10*60*1000)return cache[key];
     if(inflight[key])return inflight[key];
     inflight[key]=(async()=>{
-      const [m15,h1,d1]=await Promise.all([candles(pair,900),candles(pair,3600),candles(pair,86400)]);
-      const h4=aggregate4h(h1);
-      const trends={m15:classify(m15),h1:classify(h1),h4:classify(h4),d1:classify(d1)};
-      const out={asset,pair,trends,summary:summary(trends),loadedAt:Date.now()};cache[key]=out;delete inflight[key];return out;
+      try{
+        const [m15,h1,d1]=await Promise.all([candles(pair,900),candles(pair,3600),candles(pair,86400)]);
+        const h4=aggregate4h(h1);
+        const trends={m15:classify(m15),h1:classify(h1),h4:classify(h4),d1:classify(d1)};
+        const out={asset,pair,trends,summary:summary(trends),loadedAt:Date.now()};cache[key]=out;return out;
+      }finally{delete inflight[key];}
     })();
     return inflight[key];
   }
@@ -91,5 +92,10 @@
   }
   function currentPair(){const a=window.__crSelectedAsset||'BTC';return (state.radar||[]).find(x=>x.asset===a)?.pair||`${a}-USDC`}
   const base=screens.assetDetail;
-  screens.assetDetail=function(){const a=window.__crSelectedAsset||'BTC';const html=base();const data=cache[a]||null;setTimeout(async()=>{try{await load(a,currentPair());if(window.__crSelectedAsset===a&&currentScreen==='assetDetail')show('assetDetail')}catch{}},0);return html+card(data)};
+  screens.assetDetail=function(){
+    const a=window.__crSelectedAsset||'BTC';const html=base();const data=cache[a]||null;
+    const stale=!data||Date.now()-data.loadedAt>=10*60*1000;
+    if(stale&&!inflight[a])setTimeout(async()=>{try{const before=cache[a]?.loadedAt||0;const out=await load(a,currentPair());if(out.loadedAt!==before&&window.__crSelectedAsset===a&&currentScreen==='assetDetail')show('assetDetail')}catch{}},0);
+    return html+card(data);
+  };
 })();
