@@ -2,6 +2,19 @@
 
 All material changes to Crypto Reca Dashboard are recorded here.
 
+## [0.4.9] — 2026-08-23
+
+### Position Risk v2.1 — breach / reclaim
+- Added canonical `docs/POSITION_RISK_SPEC_V2_1.md`.
+- Fixed the exit-engine flaw that treated any intrabar print below technical invalidation as permanent thesis failure.
+- New structural state machine: `INTACT -> BREACH -> CONFIRMED INVALIDATION`, with recovery path `BREACH -> RECLAIMED`.
+- Confirmed invalidation now requires two consecutive completed 15m closes below invalidation, one completed 1H close below invalidation, touch of a contemporaneously defined catastrophic boundary, or an explicitly documented market-discontinuity override.
+- Structural PRS mapping is now deterministic: `INTACT=0`, `RECLAIMED=15`, `BREACH=25`, `INVALIDATED=40`.
+- A reclaimed wick no longer forces `EXIT SIGNAL`; the historical breach remains preserved for audit.
+- Catastrophic boundaries may not be invented retroactively. If not frozen before/at entry, a later level must be labelled `RECOMMENDED` or `UNDEFINED`.
+- Updated `DATA_CONTRACT.md` and `AI_HANDOFF.md` so future Position Risk writers must obey v2.1.
+- SOL migration test case: post-fill 15m low near 93.36 with close 94.42 above technical invalidation 94.15 is classified `BREACH -> RECLAIMED`, not permanent `INVALIDATED`.
+
 ## [0.4.8] — 2026-08-23
 
 ### Fixed
