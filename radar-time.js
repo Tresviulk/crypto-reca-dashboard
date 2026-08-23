@@ -1,4 +1,4 @@
-// Crypto Reca Radar timestamp visibility patch v0.3.1
+// Crypto Reca Radar timestamp visibility patch v0.4.8
 (function(){
   const fmtMadrid = iso => {
     if(!iso) return '—';
@@ -20,15 +20,16 @@
   };
   const metaCard = () => {
     const f=freshness();
-    const scanTs=state?.scan?.timestampEuropeMadrid||'—';
+    const exactIndicator=state?.generatedAt?fmtMadrid(state.generatedAt):'—';
+    const scanReported=state?.scan?.timestampEuropeMadrid||'—';
     const scanId=state?.scan?.id||'—';
     const liveTs=market?.updatedAt?fmtMadrid(market.updatedAt):'Pendiente';
     return `<div class="radar-time-card">
-      <div class="radar-time-head"><div><strong>Fecha y hora de la información</strong><div class="tiny">Zona horaria: Europe/Madrid</div></div><span class="badge ${f.cls}">${f.label}</span></div>
+      <div class="radar-time-head"><div><strong>Hora exacta del indicativo</strong><div class="tiny">Zona horaria: Europe/Madrid</div></div><span class="badge ${f.cls}">${f.label}</span></div>
       <div class="radar-time-grid">
-        <div><small>Último scan Crypto Reca</small><strong>${esc(scanTs)}</strong><span>${esc(scanId)}</span></div>
-        <div><small>Sincronizado en la app</small><strong>${esc(fmtMadrid(state?.generatedAt))}</strong><span>${esc(f.age)}</span></div>
-        <div><small>Precios públicos Coinbase</small><strong>${esc(liveTs)}</strong><span>se actualizan aparte del scan</span></div>
+        <div><small>Indicativo Crypto Reca</small><strong>${esc(exactIndicator)}</strong><span>${esc(scanId)}</span></div>
+        <div><small>Hora reportada por el scan</small><strong>${esc(scanReported)}</strong><span>${esc(f.age)}</span></div>
+        <div><small>Precio público Coinbase</small><strong>${esc(liveTs)}</strong><span>se actualiza aparte del indicativo</span></div>
       </div>
     </div>`;
   };
