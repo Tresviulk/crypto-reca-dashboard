@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Crypto Reca" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>Crypto Reca</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">CRYPTO RECA v3.0</div>
+      <h1 id="screenTitle">Dashboard</h1>
+    </div>
+    <div class="live-dot" title="App local"><span></span>LOCAL</div>
+  </header>
+
+  <main id="content" class="content"></main>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-btn active" data-screen="dashboard" aria-label="Dashboard"><span>⌂</span><small>Inicio</small></button>
+    <button class="nav-btn" data-screen="radar" aria-label="Radar"><span>◎</span><small>Radar</small></button>
+    <button class="nav-btn" data-screen="positions" aria-label="Posiciones"><span>◫</span><small>Posiciones</small></button>
+    <button class="nav-btn" data-screen="ledger" aria-label="Operaciones"><span>⇄</span><small>Operaciones</small></button>
+    <button class="nav-btn" data-screen="audit" aria-label="Auditoría"><span>≡</span><small>Auditoría</small></button>
+  </nav>
+</div>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
