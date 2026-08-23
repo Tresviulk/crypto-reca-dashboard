@@ -1,22 +1,18 @@
 {
   "schemaVersion": "2.0",
   "module": "positionRisk",
-  "generatedAt": "2026-08-23T21:08:19+02:00",
-  "source": "Crypto Reca Position Risk; Bybit spot 15m/1H/4H/1D primary; Coinbase public cross-check inconclusive",
-  "policyVersion": "2.1",
+  "generatedAt": "2026-08-23T22:01:00+02:00",
+  "source": "Crypto Reca Position Risk; Bybit spot 15m/1H/4H/1D primary; Coinbase public cross-check not used in this run",
   "positionRisk": {
-    "generatedAt": "2026-08-23T21:08:19+02:00",
+    "generatedAt": "2026-08-23T22:01:00+02:00",
     "source": "Crypto Reca Position Risk",
-    "policyVersion": "2.1",
     "dataQuality": "PARTIAL",
     "positions": {
       "btc-20260822-1858": {
         "asset": "BTC",
         "engine": "CORE",
-        "policyVersion": "2.1",
-        "structuralState": "INTACT",
         "entry": 77340.93,
-        "currentPrice": 77344.0,
+        "currentPrice": 77313.3,
         "qty": 0.00946259,
         "prs": 10,
         "breakdown": {
@@ -31,86 +27,58 @@
         "protection": "UNPROTECTED",
         "modeledLossUSDC": 19.31248381,
         "modeledLossPctCapital": 0.13149149,
-        "distanceToInvalidationPct": 2.64273893,
-        "distanceToInvalidationATR": 4.00531878,
-        "unrealizedPnLUSDC": 0.02905015,
-        "unrealizedPnLPct": 0.00396944,
+        "distanceToInvalidationPct": 2.60407976,
+        "distanceToInvalidationATR": 4.54044911,
+        "unrealizedPnLUSDC": -0.26145136,
+        "unrealizedPnLPct": -0.03572494,
         "technicalInvalidation": 75300,
         "invalidationStatus": "CURRENT",
-        "breach": {
-          "occurred": false,
-          "firstBreachAt": null,
-          "lowestVerifiedPrice": null,
-          "confirmed15mClosesBelow": 0,
-          "confirmed1hCloseBelow": false,
-          "reclaimedAt": null
-        },
-        "catastrophicBoundary": {
-          "price": null,
-          "status": "UNDEFINED",
-          "basis": "No contemporaneously frozen catastrophic boundary is recorded for this existing position."
-        },
         "trendTimeframes": {
-          "15m": "NEUTRAL-ALCISTA / RECLAIM HACIA 77,344 TRAS MÍNIMO RECIENTE EN 77,105",
-          "1h": "ALCISTA-CONSTRUCTIVO / RECUPERACIÓN; RSI14 ~60.8, SIN COMBINACIÓN BAJISTA VERIFICADA",
-          "4h": "ALCISTA-CONSTRUCTIVO / ESTRUCTURA SUPERIOR INTACTA, CONSOLIDANDO SOBRE 77k",
-          "1d": "ALCISTA EN CORRECCIÓN / ESTRUCTURA DE FONDO INTACTA"
+          "15m": "NEUTRAL-CONSTRUCTIVO / consolidación alrededor de 77,300 tras recuperar desde 77,105; sin ruptura bajista actual",
+          "1H": "ALCISTA-CONSTRUCTIVO / cierres recientes 77,184 -> 77,323 -> 77,353.5; RSI14 ~72.1, sin combinación bajista verificada",
+          "4H": "ALCISTA-CONSTRUCTIVO / recuperación y consolidación sobre 77k; estructura superior intacta",
+          "1D": "ALCISTA EN CORRECCIÓN / tendencia de fondo intacta pese a consolidación tras el impulso reciente"
         },
-        "trendConclusion": "BTC mantiene intacta la tesis CORE. El 15m/1H han recuperado y la estructura 4H/1D sigue constructiva; el precio está aproximadamente 4.01 ATR14(1H) por encima de 75,300. No hay deterioro estructural ni combinación bajista suficiente para elevar el PRS. La única penalización actual es seguir UNPROTECTED.",
-        "reason": "Posición confirmada OPEN: 0.00946259 BTC @ 77,340.93. Bybit spot ~77,344 a las 21:08 Madrid. ATR14(1H) ~510.32 y RSI14(1H) ~60.8 sobre velas verificadas. La invalidación 75,300 sigue a ~2.64% / 4.01 ATR; P/L bruto ~+0.03 USDC (+0.004%). 4H/1D permanecen constructivos. No existe stop real confirmado en Coinbase. El cross-check público de Coinbase devolvió superficies no suficientemente consistentes para usarlo como precio de referencia, por lo que dataQuality queda PARTIAL.",
-        "upgradeCondition": "Confirmar protección real en Coinbase eliminaría los 10 puntos de Operational Protection y dejaría PRS 0 si el resto continúa intacto. Mantener cierres 1H por encima de la zona 77,100-77,300 con 4H constructivo refuerza la tesis.",
-        "downgradeCondition": "Una caída hacia <=75,810 aproximadamente (75,300 + 1 ATR actual ~510) colocaría la posición dentro de 1 ATR de invalidación y elevaría Structural Risk. Un breach intrabar de 75,300 activa BREACH; dos cierres 15m consecutivos bajo 75,300 o un cierre 1H bajo 75,300 confirman INVALIDATED / EXIT SIGNAL bajo v2.1."
+        "trendConclusion": "BTC mantiene intacta la tesis CORE. 4H/1D siguen constructivos y 15m/1H no muestran deterioro material; la invalidación 75,300 está a ~4.54 ATR14(1H). La única penalización es seguir UNPROTECTED.",
+        "reason": "Posición real OPEN 0.00946259 BTC @ 77,340.93. Bybit spot ~77,313.3. ATR14(1H) ~443.41 y RSI14(1H) ~72.1 sobre velas completadas; P/L bruto ~-0.26 USDC (-0.036%). No hay breach de 75,300 ni combinación bajista RSI/MACD/volumen verificada que justifique momentum risk. No existe stop real confirmado.",
+        "upgradeCondition": "Confirmar protección real en Coinbase elimina los 10 puntos operativos. Mantener cierres 1H sobre 77,100-77,300 y 4H constructivo mantiene PRS en HOLD.",
+        "downgradeCondition": "Una caída hacia <=75,743 aproximadamente (75,300 + 1 ATR actual ~443) elevaría Structural Risk a 15. Un breach intrabar bajo 75,300 activa BREACH; dos cierres 15m consecutivos o un cierre 1H bajo 75,300 confirman INVALIDATED / EXIT SIGNAL."
       },
       "sol-20260823-160608": {
         "asset": "SOL",
         "engine": "TACTICAL",
-        "policyVersion": "2.1",
-        "structuralState": "INTACT",
-        "entry": 95.30,
-        "currentPrice": 95.18,
+        "entry": 95.3,
+        "currentPrice": 95.06,
         "qty": 16.80631246,
-        "prs": 10,
+        "prs": 25,
         "breakdown": {
-          "structural": 0,
+          "structural": 15,
           "regime": 0,
           "momentum": 0,
           "adverseMove": 0,
           "protection": 10
         },
         "thesisState": "INTACT",
-        "action": "HOLD",
+        "action": "WATCH",
         "protection": "UNPROTECTED",
         "modeledLossUSDC": 19.32725933,
         "modeledLossPctCapital": 0.13159209,
-        "distanceToInvalidationPct": 1.08216012,
-        "distanceToInvalidationATR": 1.00839161,
-        "unrealizedPnLUSDC": -2.01675750,
-        "unrealizedPnLPct": -0.12591815,
+        "distanceToInvalidationPct": 0.95729013,
+        "distanceToInvalidationATR": 0.96442089,
+        "unrealizedPnLUSDC": -4.03351499,
+        "unrealizedPnLPct": -0.25183631,
         "technicalInvalidation": 94.15,
         "invalidationStatus": "CURRENT",
-        "breach": {
-          "occurred": true,
-          "firstBreachAt": "2026-08-23T16:30:00+02:00",
-          "lowestVerifiedPrice": 93.36,
-          "confirmed15mClosesBelow": 0,
-          "confirmed1hCloseBelow": false,
-          "reclaimedAt": "2026-08-23T16:45:00+02:00"
-        },
-        "catastrophicBoundary": {
-          "price": null,
-          "status": "UNDEFINED",
-          "basis": "No catastrophic boundary was contemporaneously frozen for this existing SOL setup; v2.1 forbids inventing one retroactively."
-        },
         "trendTimeframes": {
-          "15m": "NEUTRAL / RECLAIM CONSOLIDADO SOBRE 94.15, PRECIO ~95.18",
-          "1h": "ALCISTA-CONSTRUCTIVO / MÚLTIPLES CIERRES COMPLETADOS SOBRE 94.15; RSI14 ~78.4",
-          "4h": "ALCISTA-CONSTRUCTIVO / RECUPERACIÓN DESDE 91.52 Y MANTENIMIENTO SOBRE 94.15",
-          "1d": "ALCISTA / EXPANSIÓN FUERTE CON VOLATILIDAD ELEVADA"
+          "15m": "NEUTRAL-VOLÁTIL / mantiene cierres sobre 94.15, pero retrocede a ~95.06 tras 95.49",
+          "1H": "ALCISTA-CONSTRUCTIVO / cierres recientes 95.13 -> 95.29 -> 95.06; RSI14 ~78.9, sin combinación bajista confirmada",
+          "4H": "ALCISTA-CONSTRUCTIVO / recuperación desde 91.52 y cierres sostenidos sobre 94.15",
+          "1D": "ALCISTA / expansión fuerte con volatilidad elevada"
         },
-        "trendConclusion": "El breach post-fill de SOL quedó reclamado y ahora ha demostrado durabilidad: varias velas 1H completadas cerraron por encima de 94.15 sin nueva confirmación bajista, mientras 4H/1D siguen constructivos. Bajo Position Risk v2.1 la tesis vuelve de RECLAIMED a INTACT. No obstante, con el ATR14(1H) actual el precio está solo ~1.01 ATR por encima de 94.15, por lo que la proximidad debe vigilarse estrechamente.",
-        "reason": "Posición confirmada OPEN: 16.80631246 SOL @ 95.30. Bybit spot ~95.18 a las 21:08 Madrid. ATR14(1H) ~1.0214 y RSI14(1H) ~78.4. Tras el wick histórico a 93.36, no hubo dos cierres 15m consecutivos ni un cierre 1H bajo 94.15; posteriormente se registraron múltiples cierres 1H sobre 94.15, permitiendo retornar a INTACT bajo v2.1. Distancia actual ~1.08% / 1.008 ATR; P/L bruto ~-2.02 USDC (-0.126%). No existe stop real confirmado en Coinbase. El cross-check público de Coinbase no fue suficientemente consistente para usarlo como precio primario, por lo que dataQuality queda PARTIAL.",
-        "upgradeCondition": "Confirmar protección real en Coinbase eliminaría los 10 puntos de Operational Protection y dejaría PRS 0 si la estructura continúa intacta. Mantener cierres 1H por encima de 94.15 y recuperar/estabilizar por encima de 95.30-95.50 refuerza la durabilidad del reclaim.",
-        "downgradeCondition": "Con ATR14(1H) ~1.0214, una referencia <=95.1714 deja SOL dentro de 1 ATR de 94.15 y eleva Structural Risk a 15 / WATCH si no hay breach. Un nuevo print bajo 94.15 activa BREACH y reinicia confirmación; dos cierres 15m consecutivos bajo 94.15 o un cierre 1H bajo 94.15 confirman INVALIDATED / EXIT SIGNAL."
+        "trendConclusion": "SOL conserva la tesis TACTICAL tras el reclaim previo y no hay invalidación confirmada, pero al precio actual está de nuevo dentro de 1 ATR14(1H) de 94.15. Eso activa Structural Risk 15 y, al seguir UNPROTECTED, eleva PRS a 25 / WATCH.",
+        "reason": "Posición real OPEN 16.80631246 SOL @ 95.30. Bybit spot ~95.06. ATR14(1H) ~0.9436 y RSI14(1H) ~78.9; distancia a 94.15 ~0.96 ATR / 0.96%. P/L bruto ~-4.03 USDC (-0.252%). No existe nuevo breach ni dos cierres 15m / un cierre 1H bajo 94.15, y 4H/1D siguen constructivos. Sin stop real confirmado, Operational Protection=10.",
+        "upgradeCondition": "Un cierre 1H sostenido por encima de ~95.10 (más de 1 ATR sobre 94.15) con estructura 4H intacta reduce Structural Risk de 15 a 0. Confirmar protección real en Coinbase elimina además los 10 puntos operativos.",
+        "downgradeCondition": "Un nuevo print bajo 94.15 activa BREACH y reinicia confirmación. Dos cierres 15m consecutivos bajo 94.15 o un cierre 1H bajo 94.15 confirman INVALIDATED / EXIT SIGNAL. Deterioro material simultáneo de 1H/4H o una combinación bajista verificada de momentum/volumen elevaría PRS antes de eso."
       }
     }
   },
@@ -136,6 +104,8 @@
     {"timestampEuropeMadrid":"2026-08-23 20:06","positionId":"sol-20260823-160608","asset":"SOL","prs":50,"action":"EXIT SIGNAL","thesisState":"INVALIDATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.79179615,"dataQuality":"PARTIAL"},
     {"timestampEuropeMadrid":"2026-08-23 20:45","positionId":"sol-20260823-160608","asset":"SOL","prs":25,"action":"WATCH","thesisState":"RECLAIMED","structuralState":"RECLAIMED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":null,"dataQuality":"PARTIAL","event":"POLICY_MIGRATION_V2_1","note":"Existing contemporaneous 15m evidence reclassified from automatic invalidation to BREACH -> RECLAIMED; historical EXIT SIGNAL records preserved unchanged for audit."},
     {"timestampEuropeMadrid":"2026-08-23 21:08","positionId":"btc-20260822-1858","asset":"BTC","prs":10,"action":"HOLD","thesisState":"INTACT","structuralState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":75300,"distanceToInvalidationATR":4.00531878,"dataQuality":"PARTIAL"},
-    {"timestampEuropeMadrid":"2026-08-23 21:08","positionId":"sol-20260823-160608","asset":"SOL","prs":10,"action":"HOLD","thesisState":"INTACT","structuralState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":1.00839161,"dataQuality":"PARTIAL"}
+    {"timestampEuropeMadrid":"2026-08-23 21:08","positionId":"sol-20260823-160608","asset":"SOL","prs":10,"action":"HOLD","thesisState":"INTACT","structuralState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":1.00839161,"dataQuality":"PARTIAL"},
+    {"timestampEuropeMadrid":"2026-08-23 22:01","positionId":"btc-20260822-1858","asset":"BTC","prs":10,"action":"HOLD","thesisState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":75300,"distanceToInvalidationATR":4.54044911,"dataQuality":"PARTIAL"},
+    {"timestampEuropeMadrid":"2026-08-23 22:01","positionId":"sol-20260823-160608","asset":"SOL","prs":25,"action":"WATCH","thesisState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.96442089,"dataQuality":"PARTIAL"}
   ]
 }
