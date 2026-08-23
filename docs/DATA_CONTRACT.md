@@ -96,6 +96,8 @@ Normal ledger behavior is append-only. Corrections must leave an audit note.
 
 ## 6. Position Risk module
 
+Canonical rules live in `docs/POSITION_RISK_SPEC_V2_1.md`.
+
 `data/position-risk.json` may contain only:
 
 ```json
@@ -104,6 +106,7 @@ Normal ledger behavior is append-only. Corrections must leave an audit note.
   "positionRisk": {
     "generatedAt": "...",
     "source": "Crypto Reca Position Risk",
+    "policyVersion": "2.1",
     "dataQuality": "PASS|PARTIAL|FAIL",
     "positions": {}
   },
@@ -111,9 +114,40 @@ Normal ledger behavior is append-only. Corrections must leave an audit note.
 }
 ```
 
-PRS actions are `HOLD / WATCH / REDUCE REVIEW / EXIT REVIEW / EXIT SIGNAL`. They are advisory only. The risk writer cannot close, resize or mark a real position sold.
+PRS actions remain `HOLD / WATCH / REDUCE REVIEW / EXIT REVIEW / EXIT SIGNAL`. They are advisory only. The risk writer cannot close, resize or mark a real position sold.
+
+Each open-position risk object should support the structural state machine fields:
+
+```json
+{
+  "policyVersion": "2.1",
+  "structuralState": "INTACT|BREACH|RECLAIMED|INVALIDATED",
+  "technicalInvalidation": 0,
+  "breach": {
+    "occurred": false,
+    "firstBreachAt": null,
+    "lowestVerifiedPrice": null,
+    "confirmed15mClosesBelow": 0,
+    "confirmed1hCloseBelow": false,
+    "reclaimedAt": null
+  },
+  "catastrophicBoundary": {
+    "price": null,
+    "status": "FROZEN|RECOMMENDED|UNDEFINED",
+    "basis": null
+  }
+}
+```
+
+An intrabar low below `technicalInvalidation` is a `BREACH`, not permanent invalidation by itself. Confirmed invalidation requires one of the deterministic conditions in the v2.1 spec: two consecutive completed 15m closes below the level, one completed 1H close below the level, touch of a contemporaneously defined catastrophic boundary, or an explicitly documented market-discontinuity override.
+
+If a completed 15m candle reclaims and closes at/above the technical invalidation before confirmation, structural state becomes `RECLAIMED`. The historical breach must remain preserved in `riskHistory`.
+
+Structural PRS mapping is: `INTACT=0`, `RECLAIMED=15`, `BREACH=25`, `INVALIDATED=40`. Other PRS components remain independent.
 
 For CORE positions, 4H/1D structure has greater thesis weight than ordinary 15m/1H noise. Trend by timeframe should be stored when available rather than collapsed into one ambiguous “trend”.
+
+A catastrophic boundary may never be reconstructed as though it existed before entry. If no such level was frozen contemporaneously, a later proposed level must be labelled `RECOMMENDED` or `UNDEFINED`, never `FROZEN`.
 
 ## 7. Intelligence module
 
@@ -146,6 +180,7 @@ Correlation shown by the frontend is display analytics from public completed mar
 - Do not reconstruct original ERS, P/M, Entry Engine, stop, target or gates from later price action.
 - Subsequent market data may be used only to evaluate a setup that was already frozen contemporaneously.
 - Ambiguous intrabar outcome remains ambiguous when ordering cannot be verified.
+- A policy migration may reclassify the consequence of preserved contemporaneous evidence, but may not alter the underlying historical price/fill/setup evidence.
 
 ## 13. Security
 
