@@ -2,6 +2,41 @@
 
 All material changes to Crypto Reca Dashboard are recorded here.
 
+## [0.4.0] — 2026-08-23
+
+### Added
+- Full per-asset detail view accessible by tapping any Radar asset.
+- Opportunity Center ranking the current universe by operational state, Entry Engine and ERS without presenting it as win probability.
+- Risk Dashboard separating open exposure, modeled risk and confirmed protected risk.
+- Intelligent in-app alerts for stale sync, unprotected positions and Entry Engine PREPARE/STRONG states.
+- Automatic journal combining confirmed Coinbase ledger events and contemporaneous scan history.
+- System analytics by asset with scan count, average ERS, PREPARE+ and STRONG+ counts, with explicit insufficient-sample protection.
+- Position timeline combining confirmed Coinbase events with stored Crypto Reca scan history.
+- Historical ERS and Entry Engine charts per asset.
+- Manual `Actualizar ahora` action.
+- Clear data-origin labels: LIVE, SCAN and CONFIRMED COINBASE.
+- Public display-only technical analytics from completed Coinbase 1H candles: EMA20/50/200, RSI14, MACD 12/26, ATR14, standard 24H VWAP and RVOL vs prior 20 completed candles.
+- `features-v04.js`, `features-v04.css` and `live-indicators-v04.js` as isolated feature modules so the stable v0.3 core remains small and recoverable.
+
+### Changed
+- PWA cache generation upgraded to `crypto-reca-app-v0.4.1`.
+- Asset cards and positions are now interactive.
+- Audit, Positions and Ledger screens now link into the new intelligence views.
+- `docs/DATA_CONTRACT.md` expanded for optional detailed scan fields, alerts and journal events.
+
+### Safety
+- Live technical indicators are explicitly display analytics and do not replace the contemporaneous Crypto Reca decision engine.
+- Win rates and efficacy claims are suppressed until there is enough real contemporaneous history.
+- `PROTECTED` risk only counts real protection that has been confirmed; recommended stops remain modeled risk.
+- No Coinbase credentials, JWTs, private keys or trading secrets are stored in the frontend or repository.
+- The app remains read-only and cannot execute trades.
+
+### Still requires private backend / later phase
+- Direct authenticated Coinbase balances, orders and fills without user confirmation.
+- Private authentication/access control for financial data.
+- True external push notifications originating from the PWA itself.
+- Automatic trade execution.
+
 ## [0.3.1] — 2026-08-23
 
 ### Fixed
