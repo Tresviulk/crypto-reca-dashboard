@@ -1,5 +1,5 @@
-const CACHE='crypto-reca-app-v0.3.1';
-const STATIC=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE='crypto-reca-app-v0.3.2';
+const STATIC=['./','./index.html','./styles.css','./app.js','./radar-time.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 const DATA_KEY='./data/crypto-reca-state.json';
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting()));

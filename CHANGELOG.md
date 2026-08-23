@@ -2,6 +2,14 @@
 
 All material changes to Crypto Reca Dashboard are recorded here.
 
+## [0.3.1] — 2026-08-23
+
+### Fixed
+- Radar now shows the exact date/time of the latest Crypto Reca scan prominently.
+- Radar distinguishes scan time from live Coinbase price refresh time.
+- Added freshness status: `ACTUAL`, `RETRASADO`, `ANTIGUO` or `SINCRONIZACIÓN PENDIENTE`.
+- Updated PWA cache so the timestamp visibility patch propagates to installed devices.
+
 ## [0.3.0] — 2026-08-23
 
 ### Added
