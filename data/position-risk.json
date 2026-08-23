@@ -1,45 +1,45 @@
 {
   "schemaVersion": "2.0",
   "module": "positionRisk",
-  "generatedAt": "2026-08-23T11:56:36+02:00",
+  "generatedAt": "2026-08-23T12:55:08+02:00",
   "source": "Crypto Reca Position Risk",
   "positionRisk": {
-    "generatedAt": "2026-08-23T11:56:36+02:00",
+    "generatedAt": "2026-08-23T12:55:08+02:00",
     "source": "Crypto Reca Position Risk",
     "dataQuality": "PARTIAL",
     "positions": {
       "btc-20260822-1858": {
         "asset": "BTC",
         "engine": "CORE",
-        "prs": 75,
+        "prs": 55,
         "breakdown": {
           "structural": 25,
           "regime": 10,
-          "momentum": 15,
-          "adverseMove": 15,
+          "momentum": 0,
+          "adverseMove": 10,
           "protection": 10
         },
         "thesisState": "WEAKENING",
-        "action": "EXIT REVIEW",
+        "action": "REDUCE REVIEW",
         "protection": "UNPROTECTED",
         "modeledLossUSDC": 19.31248381,
         "modeledLossPctCapital": 0.13149149,
-        "distanceToInvalidationPct": 1.668372997,
-        "distanceToInvalidationATR": 2.861651685,
-        "unrealizedPnLUSDC": -7.223078825,
-        "unrealizedPnLPct": -0.986967703,
+        "distanceToInvalidationPct": 1.94763509,
+        "distanceToInvalidationATR": 3.38831715,
+        "unrealizedPnLUSDC": -5.15928795,
+        "unrealizedPnLPct": -0.70496954,
         "technicalInvalidation": 75300,
         "invalidationStatus": "CURRENT",
         "trendTimeframes": {
-          "15m": "RECUPERACIÓN / CONSOLIDACIÓN POR DEBAJO DE RESISTENCIA DE CORTO PLAZO",
-          "1h": "BAJISTA EN RECUPERACIÓN / DETERIORO AÚN NO REVERTIDO",
-          "4h": "NEUTRAL-ALCISTA / WEAKENING",
+          "15m": "ALCISTA DE CORTO PLAZO / REBOTE EN DESARROLLO",
+          "1h": "RECUPERACIÓN TRAS DETERIORO / AÚN POR DEBAJO DE LA ENTRADA",
+          "4h": "NEUTRAL-ALCISTA / WEAKENING, SIN INVALIDACIÓN CORE",
           "1d": "ALCISTA EN CORRECCIÓN"
         },
-        "trendConclusion": "La recuperación intradía continúa, pero todavía no revierte el deterioro de 1H ni recupera de forma sostenida el clúster de resistencia de corto plazo. El 4H sigue debilitado pero no invalidado, mientras el 1D conserva la estructura alcista previa. La tesis CORE permanece WEAKENING, no INVALIDATED, porque 75,300 sigue intacto.",
-        "reason": "Bybit spot mostraba BTC cerca de 76,577.6. La última hora completada verificable (10:00-11:00 Europe/Madrid) cerró en 76,484.7, con máximo 76,686.7, mínimo 75,953.8 y volumen 283.82 BTC, aproximadamente 1.19x la media de las 20 horas completadas previas (~238.92 BTC). RSI14 1H calculado sobre velas completadas es ~41.9; MACD 1H sigue negativo (~ -236.5) y por debajo de su señal (~ -135.5), por lo que el momentum continúa deteriorado aunque ha mejorado frente al mínimo previo. ATR14(1H) ~446.5. El precio está ~2.86 ATR por encima de la invalidación de 75,300 y la caída desde la entrada equivale a ~1.71 ATR, por lo que adverseMove permanece en 15. La posición sigue UNPROTECTED. El cross-check público de Coinbase no fue suficientemente limpio/contemporáneo en esta ejecución, de ahí dataQuality PARTIAL.",
-        "upgradeCondition": "Para bajar desde EXIT REVIEW, BTC debería recuperar y sostener al menos ~76,900-77,000, llevar RSI14 1H por encima de 45 con mejora clara de MACD/presión vendedora y posteriormente recuperar ~77,300 para reforzar la tesis CORE.",
-        "downgradeCondition": "Una ruptura verificada de 75,300 en el marco de tesis fuerza EXIT SIGNAL. Con ATR14(1H) ~446.5, una vuelta sostenida a <=1 ATR de la invalidación, aproximadamente 75,747 o menos, vuelve crítica la situación operativa al seguir UNPROTECTED."
+        "trendConclusion": "El rebote intradía ha mejorado de forma clara el 15m y el 1H, pero la estructura sigue por debajo de la entrada y del área de resistencia previa. El 4H continúa debilitado aunque la invalidación CORE de 75,300 sigue intacta, y el 1D conserva una estructura alcista en corrección. La tesis mejora frente al control anterior, pero permanece WEAKENING, no INVALIDATED.",
+        "reason": "Bybit spot muestra BTC alrededor de 76,795.7. La vela 1H más reciente disponible cotiza 76,788.9 tras recuperar desde 76,544, y la secuencia reciente de 1H ha mejorado desde el mínimo de 75,561.8. RSI14 1H calculado sobre cierres recientes es ~41.4: todavía débil, pero el MACD 1H estimado con la serie disponible sigue negativo (~ -301.8) y ya está ligeramente por encima de su señal (~ -304.7), por lo que no se mantiene una combinación bajista suficiente para penalización de momentum. ATR14(1H) aproximado es ~441.4. El precio está ~3.39 ATR por encima de la invalidación de 75,300 y la caída desde la entrada equivale a ~1.24 ATR, reduciendo adverseMove a 10. La posición sigue UNPROTECTED. No se obtuvo un cross-check Coinbase suficientemente limpio/contemporáneo, por lo que dataQuality permanece PARTIAL.",
+        "upgradeCondition": "Para bajar desde REDUCE REVIEW hacia WATCH/HOLD, BTC debería recuperar y sostener aproximadamente 76,900-77,000, llevar RSI14 1H >45 con MACD claramente mejorando y, preferiblemente, recuperar la zona de 77,300 para restablecer mejor la tesis CORE.",
+        "downgradeCondition": "Una nueva pérdida sostenida de la recuperación de 1H, especialmente regreso hacia <=1 ATR de 75,300 (aprox. 75,741 con ATR actual ~441), vuelve a elevar el riesgo. Una ruptura verificada de 75,300 en el marco de tesis fuerza EXIT SIGNAL."
       }
     }
   },
@@ -126,6 +126,18 @@
       "protection": "UNPROTECTED",
       "technicalInvalidation": 75300,
       "distanceToInvalidationATR": 2.861651685,
+      "dataQuality": "PARTIAL"
+    },
+    {
+      "timestampEuropeMadrid": "2026-08-23 12:55",
+      "positionId": "btc-20260822-1858",
+      "asset": "BTC",
+      "prs": 55,
+      "action": "REDUCE REVIEW",
+      "thesisState": "WEAKENING",
+      "protection": "UNPROTECTED",
+      "technicalInvalidation": 75300,
+      "distanceToInvalidationATR": 3.38831715,
       "dataQuality": "PARTIAL"
     }
   ]
