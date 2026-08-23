@@ -8,7 +8,7 @@ Este repositorio contiene la aplicación web/PWA **Crypto Reca Dashboard**.
 - Producción: `https://tresviulk.github.io/crypto-reca-dashboard/`
 - Rama de producción: `main`
 - Motor de trading referenciado: **Crypto Reca v3.0**
-- App: **0.3.0**
+- App objetivo actual: **0.4.0**
 
 ## 2. Instrucción obligatoria para cualquier IA o desarrollador
 
@@ -32,16 +32,36 @@ Antes de modificar nada:
 - Para cambios funcionales relevantes, trabajar en rama separada y revisar antes de merge a `main`.
 - Los cambios puramente operativos de `data/crypto-reca-state.json` pueden hacerse directamente en `main` si respetan el contrato y provienen de un scan/confirmación contemporánea.
 
-## 4. Fuente de verdad
+## 4. Fuente de verdad y módulos
 
 La app separa código de datos.
 
-- Código/UI: `index.html`, `styles.css`, `app.js`, `sw.js`, `manifest.webmanifest`.
+- UI/núcleo: `index.html`, `styles.css`, `app.js`.
+- Timestamp/frescura: `radar-time.js`.
+- Funcionalidades v0.4: `features-v04.js` + `features-v04.css`.
+- Indicadores públicos de visualización: `live-indicators-v04.js`.
 - Estado operativo visible: `data/crypto-reca-state.json`.
-- Mercado público: `app.js` intenta obtener precios y velas de Coinbase Exchange/Coinbase public APIs. Esto es solo market data público.
-- Posiciones y fills reales: solo pueden cambiar por evidencia confirmada del usuario o por un proceso explícitamente autorizado.
+- Service worker: `sw.js`.
 
-## 5. Sincronización automática
+El frontend puede calcular indicadores públicos para visualización usando velas Coinbase. Esos valores deben etiquetarse como **LIVE/CALCULATED** y nunca sustituir silenciosamente a los indicadores contemporáneos del motor Crypto Reca.
+
+## 5. Funcionalidades v0.4
+
+- Radar con timestamp y frescura.
+- Ficha completa por activo.
+- Centro de oportunidades.
+- Risk Dashboard.
+- Alertas internas.
+- Journal automático.
+- Analítica del sistema.
+- Timeline de posiciones.
+- Histórico gráfico ERS / Entry Engine.
+- Actualización manual.
+- Etiquetas de procedencia de datos.
+
+Si no existe muestra suficiente, mostrarlo explícitamente. No fabricar win rates, probabilidades ni conclusiones estadísticas.
+
+## 6. Sincronización automática
 
 El radar horario de ChatGPT **Crypto Reca v3.0 Radar** debe, después de completar cada scan, actualizar `data/crypto-reca-state.json` si la conexión GitHub está disponible.
 
@@ -52,11 +72,13 @@ En cada sync:
 - actualizar `generatedAt`, `source` y `scan`;
 - actualizar los seis registros del `radar` con los valores realmente calculados;
 - añadir un registro compacto a `history`;
-- conservar posiciones, ledger y auditorías salvo cambio contemporáneo confirmado;
+- conservar posiciones, ledger, journal y auditorías salvo cambio contemporáneo confirmado;
 - limitar `history` a los últimos 168 scans horarios salvo decisión distinta documentada;
 - en el scan diario de auditoría, añadir/actualizar la entrada correspondiente en `audits`.
 
-## 6. Cambios de posiciones reales
+Campos detallados del radar como `indicators`, `structure` o `entryDimensions` solo pueden escribirse si fueron calculados contemporáneamente en ese mismo run.
+
+## 7. Cambios de posiciones reales
 
 Cuando el usuario confirme un fill, salida, stop colocado o modificación real:
 
@@ -64,15 +86,16 @@ Cuando el usuario confirme un fill, salida, stop colocado o modificación real:
 2. actualizar la lógica/registro de Crypto Reca;
 3. actualizar `positions` y/o `ledger` en `data/crypto-reca-state.json`;
 4. no borrar el histórico previo;
-5. registrar el cambio en `CHANGELOG.md` solo si supone cambio de app/arquitectura; los fills normales no requieren bump de versión.
+5. registrar el cambio en `journal` si aporta trazabilidad;
+6. registrar el cambio en `CHANGELOG.md` solo si supone cambio de app/arquitectura; los fills normales no requieren bump de versión.
 
-## 7. Deployment
+## 8. Deployment
 
 GitHub Pages se despliega desde `main` mediante `.github/workflows/deploy-pages.yml`.
 
-Un merge o commit en `main` activa el deployment. La PWA tiene service worker. Si se cambia código estático, incrementar la constante `CACHE` de `sw.js` y, si corresponde, `APP_VERSION`.
+Un merge o commit en `main` activa el deployment. La PWA tiene service worker. Si se cambia código estático, incrementar la constante `CACHE` de `sw.js` y, si corresponde, la versión visible de app.
 
-## 8. Rollback
+## 9. Rollback
 
 Si una versión rompe producción:
 
@@ -81,7 +104,7 @@ Si una versión rompe producción:
 - no borrar el historial Git;
 - comprobar que `data/crypto-reca-state.json` no pierde fills/ledger posteriores al rollback de código.
 
-## 9. Seguridad
+## 10. Seguridad
 
 El repositorio y GitHub Pages son públicos. Por tanto:
 
@@ -91,6 +114,8 @@ El repositorio y GitHub Pages son públicos. Por tanto:
 - no habilitar trading privado desde el navegador;
 - cualquier futura integración autenticada con Coinbase debe usar backend seguro/secret manager y permisos mínimos, preferiblemente read-only inicialmente.
 
-## 10. Prompt recomendado para otra IA
+La v0.4 sigue siendo read-only. Las funciones que requieren backend privado no deben simularse: autenticación, balances privados automáticos, órdenes privadas, push seguro y ejecución automática.
 
-> Trabaja sobre mi aplicación Crypto Reca Dashboard en el repositorio `Tresviulk/crypto-reca-dashboard`. Antes de modificar nada, lee `README.md`, `docs/AI_HANDOFF.md`, `docs/CRYPTO_RECA_APP_MASTER_GUIDE.md`, `docs/DATA_CONTRACT.md` y `CHANGELOG.md`, y revisa el código actual del repositorio. No reconstruyas la aplicación desde cero ni cambies funcionalidades no solicitadas. Analiza primero riesgos e impacto. Para cambios funcionales, usa una rama separada, comprueba que no rompa la versión actual y actualiza documentación y CHANGELOG antes de pasar a `main`. No introduzcas secretos ni credenciales en el frontend. Mi cambio solicitado es: [DESCRIBIR CAMBIO].
+## 11. Prompt recomendado para otra IA
+
+> Trabaja sobre mi aplicación Crypto Reca Dashboard en el repositorio `Tresviulk/crypto-reca-dashboard`. Antes de modificar nada, lee `README.md`, `docs/AI_HANDOFF.md`, `docs/CRYPTO_RECA_APP_MASTER_GUIDE.md`, `docs/DATA_CONTRACT.md` y `CHANGELOG.md`, y revisa el código actual del repositorio. No reconstruyas la aplicación desde cero ni cambies funcionalidades no solicitadas. Analiza primero riesgos e impacto. Para cambios funcionales, usa una rama separada, comprueba que no rompa la versión actual y actualiza documentación y CHANGELOG antes de pasar a `main`. Mantén separados datos LIVE públicos, datos del ÚLTIMO SCAN y datos CONFIRMADOS COINBASE. No introduzcas secretos ni credenciales en el frontend. Mi cambio solicitado es: [DESCRIBIR CAMBIO].
