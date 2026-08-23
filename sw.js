@@ -1,5 +1,6 @@
-const CACHE='crypto-reca-app-v0.3.0';
+const CACHE='crypto-reca-app-v0.3.1';
 const STATIC=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const DATA_KEY='./data/crypto-reca-state.json';
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting()));
 });
@@ -10,17 +11,28 @@ self.addEventListener('fetch',event=>{
   const req=event.request;
   if(req.method!=='GET')return;
   const url=new URL(req.url);
-  if(url.origin!==self.location.origin){return;}
+  if(url.origin!==self.location.origin)return;
   if(url.pathname.endsWith('/data/crypto-reca-state.json')){
-    event.respondWith(fetch(req,{cache:'no-store'}).then(resp=>{const copy=resp.clone();caches.open(CACHE).then(c=>c.put(req,copy));return resp;}).catch(()=>caches.match(req)));
+    event.respondWith(fetch(req,{cache:'no-store'}).then(resp=>{
+      const copy=resp.clone();
+      caches.open(CACHE).then(c=>c.put(DATA_KEY,copy));
+      return resp;
+    }).catch(()=>caches.match(DATA_KEY)));
     return;
   }
   if(req.mode==='navigate'){
-    event.respondWith(fetch(req).then(resp=>{const copy=resp.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));return resp;}).catch(()=>caches.match('./index.html')));
+    event.respondWith(fetch(req).then(resp=>{
+      const copy=resp.clone();
+      caches.open(CACHE).then(c=>c.put('./index.html',copy));
+      return resp;
+    }).catch(()=>caches.match('./index.html')));
     return;
   }
   event.respondWith(caches.match(req).then(cached=>{
-    const network=fetch(req).then(resp=>{if(resp&&resp.ok){const copy=resp.clone();caches.open(CACHE).then(c=>c.put(req,copy));}return resp;}).catch(()=>cached);
+    const network=fetch(req).then(resp=>{
+      if(resp&&resp.ok){const copy=resp.clone();caches.open(CACHE).then(c=>c.put(req,copy));}
+      return resp;
+    }).catch(()=>cached);
     return cached||network;
   }));
 });
