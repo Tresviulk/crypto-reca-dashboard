@@ -1,128 +1,156 @@
-# DATA CONTRACT — Crypto Reca Dashboard
+# DATA CONTRACT — Crypto Reca Dashboard v2 modular
 
-## Purpose
+Effective: 2026-08-23. App target: v0.4.5+. Engine: Crypto Reca v3.0.
 
-`data/crypto-reca-state.json` is the operational source consumed by the PWA. This contract exists to prevent accidental corruption, hindsight reconstruction, or loss of confirmed trading records.
+## 1. Architecture
 
-## Top-level fields
+The dashboard no longer relies on one shared JSON writer. `data/crypto-reca-state.json` remains a **legacy read-only compatibility snapshot** during migration. New writes are split by authority:
 
-- `schemaVersion`: data schema version.
-- `appVersion`: app version expected by the writer.
-- `engineVersion`: Crypto Reca ruleset/version.
-- `generatedAt`: ISO timestamp of the most recent successful sync, or `null` before first sync.
-- `source`: origin of the update, e.g. `Crypto Reca v3.0 Radar`.
-- `scan`: latest contemporaneous scan metadata.
-- `validationCapital`: reference capital used by the system.
-- `radar`: exactly the current monitored universe unless the system rules change explicitly.
-- `positions`: user-confirmed real positions only.
-- `ledger`: user-confirmed real fills/transactions only.
-- `audits`: contemporaneous audit records.
-- `history`: compact scan history.
+| File | Writer / authority | May contain |
+|---|---|---|
+| `data/radar-state.json` | Crypto Reca v3.0 Radar | scan, radar, D/E, P/M/ERS, Entry Engine, history, audits, ERS health, Shadow Portfolio |
+| `data/positions-state.json` | user-confirmed Coinbase evidence only | real positions, ledger, actual protection, confirmed journal events |
+| `data/position-risk.json` | Crypto Reca Position Risk | PRS evaluations and risk history only |
+| `data/intelligence.json` | Crypto Reca Intelligence Watch | news, catalysts, news history only |
+| `data/external-signals.json` | Crypto Reca Intelligence Watch | external calls, source validation, signal history only |
 
-## `scan`
+The frontend merges these modules at read time. A module writer must never rewrite another module's file.
 
-Recommended fields:
+## 2. Truth classes
+
+The UI must keep these classes separate:
+
+- **SCAN** — contemporaneous Crypto Reca outputs: ERS, D/E, Entry Engine, decision, trigger, structure.
+- **LIVE / CALCULATED** — public Coinbase market data and frontend-derived display analytics.
+- **CONFIRMED COINBASE** — actual fills, fees, quantity, status and protection confirmed from execution evidence.
+- **RISK MODEL** — advisory PRS and modeled invalidation loss; never an executed sale.
+- **INTELLIGENCE** — public news/catalysts and externally published trade calls; never a Crypto Reca trade trigger by themselves.
+
+## 3. Radar module
+
+Minimum `data/radar-state.json`:
 
 ```json
 {
-  "id": "CR30-YYYYMMDD-HHMM",
-  "timestampEuropeMadrid": "YYYY-MM-DD HH:MM",
-  "dataQuality": "PASS | PARTIAL | FAIL",
-  "bestCondition": "CORE | TACTICAL | A+ | NONE",
-  "closestSetup": "...",
-  "realOrderThisScan": "NO | CORE | TACTICAL | A+",
-  "conclusion": "..."
+  "schemaVersion": "2.0",
+  "module": "radar",
+  "generatedAt": "ISO timestamp",
+  "source": "Crypto Reca v3.0 Radar",
+  "engineVersion": "Crypto Reca v3.0",
+  "validationCapital": 14687.25,
+  "scan": {},
+  "radar": [],
+  "history": [],
+  "audits": [],
+  "engineHealth": {},
+  "shadowPortfolio": {"generatedAt": null, "candidates": []}
 }
 ```
 
-Do not invent a scan ID or timestamp. Missing run = missing run.
-
-## `radar[]`
-
-Each asset may include:
+Each radar asset should contain, when core data permit:
 
 ```json
 {
   "asset": "BTC",
   "pair": "BTC-USDC",
-  "d": "D0/D1/D2/...",
-  "e": "E0/E1/E2/...",
-  "ers": 72,
-  "entryConfirmation": 4,
-  "decision": "WATCH / HOLD CORE",
-  "entryState": "STRONG CONFIRMATION"
+  "d": "D0|D1|D2",
+  "e": "E0|E1|E2",
+  "pullbackScore": 0,
+  "momentumScore": 0,
+  "ers": 0,
+  "ersLane": "PULLBACK|MOMENTUM|MIXED",
+  "entryConfirmation": 0,
+  "entryState": "...",
+  "decision": "..."
 }
 ```
 
-Rules:
+Canonical D/E and ERS rules live in `docs/ENGINE_SPEC_V3_ERS.md`. If sufficient core data exist, a missing optional source must not suppress every numeric score. If core data are genuinely insufficient, set `ers=null` and report ERS health accordingly. Never reuse an old score.
 
-- `ers` must be numeric only if contemporaneously calculated.
-- `entryConfirmation` is `0..5` or `null` if unavailable/partial.
-- Do not use a market price copied from the frontend as a scan decision variable after the fact.
-- The frontend obtains its own public display price separately.
+## 4. ERS health
 
-## `positions[]`
-
-Real positions only. Example:
+Every radar run must write:
 
 ```json
-{
-  "id": "unique-id",
-  "asset": "BTC",
-  "pair": "BTC-USDC",
-  "engine": "CORE",
-  "setup": "C-RECLAIM",
-  "status": "OPEN",
-  "protection": "UNPROTECTED",
-  "qty": 0.00946259,
-  "entry": 77340.93,
-  "fee": 1.17095282,
-  "recommendedStop": 75300,
-  "openedEuropeMadrid": "2026-08-22 18:58"
-}
-```
-
-A position cannot be added because a recommendation was generated. It requires a confirmed fill.
-
-`protection` must distinguish recommendation from actual protection. Never mark `PROTECTED` unless a real stop/protection has been confirmed.
-
-## `ledger[]`
-
-Append-only in normal operation. Never rewrite history to improve presentation. Corrections must preserve an audit trail or note explaining the correction.
-
-## `history[]`
-
-Compact rolling history. Recommended structure:
-
-```json
-{
-  "id": "CR30-YYYYMMDD-HHMM",
-  "timestampEuropeMadrid": "YYYY-MM-DD HH:MM",
-  "dataQuality": "PASS",
-  "bestCondition": "CORE",
-  "realOrderThisScan": "NO",
-  "radar": {
-    "BTC": {"ers":72,"entryConfirmation":4},
-    "ETH": {"ers":67,"entryConfirmation":null}
+"engineHealth": {
+  "ers": {
+    "status": "PASS|PARTIAL|FAIL",
+    "spec": "docs/ENGINE_SPEC_V3_ERS.md",
+    "specRevision": "R1",
+    "reason": "..."
   }
 }
 ```
 
-Default retention target: latest 168 hourly scans. Longer-term audit archives may later move to a dedicated historical file/database.
+The frontend must display missing ERS as `ERS NO CALCULADO`, never as zero or a numeric-looking stale value.
 
-## Merge/write rules
+## 5. Positions / ledger module
 
-A radar automation updating the file must:
+`data/positions-state.json` is the only new modular source allowed to state that a real trade happened.
 
-1. read current JSON first;
-2. preserve `positions`, `ledger`, and existing `audits` unless it has contemporaneous authority to change them;
-3. replace `scan` and `radar` with the current run;
-4. append one `history` record;
-5. deduplicate by scan ID;
-6. cap rolling history to 168 records;
-7. write valid JSON atomically through one GitHub file update;
-8. if write fails, report sync failure but never fabricate success.
+A position requires user-confirmed Coinbase evidence. Recommendation, signal, trigger, public market price or external guru call is not evidence of a fill.
 
-## Security
+`PROTECTED` requires confirmed real protection. A recommended technical stop remains `UNPROTECTED` until confirmed.
 
-Forbidden fields include API secrets, private keys, passwords, session cookies, Coinbase JWTs, recovery codes, or any credential material.
+Normal ledger behavior is append-only. Corrections must leave an audit note.
+
+## 6. Position Risk module
+
+`data/position-risk.json` may contain only:
+
+```json
+{
+  "generatedAt": "...",
+  "positionRisk": {
+    "generatedAt": "...",
+    "source": "Crypto Reca Position Risk",
+    "dataQuality": "PASS|PARTIAL|FAIL",
+    "positions": {}
+  },
+  "riskHistory": []
+}
+```
+
+PRS actions are `HOLD / WATCH / REDUCE REVIEW / EXIT REVIEW / EXIT SIGNAL`. They are advisory only. The risk writer cannot close, resize or mark a real position sold.
+
+For CORE positions, 4H/1D structure has greater thesis weight than ordinary 15m/1H noise. Trend by timeframe should be stored when available rather than collapsed into one ambiguous “trend”.
+
+## 7. Intelligence module
+
+`data/intelligence.json` contains high-signal public news only. Positive news never creates a buy order. High-impact scheduled events may change event-risk posture; severe verified negative events may prompt `REDUCE REVIEW` or `EXIT REVIEW`, never a fabricated execution.
+
+## 8. External signals module
+
+`data/external-signals.json` contains only forward-captured, publicly verifiable, spot-long compatible calls for BTC/ETH/SOL/XRP/AVAX/SUI under the strict source-validation rules.
+
+A source remains `VALIDATING` until the forward sample meets the configured qualification standard. Popularity, screenshots, marketing win rates and retrospective claims do not qualify a source.
+
+## 9. Shadow Portfolio
+
+`shadowPortfolio.candidates` belongs to the radar module because only the radar knows the contemporaneous rejected/prepared setup state.
+
+Freeze a candidate prospectively when useful for system research (for example PREPARE, strong ERS rejected by a gate, CHASE, or R/R failure). Store the original scan ID, asset, setup/lane, ERS, Entry Engine, frozen entry/zone, invalidation/target only when defensible, rejection reason and lifecycle. Later price outcomes may update lifecycle, but original decision variables must never be reconstructed or edited with hindsight.
+
+## 10. System Health
+
+System Health is computed by the frontend from module availability, freshness and engine-health fields. It does not need a separate writer. Expected current cadences are approximately hourly for Radar, Position Risk and Intelligence. Missing/stale modules are shown as PASS/PARTIAL/FAIL independently.
+
+## 11. Correlation & cluster risk
+
+Correlation shown by the frontend is display analytics from public completed market series. It does not change historical ERS. Cluster exposure separates at minimum total crypto, BTC+ETH Core and higher-beta SOL/AVAX/SUI exposure. Several correlated crypto positions must not be presented as independent diversification.
+
+## 12. No-hindsight rules
+
+- Every scan/history/shadow record must have a real contemporaneous timestamp/ID.
+- Missing run = missing run.
+- Do not reconstruct original ERS, P/M, Entry Engine, stop, target or gates from later price action.
+- Subsequent market data may be used only to evaluate a setup that was already frozen contemporaneously.
+- Ambiguous intrabar outcome remains ambiguous when ordering cannot be verified.
+
+## 13. Security
+
+Never write API secrets, private keys, passwords, JWTs, cookies, recovery codes or private X/Telegram/Coinbase credentials to GitHub. The current Pages repository is public; sensitive account balances or authenticated Coinbase data require a private backend before they are introduced.
+
+## 14. Migration compatibility
+
+During v0.4.5 migration, the PWA first loads `data/crypto-reca-state.json` and then overlays any non-empty modular files. Empty migration placeholders therefore cannot erase the confirmed legacy state. After all active writers have migrated and modular files are populated, `crypto-reca-state.json` becomes compatibility-only and should no longer receive routine writes.
