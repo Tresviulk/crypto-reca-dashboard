@@ -8,6 +8,7 @@
 - Motor: **Crypto Reca v3.0**
 - App objetivo: **0.4.5**
 - ERS spec canónica: `docs/ENGINE_SPEC_V3_ERS.md` revision R1
+- Position Risk spec canónica: `docs/POSITION_RISK_SPEC_V2_1.md` revision 2.1
 
 ## 2. Lectura obligatoria antes de tocar nada
 
@@ -16,8 +17,9 @@
 3. `docs/CRYPTO_RECA_APP_MASTER_GUIDE.md`
 4. `docs/DATA_CONTRACT.md`
 5. `docs/ENGINE_SPEC_V3_ERS.md`
-6. `CHANGELOG.md`
-7. código actual de la rama objetivo
+6. `docs/POSITION_RISK_SPEC_V2_1.md`
+7. `CHANGELOG.md`
+8. código actual de la rama objetivo
 
 No reconstruir desde memoria, capturas o chats antiguos.
 
@@ -26,7 +28,7 @@ No reconstruir desde memoria, capturas o chats antiguos.
 - No inventar precios, scores, timestamps, fills, órdenes o protección.
 - No transformar recomendación en ejecución.
 - No reconstruir ERS/Entry/stop/TP históricos con hindsight.
-- No cambiar una regla de ERS/D/E silenciosamente: cualquier cambio requiere spec + data contract + changelog + writer.
+- No cambiar una regla de ERS/D/E/Position Risk silenciosamente: cualquier cambio requiere spec + data contract + changelog + writer.
 - No almacenar claves, JWT, cookies, passwords o secrets en frontend/GitHub.
 - Cambio funcional importante: rama → validar → PR → merge main → verificar Pages.
 - El repositorio/Pages es público.
@@ -64,7 +66,19 @@ Resumen:
 
 ERS no es probabilidad de beneficio ni autorización de trade.
 
-## 6. Capas que no deben mezclarse
+## 6. Position Risk v2.1 — breach/reclaim
+
+La fuente canónica es `docs/POSITION_RISK_SPEC_V2_1.md`.
+
+Regla crítica:
+
+- un mínimo intrabar bajo la invalidación técnica = `BREACH`, no invalidación permanente automática;
+- invalidación confirmada requiere 2 cierres 15m consecutivos bajo el nivel, o 1 cierre 1H bajo el nivel, o tocar el catastrophic boundary previamente definido, o una discontinuidad de mercado documentada;
+- si antes de confirmarse la invalidación una vela 15m completada cierra de nuevo en/por encima del nivel, el estado pasa a `RECLAIMED`;
+- `RECLAIMED` no borra el breach histórico y normalmente implica `WATCH`, no `EXIT SIGNAL`;
+- el catastrophic boundary nunca puede inventarse retroactivamente.
+
+## 7. Capas que no deben mezclarse
 
 - **SCAN**: ERS, D/E, Entry Engine, decision, trigger, structure.
 - **LIVE/CALCULATED**: Coinbase público e indicadores frontend.
@@ -74,7 +88,7 @@ ERS no es probabilidad de beneficio ni autorización de trade.
 
 Decision Matrix las presenta juntas pero nunca las promedia ni permite que una capa externa reescriba otra.
 
-## 7. Funcionalidades v0.4.5
+## 8. Funcionalidades v0.4.5
 
 - Radar + timestamp/freshness.
 - Full asset detail + ERS/Entry history.
@@ -92,7 +106,7 @@ Decision Matrix las presenta juntas pero nunca las promedia ni permite que una c
 - Shadow Portfolio prospective/no-hindsight.
 - Journal, timeline, descriptive analytics, alerts.
 
-## 8. Real positions
+## 9. Real positions
 
 Only `data/positions-state.json` may become the modular source of real fills/protection.
 
@@ -107,22 +121,22 @@ On user-confirmed buy/sell/stop change:
 
 Coinbase Advanced remains execution truth.
 
-## 9. Writer rules
+## 10. Writer rules
 
 ### Radar
 Read its own latest module before writing. Update only `radar-state.json`. Preserve history/audits/shadow as appropriate. Produce ERS health every run. Never write positions/risk/intelligence/external files.
 
 ### Position Risk
-Read confirmed open positions from `positions-state.json` and current radar context if useful. Write only `position-risk.json`. Advisory only.
+Read confirmed open positions from `positions-state.json` and current radar context if useful. Read and obey `docs/POSITION_RISK_SPEC_V2_1.md`. Write only `position-risk.json`. Advisory only. Preserve breach/reclaim evidence in `riskHistory`. Never convert an intrabar wick alone into permanent `INVALIDATED`.
 
 ### Intelligence Watch
 Write News/Catalysts only to `intelligence.json`; External Signals/source validation only to `external-signals.json`. Do not modify fills/radar/risk.
 
-## 10. Shadow Portfolio
+## 11. Shadow Portfolio
 
 Freeze candidates only contemporaneously. Later price path may update outcome, but original entry/ERS/Entry/gate/invalidation/target cannot be rebuilt or edited after the fact. Ambiguity remains ambiguous.
 
-## 11. Frontend modules
+## 12. Frontend modules
 
 Base/legacy-compatible layer:
 - `app.js`
@@ -143,14 +157,14 @@ Hardening layer:
 
 New hardening modules should use `CR4.registerScreen` / `CR4.on` rather than creating another independent `show()` wrapper.
 
-## 12. Deployment / rollback
+## 13. Deployment / rollback
 
 Push/merge to `main` deploys through GitHub Pages workflow. On static change, bump service-worker cache. If production breaks, revert code without overwriting newer operational data. Never force-reset confirmed ledger data.
 
-## 13. Security / future backend
+## 14. Security / future backend
 
 No authenticated Coinbase integration in public frontend. Private balances, exact account orders, authenticated fills or automatic execution require private backend/serverless + secret manager + auth, starting read-only where possible.
 
-## 14. Standard prompt for another AI
+## 15. Standard prompt for another AI
 
-> Trabaja sobre `Tresviulk/crypto-reca-dashboard`. Antes de modificar nada, lee `README.md`, `docs/AI_HANDOFF.md`, `docs/CRYPTO_RECA_APP_MASTER_GUIDE.md`, `docs/DATA_CONTRACT.md`, `docs/ENGINE_SPEC_V3_ERS.md` y `CHANGELOG.md`, y revisa el código actual. No reconstruyas desde memoria. No cambies funcionalidades no solicitadas. Para cambios funcionales usa rama y valida antes de `main`. Respeta los writers modulares: radar, positions, risk, intelligence y external signals nunca escriben en el archivo de otro. Mantén separados SCAN, LIVE/CALCULATED, CONFIRMED COINBASE, RISK MODEL e INTELLIGENCE. No introduzcas secretos. Cambio solicitado: [DESCRIBIR].
+> Trabaja sobre `Tresviulk/crypto-reca-dashboard`. Antes de modificar nada, lee `README.md`, `docs/AI_HANDOFF.md`, `docs/CRYPTO_RECA_APP_MASTER_GUIDE.md`, `docs/DATA_CONTRACT.md`, `docs/ENGINE_SPEC_V3_ERS.md`, `docs/POSITION_RISK_SPEC_V2_1.md` y `CHANGELOG.md`, y revisa el código actual. No reconstruyas desde memoria. No cambies funcionalidades no solicitadas. Para cambios funcionales usa rama y valida antes de `main`. Respeta los writers modulares: radar, positions, risk, intelligence y external signals nunca escriben en el archivo de otro. Mantén separados SCAN, LIVE/CALCULATED, CONFIRMED COINBASE, RISK MODEL e INTELLIGENCE. No introduzcas secretos. Cambio solicitado: [DESCRIBIR].
