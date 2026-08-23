@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Crypto Reca" />
+  <title>Crypto Reca Dashboard</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <img class="brand-icon" src="icons/icon-192.png" alt="Crypto Reca" />
+        <div>
+          <div class="eyebrow">CRYPTO RECA</div>
+          <h1>Dashboard</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="installBtn" class="btn primary" hidden>Instalar app</button>
+        <button id="themeBtn" class="btn ghost" aria-label="Cambiar tema">☾</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-card">
+        <div>
+          <div class="eyebrow">RESUMEN</div>
+          <h2 id="statusTitle">Sin posiciones abiertas</h2>
+          <p id="statusText">Añade operaciones reales o en seguimiento. Los datos se guardan en este dispositivo.</p>
+        </div>
+        <div class="hero-badge" id="heroBadge">READY</div>
+      </section>
+
+      <section class="metrics-grid">
+        <article class="metric-card">
+          <span>Capital base</span>
+          <strong id="baseCapital">14.687,25 USDC</strong>
+          <small>Configurable</small>
+        </article>
+        <article class="metric-card">
+          <span>Exposición abierta</span>
+          <strong id="openExposure">0,00 USDC</strong>
+          <small id="openExposurePct">0,0%</small>
+        </article>
+        <article class="metric-card">
+          <span>P/L realizado</span>
+          <strong id="realizedPnl">0,00 USDC</strong>
+          <small>Operaciones cerradas</small>
+        </article>
+        <article class="metric-card">
+          <span>Operaciones</span>
+          <strong id="tradeCount">0</strong>
+          <small id="winRate">Win rate —</small>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="eyebrow">MERCADO / SISTEMA</div>
+            <h3>Radar rápido</h3>
+          </div>
+          <button class="btn ghost" id="editRadarBtn">Editar</button>
+        </div>
+        <div class="radar-grid" id="radarGrid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="eyebrow">OPERATIVA</div>
+            <h3>Posiciones abiertas</h3>
+          </div>
+          <button class="btn primary" id="addTradeBtn">+ Añadir</button>
+        </div>
+        <div id="openTrades" class="trade-list empty-state">No hay posiciones abiertas.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="eyebrow">HISTÓRICO</div>
+            <h3>Operaciones cerradas</h3>
+          </div>
+          <button class="btn ghost" id="clearClosedBtn">Limpiar cerradas</button>
+        </div>
+        <div id="closedTrades" class="trade-list empty-state">Todavía no hay operaciones cerradas.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="eyebrow">DATOS</div>
+            <h3>Copia de seguridad</h3>
+          </div>
+        </div>
+        <div class="backup-actions">
+          <button class="btn" id="exportBtn">Exportar JSON</button>
+          <label class="btn file-btn">Importar JSON<input id="importInput" type="file" accept="application/json" hidden></label>
+          <button class="btn ghost" id="settingsBtn">Ajustes</button>
+        </div>
+        <p class="muted">La v0.2 funciona sin servidor. Para sincronización automática entre móvil y ordenador hará falta añadir backend en una versión posterior.</p>
+      </section>
+    </main>
+
+    <footer>
+      <span>Crypto Reca Dashboard v0.2 PWA</span>
+      <span id="offlineState">Online</span>
+    </footer>
+  </div>
+
+  <dialog id="tradeDialog">
+    <form method="dialog" id="tradeForm" class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <div class="eyebrow">OPERACIÓN</div>
+          <h3 id="dialogTitle">Añadir posición</h3>
+        </div>
+        <button class="icon-btn" value="cancel" aria-label="Cerrar">×</button>
+      </div>
+      <input type="hidden" id="tradeId" />
+      <div class="form-grid">
+        <label>Par
+          <select id="pair" required>
+            <option>BTC/USDC</option><option>ETH/USDC</option><option>SOL/USDC</option><option>XRP/USDC</option><option>AVAX/USDC</option><option>ADA/USDC</option>
+          </select>
+        </label>
+        <label>Estado
+          <select id="tradeStatus" required>
+            <option value="open">Abierta</option><option value="closed">Cerrada</option><option value="watch">Seguimiento</option>
+          </select>
+        </label>
+        <label>Precio entrada<input id="entryPrice" type="number" step="any" min="0" required /></label>
+        <label>Notional USDC<input id="notional" type="number" step="0.01" min="0" required /></label>
+        <label>Stop / invalidación<input id="stopPrice" type="number" step="any" min="0" /></label>
+        <label>Precio salida<input id="exitPrice" type="number" step="any" min="0" /></label>
+        <label>Fecha entrada<input id="entryDate" type="datetime-local" /></label>
+        <label>Fecha salida<input id="exitDate" type="datetime-local" /></label>
+      </div>
+      <label>Notas<textarea id="notes" rows="3" placeholder="Ej.: Core starter, Tactical, motivo de entrada, invalidación estructural…"></textarea></label>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost danger" id="deleteTradeBtn" hidden>Eliminar</button>
+        <div class="spacer"></div>
+        <button class="btn ghost" value="cancel">Cancelar</button>
+        <button type="button" class="btn primary" id="saveTradeBtn">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head"><div><div class="eyebrow">AJUSTES</div><h3>Configuración</h3></div><button class="icon-btn" value="cancel">×</button></div>
+      <label>Capital base (USDC)<input id="settingsCapital" type="number" step="0.01" min="0" /></label>
+      <label>Nombre del sistema<input id="settingsSystem" type="text" /></label>
+      <div class="dialog-actions"><div class="spacer"></div><button class="btn ghost" value="cancel">Cancelar</button><button type="button" id="saveSettingsBtn" class="btn primary">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="radarDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head"><div><div class="eyebrow">RADAR</div><h3>Estado por activo</h3></div><button class="icon-btn" value="cancel">×</button></div>
+      <div id="radarEditor" class="radar-editor"></div>
+      <div class="dialog-actions"><div class="spacer"></div><button class="btn ghost" value="cancel">Cancelar</button><button type="button" id="saveRadarBtn" class="btn primary">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
