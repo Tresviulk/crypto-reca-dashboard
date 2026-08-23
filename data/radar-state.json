@@ -1,24 +1,61 @@
 {
   "schemaVersion": "2.0",
   "module": "radar",
-  "generatedAt": null,
-  "source": "PENDING_MIGRATION",
+  "generatedAt": "2026-08-23T05:01:16+02:00",
+  "source": "MIGRATED_LEGACY_SNAPSHOT",
   "engineVersion": "Crypto Reca v3.0",
   "validationCapital": 14687.25,
-  "scan": null,
-  "radar": [],
-  "history": [],
-  "audits": [],
+  "scan": {
+    "id": "CR30-20260823-0501",
+    "timestampEuropeMadrid": "2026-08-23 05:01",
+    "dataQuality": "PARTIAL",
+    "bestCondition": "CORE",
+    "closestSetup": "BTC CORE hold; add-on timing not confirmed. Nearest local reclaim trigger: completed 15m close above 77,215 USDT; stronger confirmation above 77,406.",
+    "realOrderThisScan": "NO",
+    "conclusion": "Bybit OHLCV is fresh and the BTC CORE position remains open, but the exact v3.0 D/E and deterministic ERS rule definitions were not available in this pre-repair run context, so no contemporaneous ERS or new-entry qualification is asserted. No new real order."
+  },
+  "radar": [
+    {"asset":"BTC","pair":"BTC-USDC","d":null,"e":null,"pullbackScore":null,"momentumScore":null,"ers":null,"ersLane":null,"entryConfirmation":null,"decision":"HOLD CORE / NO ADD-ON","entryState":"PARTIAL"},
+    {"asset":"ETH","pair":"ETH-USDC","d":null,"e":null,"pullbackScore":null,"momentumScore":null,"ers":null,"ersLane":null,"entryConfirmation":null,"decision":"NO ENTRY — ERS UNVERIFIED","entryState":"PARTIAL"},
+    {"asset":"SOL","pair":"SOL-USDC","d":null,"e":null,"pullbackScore":null,"momentumScore":null,"ers":null,"ersLane":null,"entryConfirmation":null,"decision":"NO ENTRY — ERS UNVERIFIED","entryState":"PARTIAL"},
+    {"asset":"XRP","pair":"XRP-USDC","d":null,"e":null,"pullbackScore":null,"momentumScore":null,"ers":null,"ersLane":null,"entryConfirmation":null,"decision":"NO ENTRY — ERS UNVERIFIED","entryState":"PARTIAL"},
+    {"asset":"AVAX","pair":"AVAX-USDC","d":null,"e":null,"pullbackScore":null,"momentumScore":null,"ers":null,"ersLane":null,"entryConfirmation":null,"decision":"NO ENTRY — ERS UNVERIFIED","entryState":"PARTIAL"},
+    {"asset":"SUI","pair":"SUI-USDC","d":null,"e":null,"pullbackScore":null,"momentumScore":null,"ers":null,"ersLane":null,"entryConfirmation":null,"decision":"NO ENTRY — VALIDATION/ERS UNVERIFIED","entryState":"PARTIAL"}
+  ],
+  "history": [
+    {
+      "id": "CR30-20260823-0501",
+      "timestampEuropeMadrid": "2026-08-23 05:01",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "CORE",
+      "realOrderThisScan": "NO",
+      "radar": {
+        "BTC":{"ers":null,"entryConfirmation":null},
+        "ETH":{"ers":null,"entryConfirmation":null},
+        "SOL":{"ers":null,"entryConfirmation":null},
+        "XRP":{"ers":null,"entryConfirmation":null},
+        "AVAX":{"ers":null,"entryConfirmation":null},
+        "SUI":{"ers":null,"entryConfirmation":null}
+      }
+    }
+  ],
+  "audits": [
+    {
+      "date":"2026-08-23",
+      "status":"PARTIAL",
+      "note":"Migración inicial a fuente de datos estructurada. El histórico contemporáneo se acumulará desde los próximos scans."
+    }
+  ],
   "engineHealth": {
     "ers": {
-      "status": "PARTIAL",
+      "status": "FAIL",
       "spec": "docs/ENGINE_SPEC_V3_ERS.md",
       "specRevision": "R1",
-      "reason": "Waiting for first post-migration radar scan."
+      "reason": "Latest migrated scan predates ERS Repair R1 and explicitly had sufficient fresh OHLCV but no available deterministic v3 D/E/ERS rule definitions. Waiting for first post-repair scan; no historical score reconstructed."
     }
   },
   "shadowPortfolio": {
-    "generatedAt": null,
+    "generatedAt": "2026-08-23T05:41:00+02:00",
     "candidates": []
   }
 }
