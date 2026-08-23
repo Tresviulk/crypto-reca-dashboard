@@ -2,6 +2,32 @@
 
 All material changes to Crypto Reca Dashboard are recorded here.
 
+## [0.4.5] — 2026-08-23
+
+### Structural hardening
+- Added canonical self-contained ERS/D/E rulebook at `docs/ENGINE_SPEC_V3_ERS.md`.
+- ERS is now defined deterministically as the best contemporaneous Pullback/Momentum lane score with both lane scores preserved; missing core-data scores remain `null` and are shown as `ERS NO CALCULADO`.
+- Added `engineHealth.ers` PASS/PARTIAL/FAIL contract so a broken scoring engine cannot look like a valid low score.
+- Split operational writers into isolated module files: radar, confirmed positions/ledger, position risk, intelligence, and external signals.
+- `data/crypto-reca-state.json` becomes migration/compatibility fallback instead of a multi-writer transaction surface.
+- Service worker now treats all `data/*.json` as network-first and caches the expanded v0.4.5 module set.
+
+### Added
+- System Health screen and dashboard health card.
+- Decision Matrix combining ERS, Entry Engine, D/E, multi-timeframe trend, PRS, news and external consensus without averaging them.
+- Protection Assistant with modeled invalidation loss and 25/50/75% reduction scenarios.
+- Scenario Lab for hypothetical position prices; explicitly mechanical and not a future ERS/PRS reconstruction.
+- Correlation & Cluster Risk using recent public 1H returns when enough data exist, plus total/Core/high-beta exposure buckets.
+- Dedicated Gurús / External Signals screen with forward source validation statistics.
+- Shadow Portfolio screen and data contract for prospective PREPARE/rejected-setup research without hindsight.
+- Single `CR4` screen/action registry for all new structural modules, reducing additional global show-handler chaining.
+
+### Safety / integrity
+- Empty migration module files cannot erase non-empty confirmed legacy data.
+- Every writer is restricted to its own file after migration.
+- Real positions/ledger/protection remain user-confirmed Coinbase truth only.
+- External signals, news, frontend trend and correlation remain contextual overlays; none can mark a fill or override hard gates.
+
 ## [0.4.0] — 2026-08-23
 
 ### Added
