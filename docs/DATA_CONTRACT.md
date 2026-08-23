@@ -9,8 +9,8 @@
 - `schemaVersion`: data schema version.
 - `appVersion`: app version expected by the writer.
 - `engineVersion`: Crypto Reca ruleset/version.
-- `generatedAt`: ISO timestamp of the most recent successful sync, or `null` before first sync.
-- `source`: origin of the update, e.g. `Crypto Reca v3.0 Radar`.
+- `generatedAt`: ISO timestamp of the most recent successful radar sync, or `null` before first sync.
+- `source`: origin of the last radar update, e.g. `Crypto Reca v3.0 Radar`.
 - `scan`: latest contemporaneous scan metadata.
 - `validationCapital`: reference capital used by the system.
 - `radar`: exactly the current monitored universe unless the system rules change explicitly.
@@ -20,6 +20,10 @@
 - `history`: compact scan history.
 - `alerts` (optional): explicit app-facing alerts created contemporaneously by the scan writer.
 - `journal` (optional): structured notes/events that have a real contemporaneous source.
+- `positionRisk` (optional): latest rule-based risk/exit evaluation for currently open positions.
+- `riskHistory` (optional): compact rolling history of PRS/action/thesis states.
+- `newsOverlay`, `catalysts`, `newsHistory` (optional): high-signal public news/catalyst intelligence.
+- `externalSignals`, `signalSources`, `externalSignalHistory` (optional): forward-captured public external signal validation data.
 
 ## `scan`
 
@@ -123,6 +127,56 @@ A position cannot be added because a recommendation was generated. It requires a
 
 `protection` must distinguish recommendation from actual protection. Never mark `PROTECTED` unless a real stop/protection has been confirmed.
 
+## `positionRisk`
+
+This field is written by the separate Position Risk / Exit Engine and must never be treated as an executed sale. Recommended structure:
+
+```json
+{
+  "generatedAt": "2026-08-23T05:05:00+02:00",
+  "source": "Crypto Reca Position Risk",
+  "dataQuality": "PASS",
+  "positions": {
+    "btc-position-id": {
+      "asset": "BTC",
+      "engine": "CORE",
+      "prs": 35,
+      "breakdown": {"structural":15,"regime":10,"momentum":0,"adverseMove":0,"protection":10},
+      "thesisState": "INTACT",
+      "action": "WATCH",
+      "protection": "UNPROTECTED",
+      "trendTimeframes": {
+        "15m": "BAJISTA",
+        "1h": "BAJISTA",
+        "4h": "NEUTRAL-ALCISTA",
+        "1d": "ALCISTA"
+      },
+      "trendConclusion": "Corrección bajista de corto plazo; tesis de marco superior aún intacta.",
+      "technicalInvalidation": 75300,
+      "invalidationStatus": "CURRENT",
+      "modeledLossUSDC": 0,
+      "modeledLossPctCapital": 0,
+      "distanceToInvalidationPct": 0,
+      "distanceToInvalidationATR": 0,
+      "unrealizedPnLUSDC": 0,
+      "unrealizedPnLPct": 0,
+      "reason": "...",
+      "upgradeCondition": "...",
+      "downgradeCondition": "..."
+    }
+  }
+}
+```
+
+Multi-timeframe rules:
+
+- 15m and 1H describe short-term timing/deterioration; they must not be displayed as if they alone define the global trend.
+- 4H and 1D carry greater weight for CORE thesis management.
+- A 1H bearish state with constructive 4H/1D may result in `WATCH` rather than `EXIT`.
+- 1H + 4H bearish deterioration raises risk materially; 4H + 1D bearish/invalidated structure may force `EXIT REVIEW` or `EXIT SIGNAL` under the deterministic PRS rules.
+- `trendConclusion` must explain the timeframe conflict in plain language.
+- Public frontend trend calculations are display analytics; the risk writer must use its own verified contemporaneous OHLCV for any PRS decision.
+
 ## `ledger[]`
 
 Append-only in normal operation. Never rewrite history to improve presentation. Corrections must preserve an audit trail or note explaining the correction.
@@ -160,7 +214,7 @@ May contain structured contemporaneous events such as user-confirmed order actio
 A radar automation updating the file must:
 
 1. read current JSON first;
-2. preserve `positions`, `ledger`, `journal`, and existing `audits` unless it has contemporaneous authority to change them;
+2. preserve `positions`, `ledger`, `journal`, `positionRisk`, `riskHistory`, intelligence overlays and existing `audits` unless it has contemporaneous authority to change them;
 3. replace `scan` and `radar` with the current run;
 4. append one `history` record;
 5. deduplicate by scan ID;
@@ -169,6 +223,8 @@ A radar automation updating the file must:
 8. write valid JSON atomically through one GitHub file update;
 9. if write fails, report sync failure but never fabricate success.
 
+A dedicated risk/intelligence writer must update only its documented top-level fields and preserve the rest of the file.
+
 ## Security
 
-Forbidden fields include API secrets, private keys, passwords, session cookies, Coinbase JWTs, recovery codes, or any credential material.
+Forbidden fields include API secrets, private keys, passwords, session cookies, Coinbase JWTs, recovery codes, private Telegram/X credentials, or any credential material.
