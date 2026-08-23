@@ -1,35 +1,30 @@
-# CRYPTO RECA APP — MASTER GUIDE
+# CRYPTO RECA APP — MASTER GUIDE v0.4.5
 
-## Objetivo
+## A. Objetivo
 
-Este documento permite reconstruir, mantener o migrar Crypto Reca Dashboard desde cero sin depender de una conversación concreta de ChatGPT.
+Documento de continuidad, reconstrucción, operación y mantenimiento de Crypto Reca Dashboard sin depender de un chat concreto.
 
-## A. Componentes y propiedad
+- Repo: `Tresviulk/crypto-reca-dashboard`
+- Producción: `https://tresviulk.github.io/crypto-reca-dashboard/`
+- Producción branch: `main`
+- Motor analítico: **Crypto Reca v3.0**
+- App objetivo: **0.4.5**
+- ERS rulebook: `docs/ENGINE_SPEC_V3_ERS.md` R1
+- Hosting: GitHub Pages / GitHub Actions
+- Tipo: PWA estática read-only, instalable en Android
 
-1. Cuenta GitHub que aloja el proyecto: `Tresviulk`.
-2. Repositorio: `crypto-reca-dashboard`.
-3. Rama de producción: `main`.
-4. URL de producción: `https://tresviulk.github.io/crypto-reca-dashboard/`.
-5. Hosting: GitHub Pages.
-6. Deployment: GitHub Actions.
-7. Tipo de app: PWA web estática, instalable en Android.
-8. Fuente de datos de aplicación: `data/crypto-reca-state.json`.
-9. Precios/gráficos/indicadores de visualización: endpoints públicos de Coinbase cuando responden desde el navegador.
-10. Motor de análisis: Crypto Reca v3.0, ejecutado fuera del navegador.
-11. App visual objetivo actual: v0.4.x.
+## B. Principios de diseño
 
-## B. Qué se necesita para reconstruir desde cero
+1. Coinbase Advanced es la verdad de ejecución real.
+2. La app nunca convierte recomendación en fill.
+3. `PROTECTED` requiere evidencia real de protección; un stop recomendado es solo modelado.
+4. ERS/Entry/D/E históricos no se reconstruyen con hindsight.
+5. Datos públicos LIVE no pueden reescribir decisiones SCAN ya congeladas.
+6. News, gurús y correlación son contexto, no disparadores independientes de ejecución.
+7. Secretos y credenciales nunca viven en GitHub/frontend.
+8. Cada writer operativo escribe únicamente su archivo modular.
 
-- Una cuenta de GitHub.
-- Un repositorio, preferiblemente público si se usa GitHub Pages gratuito bajo esta arquitectura.
-- Los archivos descritos en este documento.
-- GitHub Pages configurado con **Source = GitHub Actions**.
-- Un navegador moderno Android/desktop.
-- Para sincronización automática desde ChatGPT: conexión GitHub autorizada al repositorio y una tarea horaria de Crypto Reca configurada para actualizar el JSON.
-
-No hacen falta claves de Coinbase para la versión pública/read-only.
-
-## C. Estructura del repositorio v0.4
+## C. Estructura principal
 
 ```text
 /
@@ -38,266 +33,277 @@ No hacen falta claves de Coinbase para la versión pública/read-only.
   radar-time.js
   features-v04.js
   live-indicators-v04.js
+  trend-v04.js
+  position-risk-v04.js
+  news-v04.js
+  ers-display-v04.js
+  module-loader-v04.js
+  decision-v04.js
+  risk-tools-v04.js
+  research-v04.js
   styles.css
   features-v04.css
-  manifest.webmanifest
+  news-v04.css
+  trend-v04.css
+  architecture-v04.css
   sw.js
+  manifest.webmanifest
   README.md
   CHANGELOG.md
   /icons
-    icon-192.png
-    icon-512.png
   /data
-    crypto-reca-state.json
+    crypto-reca-state.json       # legacy compatibility during migration
+    radar-state.json             # Radar authority
+    positions-state.json         # confirmed real activity authority
+    position-risk.json           # PRS authority
+    intelligence.json            # News/Catalysts authority
+    external-signals.json        # Guru/external-signal authority
   /docs
     AI_HANDOFF.md
     CRYPTO_RECA_APP_MASTER_GUIDE.md
     DATA_CONTRACT.md
+    ENGINE_SPEC_V3_ERS.md
   /.github/workflows
     deploy-pages.yml
 ```
 
-`app.js` se mantiene como núcleo relativamente pequeño. Las funcionalidades nuevas se separan en módulos para facilitar rollback y evitar reescribir el core estable.
+## D. Arquitectura de datos
 
-## D. Creación de GitHub Pages desde cero
+### D1. Separación de writers
 
-1. Crear el repositorio.
-2. Subir los archivos de la aplicación a la rama `main`.
-3. Crear `.github/workflows/deploy-pages.yml` con permisos `contents: read`, `pages: write` e `id-token: write`.
-4. En GitHub abrir **Settings > Pages**.
-5. En **Build and deployment > Source**, elegir **GitHub Actions**.
-6. Hacer un commit a `main` para disparar el workflow.
-7. Esperar a que GitHub Pages publique la URL.
-8. Verificar que `index.html`, scripts, CSS, manifest, service worker, iconos y JSON cargan correctamente.
+El antiguo diseño con múltiples procesos escribiendo `data/crypto-reca-state.json` generaba riesgo de lost updates. v0.4.5 lo sustituye por archivos de autoridad aislada:
 
-## E. Instalación Android
+- **Radar** → `radar-state.json`
+- **Actividad real confirmada** → `positions-state.json`
+- **Position Risk** → `position-risk.json`
+- **News/Catalysts** → `intelligence.json`
+- **External Signals/Gurús** → `external-signals.json`
 
-1. Abrir la URL de producción en Chrome.
-2. Esperar a que cargue por HTTPS.
-3. Menú de Chrome `⋮`.
-4. Elegir **Instalar aplicación** o **Añadir a pantalla de inicio**.
-5. Confirmar.
-6. Abrir Crypto Reca desde el icono instalado.
+Un writer nunca modifica el archivo de otro módulo.
 
-Si tras una actualización se ve una versión antigua, cerrar completamente la PWA y volver a abrir. Si persiste, abrir la URL en Chrome y recargar. La estrategia de cache se controla en `sw.js`.
+### D2. Migración segura
 
-## F. Arquitectura de datos
+Mientras se completa la migración, la PWA:
 
-La app no debe tener scores ni operaciones reales incrustadas en el código. Todos los datos operativos deben vivir en `data/crypto-reca-state.json`.
+1. lee `crypto-reca-state.json` como fallback legacy;
+2. intenta leer los cinco archivos modulares;
+3. superpone solo contenido modular no vacío;
+4. conserva datos legacy confirmados si un módulo todavía está vacío o no disponible.
 
-Hay tres categorías visuales que no deben mezclarse:
+Tras migrar todos los writers, el legacy queda solo como compatibilidad/read-only y deja de recibir escrituras rutinarias.
 
-1. **SCAN**: ERS, D/E, Entry Engine, decisión, triggers o estructura generados por Crypto Reca en el scan contemporáneo.
-2. **LIVE / CALCULATED**: precios e indicadores derivados de mercado público por el navegador. Son información visual y no reescriben la decisión del scan.
-3. **CONFIRMED COINBASE**: fills, posiciones y protección realmente confirmados por el usuario/ejecución.
+### D3. Clases de verdad
 
-Esta separación es crítica.
+- **SCAN**: ERS, P/M, D/E, Entry Engine, decisión, trigger, structure.
+- **LIVE/CALCULATED**: precios e indicadores públicos del navegador.
+- **CONFIRMED COINBASE**: fills, fees, qty, status, actual protection.
+- **RISK MODEL**: PRS y pérdida modelada, advisory.
+- **INTELLIGENCE**: News/Catalysts y External Signals.
 
-## G. Sincronización automática del radar
+## E. ERS Engine R1
 
-El proceso recomendado es:
+La definición completa está en `docs/ENGINE_SPEC_V3_ERS.md` y prevalece sobre resúmenes antiguos.
 
-```text
-Crypto Reca v3.0 Radar (cada hora)
-        ↓
-calcula scan contemporáneo
-        ↓
-publica resultado en ChatGPT
-        ↓
-lee data/crypto-reca-state.json
-        ↓
-actualiza scan + radar + history
-        ↓
-commit a main
-        ↓
-GitHub Pages despliega / JSON queda disponible
-        ↓
-la PWA relee el JSON automáticamente
-```
+### D state
 
-Reglas:
+- `D0 DEFENSIVE`: 1D/4H contradicen materialmente una nueva tesis long.
+- `D1 TRANSITIONAL`: estructura mixta/rango/transición.
+- `D2 CONSTRUCTIVE`: 1D/4H no bajistas y al menos uno claramente constructivo.
 
-- Nunca reconstruir scores pasados con hindsight.
-- Si falta un scan, registrarlo como missing en la auditoría; no inventarlo.
-- Si GitHub no está disponible, no abortar el scan.
-- No modificar `positions` o `ledger` por inferencia.
-- Un fill real requiere confirmación contemporánea del usuario.
+### E state
 
-## H. Funcionalidades visuales v0.4
+- `E0 CLEAR`: hard/non-score gates aplicables actualmente satisfechos.
+- `E1 WATCH`: sin bloqueo fatal, pero falta timing/trigger/location/RR/confirmation ejecutable.
+- `E2 BLOCKED`: bloqueo duro (core data, D0, invalidation inexistente, RR insuficiente, stale/invalid, critical event, risk/exposure cap, Preview mismatch/expiry, etc.).
 
-### H1. Radar con frescura
+### ERS
 
-Muestra claramente la hora del último scan Crypto Reca, la hora de sincronización y la hora separada del mercado público. Estados de frescura: actual, retrasado, antiguo o pendiente.
+Se calculan **dos scores independientes**:
 
-### H2. Ficha completa por activo
+- Pullback / Structure: régimen20, estructura/location20, confirmation/momentum15, volume10, market alignment10, derivatives10, news5, net RR10.
+- Momentum / Breakout: HTF trend20, breakout structure20, 1H/4H momentum15, 15m confirmation10, volume10, breadth/relative strength10, derivatives5, news5, net RR5.
 
-Al tocar un activo del Radar se abre una ficha con:
+`ERS = max(Pullback, Momentum)`; conservar P, M y `ersLane`.
 
-- precio público vivo;
-- ERS;
-- D/E;
-- Entry Engine y sus 5 dimensiones si el scan las aportó;
-- decisión del último scan;
-- estructura/trigger/invalidation si existe;
-- indicadores del scan si existen;
-- indicadores públicos de visualización calculados desde velas 1H completadas;
-- histórico ERS;
-- histórico Entry Engine.
+Si 1D/4H/1H core son suficientes, el score debe ser normalmente numérico. Inputs opcionales ausentes reciben tratamiento conservador, no borran todo el score. Si core es insuficiente, `ERS=null` y System Health lo muestra.
 
-### H3. Centro de oportunidades
+ERS no es win probability ni autorización automática.
 
-Ordena los activos por estado operativo + Entry Engine + ERS. No es probabilidad de beneficio ni autorización de trade.
+## F. Entry Engine y tendencia
 
-### H4. Risk Dashboard
+Entry Engine sigue separado de ERS:
 
-Separa:
+- 0–1/5 NO TIMING
+- 2/5 EARLY WATCH
+- 3/5 PREPARE
+- 4/5 STRONG CONFIRMATION
+- 5/5 FULL CONFIRMATION
 
-- exposición abierta;
-- riesgo modelado hasta el stop técnico recomendado;
-- riesgo realmente protegido cuando existe un stop confirmado.
+La tendencia se muestra por 15m / 1H / 4H / 1D. Para CORE, 4H/1D pesan más en tesis; un 1H bajista aislado no equivale automáticamente a tendencia global bajista.
 
-Nunca contar un stop recomendado como protección real.
+## G. Funcionalidades v0.4.5
 
-### H5. Alertas internas
+### G1. System Health
 
-Detecta dentro de la app condiciones como sincronización retrasada, posición sin protección, PREPARE y STRONG CONFIRMATION. No equivale a push notification externo.
+Presenta estado independiente del Radar, ERS Engine, Position Risk, Intelligence, External Signals y Coinbase público. PASS/PARTIAL/FAIL evita que una capa rota parezca una señal válida.
 
-### H6. Journal
+### G2. Decision Matrix
 
-Combina acciones Coinbase confirmadas y registros contemporáneos del radar. No crear narrativas retrospectivas.
+Por activo presenta conjuntamente, sin promediar:
 
-### H7. Analítica
+- ERS
+- Entry Engine
+- D/E
+- tendencia 15m/1H/4H/1D
+- PRS/action si hay posición
+- News action/impact
+- External consensus
+- decisión Crypto Reca contemporánea
 
-Calcula métricas descriptivas del histórico disponible (número de scans, ERS medio, PREPARE+, STRONG+). No calcular win rate fiable con muestra insuficiente.
+### G3. Protection Assistant
 
-### H8. Timeline
+Para posiciones abiertas muestra invalidación, distancia, pérdida modelada, PRS/thesis y escenarios hipotéticos de reducción 25/50/75%. Es advisory; no crea orden.
 
-Une eventos confirmados de operación con los scans almacenados para facilitar auditoría de la vida de una posición.
+### G4. Scenario Lab
 
-## I. Indicadores públicos de visualización
+Permite introducir un precio hipotético y ver P/L bruto, retorno, distancia a invalidación y si el precio alcanzaría la invalidación. No inventa un ERS/PRS futuro.
 
-`live-indicators-v04.js` usa velas públicas completadas de Coinbase para intentar calcular:
+### G5. Correlation & Cluster Risk
 
-- EMA20 / EMA50 / EMA200 en 1H;
-- RSI14 1H;
-- MACD 12/26 (línea principal para visualización);
-- ATR14 1H;
-- standard VWAP de las últimas 24 velas 1H;
-- RVOL de la última vela completada vs media de las 20 anteriores.
+Calcula correlaciones descriptivas desde series públicas 1H cuando hay muestra suficiente y separa exposición total, BTC+ETH Core y high-beta. Evita presentar varios activos cripto correlacionados como diversificación independiente.
 
-Estos datos son **display-only**. Si no hay historial suficiente, mostrar `—` o muestra insuficiente. Nunca usarlos retrospectivamente para alterar un score ya registrado.
+### G6. Gurús / External Signals
 
-## J. Integración futura con Coinbase privado
+Solo llamadas públicas, forward-captured, spot-long compatibles y concretas. Las fuentes permanecen VALIDATING hasta cumplir los criterios definidos por Intelligence Watch. Popularidad o win-rate auto-reportado no sirven de validación.
 
-No conectar Coinbase privado directamente desde `app.js` ni desde ninguno de los módulos frontend.
+### G7. Shadow Portfolio
 
-Arquitectura segura futura:
+Congela prospectivamente setups PREPARE/rechazados relevantes para estudiar leakage/overfiltering. Variables originales son inmutables; solo el outcome futuro puede actualizarse con price path verificable. Ambiguous permanece ambiguous.
 
-```text
-PWA
-  ↓ HTTPS + autenticación
-Backend privado / serverless
-  ↓ secret manager
-Coinbase API
-```
+### G8. Funciones anteriores conservadas
 
-Requisitos mínimos:
+- Radar + frescura
+- asset detail
+- Opportunity Center
+- Risk Dashboard
+- alerts
+- journal
+- analytics descriptiva
+- timeline
+- histórico ERS/Entry
+- indicators públicos display-only
+- News & Catalysts
+- Position Risk/Exit Advisory
 
-- secretos fuera de GitHub;
-- API keys con permisos mínimos;
-- empezar read-only;
-- allowlist/IP controls si Coinbase los ofrece;
-- logs de acceso;
-- nunca exponer secret o private key al navegador;
-- separar consulta de cuenta de ejecución de órdenes.
+## H. Posiciones reales y ledger
 
-No habilitar trading automático sin una decisión explícita y un diseño adicional de controles.
+`positions-state.json` es la autoridad modular para real activity.
 
-## K. Proceso correcto para mejorar la app
+Requisitos:
 
-### Cambio pequeño de contenido/datos
+- fill confirmado antes de añadir posición;
+- salida confirmada antes de cerrar;
+- fee exacta solo si disponible/confirmada;
+- actual stop/protection solo con evidencia;
+- ledger append-only normalmente;
+- correcciones dejan nota/audit trail.
 
-Si es un dato operativo contemporáneo y respeta `DATA_CONTRACT.md`, actualizar el JSON.
+PRS, News, external signals o un trigger de Radar nunca pueden marcar una venta como ejecutada.
 
-### Cambio funcional
+## I. Writers automáticos
 
-1. Revisar `main` actual.
-2. Crear una rama con nombre descriptivo.
-3. Cambiar solo lo solicitado.
-4. Validar sintaxis y estructura.
-5. Revisar diff.
-6. Actualizar documentación y `CHANGELOG.md`.
-7. Abrir PR o comparar rama con `main`.
-8. Hacer merge solo cuando la versión esté validada.
-9. Comprobar producción después del deployment.
+### I1. Radar
 
-## L. Versionado
+Cada hora:
 
-Hay dos versiones distintas:
+1. aplica el ERS spec R1;
+2. calcula scan contemporáneo;
+3. lee `radar-state.json` actual;
+4. actualiza scan/radar/history/audits/engineHealth y Shadow Portfolio autorizado;
+5. escribe solo ese archivo;
+6. falla de sync sin alterar el análisis.
 
-- **Crypto Reca v3.0**: versión del motor/reglas de análisis.
-- **App 0.4.x**: versión del software visual.
+### I2. Position Risk
 
-No mezclarlas.
+Lee posiciones confirmadas y contexto actual; escribe solo `position-risk.json`. Mantiene PRS, trendTimeframes, thesis/action y riskHistory. Nunca ejecuta ni cierra posiciones.
 
-Para cambios de app:
+### I3. Intelligence Watch
 
-- patch: corrección sin cambio estructural (`0.4.0 -> 0.4.1`);
-- minor: nueva funcionalidad compatible (`0.4 -> 0.5`);
-- major: rediseño incompatible (`0.x -> 1.0`).
+En una misma tarea para ahorrar slots, mantiene dos outputs separados:
 
-Al cambiar assets estáticos relevantes, actualizar también la constante `CACHE` de `sw.js`.
+- News/Catalysts → `intelligence.json`
+- External Signals/Gurús → `external-signals.json`
 
-## M. Backups y recuperación
+No toca Radar, Positions o Risk.
 
-Git conserva el historial de commits. Además:
+## J. PWA / Android
 
-- conservar documentación dentro del repositorio;
-- no borrar ramas/commits necesarios para auditoría sin motivo;
-- exportar periódicamente una copia del repositorio si se desea independencia de GitHub;
-- el JSON contiene estado operativo, pero Coinbase sigue siendo la verdad de ejecución.
+- HTTPS GitHub Pages.
+- Chrome Android → menú → Instalar aplicación / Añadir a pantalla de inicio.
+- `sw.js` cachea shell y usa network-first para todos los `data/*.json` con fallback offline.
+- Al cambiar assets estáticos, bump de `CACHE`.
 
-## N. Riesgos conocidos
+## K. Deployment correcto
 
-1. Repositorio y Pages son públicos.
-2. El frontend no autentica al usuario.
-3. Mercado público puede fallar temporalmente.
-4. El radar depende de que la tarea de ChatGPT siga activa y pueda escribir en GitHub.
-5. Un commit defectuoso en `main` puede afectar producción.
-6. El service worker puede mantener assets antiguos si no se versiona correctamente.
-7. GitHub no es una base de datos transaccional; sirve para esta fase, no para una plataforma de trading de alta frecuencia.
-8. Los cálculos públicos del frontend son auxiliares, no evidencia de lo que el motor vio en un scan pasado.
+Para cambios funcionales:
 
-## O. Cuándo migrar fuera de GitHub JSON
+1. revisar main y docs;
+2. rama separada;
+3. cambios limitados al alcance;
+4. validar sintaxis/load order/data safety;
+5. comparar con main;
+6. actualizar docs/changelog;
+7. PR;
+8. revisar mergeability/diff;
+9. merge solo si seguro;
+10. comprobar Pages/producción.
 
-Migrar a base de datos/backend cuando ocurra cualquiera de estos casos:
+Nunca sobreescribir un JSON operativo fresco con un snapshot viejo de una rama feature.
 
-- varias escrituras por minuto;
-- múltiples usuarios;
-- autenticación;
-- datos privados;
-- integración de cuenta Coinbase;
-- notificaciones push avanzadas;
-- órdenes automáticas;
-- necesidad de consistencia transaccional.
+## L. Rollback
 
-## P. Prompt estándar de mantenimiento
+Si código rompe producción:
 
-```text
-Trabaja sobre mi aplicación Crypto Reca Dashboard en el repositorio Tresviulk/crypto-reca-dashboard. Antes de modificar nada, lee README.md, docs/AI_HANDOFF.md, docs/CRYPTO_RECA_APP_MASTER_GUIDE.md, docs/DATA_CONTRACT.md y CHANGELOG.md y revisa el código actual. No reconstruyas la app desde cero. No cambies nada no solicitado. Para cambios funcionales, crea una rama, valida el cambio y explícame el impacto antes de llevarlo a main. Mantén separados LIVE/CALCULATED, SCAN y CONFIRMED COINBASE. Mantén secretos fuera del frontend. Cambio solicitado: [AQUÍ LA ORDEN].
-```
+- revertir código/merge al último commit bueno;
+- conservar datos operativos más recientes;
+- no force-reset ledger/confirmed positions;
+- redeploy y comprobar.
 
-## Q. Criterio de éxito
+## M. Seguridad y privacidad
 
-Una reconstrucción se considera correcta solo si:
+El repositorio y Pages son públicos. No almacenar:
 
-- la URL carga por HTTPS;
-- la PWA se puede instalar;
-- el JSON se lee sin datos inventados;
-- el radar puede sincronizarse;
-- precios públicos fallan de forma segura;
-- el ledger conserva solo operaciones confirmadas;
-- el Risk Dashboard no confunde riesgo modelado con protección real;
-- la analítica no inventa significancia con muestra pequeña;
-- no existe ninguna credencial en el repositorio;
-- la documentación permite a otra IA continuar sin contexto previo.
+- private key
+- API secret
+- JWT
+- password
+- cookie/session
+- recovery code
+- credenciales privadas X/Telegram/Coinbase
+
+Balances privados, órdenes autenticadas, account fills automáticos y ejecución requieren backend privado/serverless con autenticación y secret manager. Empezar read-only si se añade Coinbase privado.
+
+## N. Cuándo dejar GitHub JSON
+
+Migrar a base de datos/backend si aparecen varias escrituras por minuto, varios usuarios, auth, datos privados, trading automático, consistencia transaccional o push avanzado.
+
+## O. Criterios de validación
+
+Una versión se considera apta solo si:
+
+- JS sin errores de sintaxis;
+- scripts cargan en orden;
+- módulos vacíos no borran legacy durante migración;
+- escritores están aislados por archivo;
+- ERS missing no parece score 0;
+- System Health refleja fallos reales;
+- real positions/ledger siguen confirmados únicamente;
+- service worker incluye assets nuevos;
+- no hay secretos;
+- branch no sobreescribe el legacy operativo de main;
+- PR es revisable/mergeable;
+- Pages carga después de merge.
+
+## P. Prompt estándar
+
+> Trabaja sobre `Tresviulk/crypto-reca-dashboard`. Lee `README.md`, `docs/AI_HANDOFF.md`, `docs/CRYPTO_RECA_APP_MASTER_GUIDE.md`, `docs/DATA_CONTRACT.md`, `docs/ENGINE_SPEC_V3_ERS.md` y `CHANGELOG.md`, y revisa el código actual antes de cambiar nada. Respeta writers modulares, no reconstruyas datos con hindsight, mantén separados SCAN/LIVE/CONFIRMED/RISK/INTELLIGENCE, usa rama para cambios funcionales y no introduzcas secretos. Cambio solicitado: [DESCRIBIR].
