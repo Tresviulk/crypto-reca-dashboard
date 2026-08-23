@@ -22,6 +22,13 @@ All material changes to Crypto Reca Dashboard are recorded here.
 - Shadow Portfolio screen and data contract for prospective PREPARE/rejected-setup research without hindsight.
 - Single `CR4` screen/action registry for all new structural modules, reducing additional global show-handler chaining.
 
+### Review fixes before final validation
+- Decision Matrix now prefers the Position Risk Engine's contemporaneous `trendTimeframes`/`trendConclusion` for an open position before using frontend display-only trend fallbacks.
+- Protection Assistant now prefers the PRS engine's `modeledLossUSDC`; a price-distance fallback is explicitly labelled as gross and excluding fees/slippage.
+- Scenario Lab explicitly labels P/L as gross and uses the current risk-engine technical invalidation when available.
+- Risk Dashboard was hardened so a recommended technical stop can **never** count as actual protected risk; protected risk requires both `PROTECTED` status and a confirmed `actualStop`/`stopPlaced` level.
+- PWA cache bumped to `crypto-reca-app-v0.4.7` for the reviewed safety patch.
+
 ### Safety / integrity
 - Empty migration module files cannot erase non-empty confirmed legacy data.
 - Every writer is restricted to its own file after migration.
@@ -50,7 +57,7 @@ All material changes to Crypto Reca Dashboard are recorded here.
 - `features-v04.js`, `features-v04.css`, `live-indicators-v04.js`, `position-risk-v04.js`, `news-v04.js`, `trend-v04.js` and associated CSS as isolated feature modules so the stable v0.3 core remains recoverable.
 
 ### Changed
-- PWA cache generation upgraded to `crypto-reca-app-v0.4.4`.
+- PWA cache generation upgraded to `crypto-reca-app-v0.4.4` during initial v0.4 build.
 - Asset cards and positions are interactive.
 - Audit, Positions and Ledger screens link into the new intelligence views.
 - `docs/DATA_CONTRACT.md` expanded for optional detailed scan fields, alerts, journal events, position risk, multi-timeframe trend and intelligence overlays.
