@@ -1,50 +1,72 @@
 {
   "schemaVersion": "2.0",
   "module": "positionRisk",
-  "generatedAt": "2026-08-24T04:11:53+02:00",
-  "source": "Crypto Reca Position Risk; fresh Bybit spot 15m/1H primary; 4H/1D context from 04:02 canonical radar scan using fresh Bybit OHLCV; Coinbase public cross-check unavailable",
+  "generatedAt": "2026-08-24T05:07:26+02:00",
+  "source": "Crypto Reca Position Risk; fresh Bybit spot 15m/1H/4H/1D; latest radar context 05:00 Europe/Madrid; Coinbase public cross-check unavailable",
   "positionRisk": {
-    "generatedAt": "2026-08-24T04:11:53+02:00",
+    "generatedAt": "2026-08-24T05:07:26+02:00",
     "source": "Crypto Reca Position Risk",
     "dataQuality": "PARTIAL",
     "positions": {
       "btc-20260822-1858": {
-        "asset": "BTC", "engine": "CORE", "entry": 77340.93, "currentPrice": 77198.7, "qty": 0.00946259,
-        "prs": 20, "breakdown": {"structural":0,"regime":10,"momentum":0,"adverseMove":0,"protection":10},
-        "thesisState": "WEAKENING", "action": "HOLD", "protection": "UNPROTECTED",
-        "modeledLossUSDC": 19.31248381, "modeledLossPctCapital": 0.13149149,
-        "distanceToInvalidationPct": 2.45949737, "distanceToInvalidationATR": 4.0048513,
-        "unrealizedPnLUSDC": -1.34586418, "unrealizedPnLPct": -0.18390004,
-        "technicalInvalidation": 75300, "invalidationStatus": "CURRENT",
+        "asset": "BTC",
+        "engine": "CORE",
+        "entry": 77340.93,
+        "currentPrice": 77285,
+        "qty": 0.00946259,
+        "prs": 10,
+        "breakdown": {"structural": 0, "regime": 0, "momentum": 0, "adverseMove": 0, "protection": 10},
+        "thesisState": "INTACT",
+        "action": "HOLD",
+        "protection": "UNPROTECTED",
+        "modeledLossUSDC": 19.31248381,
+        "modeledLossPctCapital": 0.13149149,
+        "distanceToInvalidationPct": 2.5684156,
+        "distanceToInvalidationATR": 3.97056722,
+        "unrealizedPnLUSDC": -0.52924266,
+        "unrealizedPnLPct": -0.07231617,
+        "technicalInvalidation": 75300,
+        "invalidationStatus": "CURRENT",
         "trendTimeframes": {
-          "15m": "REBOUND TRAS VENTA / caída 77,667.5 -> 76,898.7 y rebote actual hacia 77,198.7; timing débil pero sin proximidad crítica a 75,300",
-          "1h": "DETERIORO MATERIAL CORTO PLAZO / última 1H completada 77,667.5 -> 76,898.7; RSI14 ~43.5, pero sin confirmación adicional suficiente para penalizar momentum",
-          "4h": "CONSTRUCTIVO EN CORRECCIÓN / contexto canónico 04:02 mantiene 4H no bajista; la debilidad 1H no ha invalidado la tesis CORE",
-          "1d": "CONSTRUCTIVO / contexto diario canónico 04:02 sigue por encima de la invalidación CORE 75,300"
+          "15m": "REBOUND CONSOLIDATING / last completed 15m at 05:00 Madrid closed 77,467.7 after the rebound; current 15m is softer near 77,285 but far from 75,300.",
+          "1h": "RECOVERED / completed 04:00-05:00 Madrid candle rose 76,898.7 -> 77,467.7; ATR14 ~499.93 and RSI14 ~53.56.",
+          "4h": "CONSTRUCTIVE IN CORRECTION / last completed 4H close 77,730 remains well above the 75,300 CORE invalidation; current 4H is softer but not structurally bearish.",
+          "1d": "CONSTRUCTIVE / last completed daily close 77,730 after a 75,536.6 low; higher-timeframe CORE structure remains above invalidation."
         },
-        "trendConclusion": "BTC presenta deterioro 1H claro, pero 4H/1D siguen sosteniendo la tesis CORE. La posición está ~4.00 ATR14(1H) por encima de 75,300. Se eleva Regime Risk a 10 por debilidad 1H; no hay invalidación estructural ni combinación bajista suficiente para EXIT.",
-        "reason": "OPEN real 0.00946259 BTC @ 77,340.93, UNPROTECTED. Bybit referencia ~77,198.7. ATR14(1H) ~474.10; RSI14(1H) ~43.5. Última 1H completada cayó 77,667.5 -> 76,898.7, pero 4H/1D siguen no bajistas según el scan canónico de 04:02. Distancia a 75,300 ~2.46% / 4.00 ATR. P/L bruto ~-1.35 USDC (-0.18%). Sin protección real confirmada, E=10.",
-        "upgradeCondition": "Recuperar y sostener cierres 1H por encima de 77,400-77,700 con 4H constructivo devuelve Regime Risk de 10 a 0. Confirmar protección real adecuada elimina los 10 puntos operativos.",
-        "downgradeCondition": "Una caída a <=75,774.10 coloca BTC dentro de 1 ATR de 75,300. Un breach bajo 75,300 inicia revisión; dos cierres 15m consecutivos o un cierre 1H bajo 75,300 confirman INVALIDATED / EXIT SIGNAL."
+        "trendConclusion": "BTC repaired the prior 1H deterioration. The latest completed 1H rebounded strongly and RSI14 recovered above 50, while 4H/1D remain constructive. No structural or momentum penalty is justified; only the UNPROTECTED operational penalty remains.",
+        "reason": "OPEN real 0.00946259 BTC @ 77,340.93, UNPROTECTED. Bybit current reference ~77,285. ATR14(1H) ~499.93, RSI14(1H) ~53.56. Distance to 75,300 is ~2.57% / 3.97 ATR. Gross P/L ~-0.53 USDC (-0.07%). Latest completed 1H reclaimed from 76,898.7 to 77,467.7, so prior Regime Risk=10 is removed. E=10 only.",
+        "upgradeCondition": "Confirmed real protection in Coinbase removes the 10 operational points. Continued completed 1H closes above ~77,400 with intact 4H keep the CORE thesis in HOLD/INTACT.",
+        "downgradeCondition": "A fall to about 75,800 would place BTC within ~1 ATR of 75,300. A breach below 75,300 starts structural review; two consecutive completed 15m closes or one completed 1H close below 75,300 confirm INVALIDATED / EXIT SIGNAL."
       },
       "sol-20260823-160608": {
-        "asset": "SOL", "engine": "TACTICAL", "entry": 95.3, "currentPrice": 94.17, "qty": 16.80631246,
-        "prs": 85, "breakdown": {"structural":40,"regime":10,"momentum":15,"adverseMove":10,"protection":10},
-        "thesisState": "INVALIDATED", "action": "EXIT SIGNAL", "protection": "UNPROTECTED",
-        "modeledLossUSDC": 19.32725933, "modeledLossPctCapital": 0.13159209,
-        "distanceToInvalidationPct": 0.02123819, "distanceToInvalidationATR": 0.01908657,
-        "unrealizedPnLUSDC": -18.99113308, "unrealizedPnLPct": -1.18572928,
-        "technicalInvalidation": 94.15, "invalidationStatus": "CURRENT",
+        "asset": "SOL",
+        "engine": "TACTICAL",
+        "entry": 95.3,
+        "currentPrice": 94.14,
+        "qty": 16.80631246,
+        "prs": 60,
+        "breakdown": {"structural": 40, "regime": 0, "momentum": 0, "adverseMove": 10, "protection": 10},
+        "thesisState": "INVALIDATED",
+        "action": "EXIT SIGNAL",
+        "protection": "UNPROTECTED",
+        "modeledLossUSDC": 19.32725933,
+        "modeledLossPctCapital": 0.13159209,
+        "distanceToInvalidationPct": 0.01062248,
+        "distanceToInvalidationATR": 0.00913242,
+        "unrealizedPnLUSDC": -19.49532245,
+        "unrealizedPnLPct": -1.21720881,
+        "technicalInvalidation": 94.15,
+        "invalidationStatus": "CURRENT",
         "trendTimeframes": {
-          "15m": "BAJISTA / varios cierres recientes por debajo de 95.30; la vela 03:45-04:00 Madrid cerró 93.87 bajo 94.15 y la vela actual solo rebota hacia ~94.17",
-          "1h": "INVALIDACIÓN CONFIRMADA / la 1H completada 03:00-04:00 Madrid abrió 95.55 y cerró 93.87, por debajo de 94.15; RSI14 ~41.95",
-          "4h": "AÚN CONSTRUCTIVO EN MARCO SUPERIOR, PERO TACTICAL INVALIDADA / el contexto 04:02 no convierte el cierre 1H bajo invalidación en HOLD",
-          "1d": "CONSTRUCTIVO EN MARCO AMPLIO / no salva el setup TACTICAL una vez confirmada la invalidación del nivel 94.15"
+          "15m": "RECLAIM ATTEMPT FADING / last completed 15m at 05:00 Madrid closed 94.56 above 94.15, but the current 15m is back near 94.14.",
+          "1h": "RECLAIM AFTER CONFIRMED INVALIDATION / completed 04:00-05:00 Madrid candle closed 94.56 above 94.15; ATR14 ~1.095 and RSI14 ~49.72, but the prior completed 03:00-04:00 candle already confirmed invalidation at 93.87.",
+          "4h": "HIGHER-TIMEFRAME STILL CONSTRUCTIVE, CURRENT 4H WEAK / last completed 4H closed 95.43; current 4H has traded down to ~93.71-94.14. This does not reopen the invalidated TACTICAL setup.",
+          "1d": "BROADER UPTREND STILL VISIBLE / previous completed day closed 95.43 after a strong multi-day advance, but higher-timeframe strength cannot restore the original TACTICAL thesis after confirmed invalidation."
         },
-        "trendConclusion": "SOL ha pasado de BREACH/WEAKENING a INVALIDATED. La 1H completada cerró 93.87 por debajo de 94.15, cumpliendo la condición explícita de invalidación. El hard override obliga EXIT SIGNAL aunque 4H/1D sigan constructivos.",
-        "reason": "OPEN real 16.80631246 SOL @ 95.30, UNPROTECTED. Bybit referencia ~94.17. La 1H completada 03:00-04:00 Madrid cerró 93.87 bajo 94.15 tras mínimo 93.74: invalidación estructural verificada en timeframe de tesis. ATR14(1H) ~1.0479 y RSI14 ~41.95. P/L bruto ~-18.99 USDC (-1.19%), ~1.08 ATR bajo entrada. El fallo de reclaim + RSI<45 valida Momentum Risk=15. A=40 fuerza EXIT SIGNAL.",
-        "upgradeCondition": "La señal de salida solo deja de aplicar a esta tesis si existe posteriormente una nueva decisión explícita con setup nuevo e invalidación nueva; un rebote posterior por sí solo no reabre retrospectivamente el setup invalidado.",
-        "downgradeCondition": "No hay downgrade adicional dentro de esta tesis: ya está INVALIDATED / EXIT SIGNAL. Cualquier permanencia o nuevo cierre 1H bajo 94.15 refuerza la invalidación; la posición sigue además UNPROTECTED hasta evidencia Coinbase de protección o cierre."
+        "trendConclusion": "SOL has reclaimed 94.15 on the latest completed 1H candle, but the original TACTICAL thesis remains INVALIDATED because the previous completed 1H closed 93.87 below 94.15. Under the no-hindsight rule, a rebound cannot retroactively reopen that setup; a new explicit setup with a new invalidation would be required.",
+        "reason": "OPEN real 16.80631246 SOL @ 95.30, UNPROTECTED. Bybit current reference ~94.14. The 04:00-05:00 Madrid 1H candle recovered to 94.56, RSI14 ~49.72 and ATR14 ~1.095, so Regime and Momentum penalties fall to 0. However A=40 persists from the already verified thesis-timeframe invalidation, and D=10 because price is ~1.06 ATR below entry. Gross P/L ~-19.50 USDC (-1.22%). Structural hard override keeps EXIT SIGNAL.",
+        "upgradeCondition": "This original TACTICAL thesis cannot return to HOLD merely by reclaiming 94.15. EXIT SIGNAL ceases only after the real position is confirmed closed/protected in Coinbase, or a separately documented new setup is contemporaneously approved with a new technical invalidation.",
+        "downgradeCondition": "No lower action exists inside the original invalidated thesis. Further completed 1H closes below 94.15 or renewed 4H deterioration reinforce the EXIT SIGNAL. The position remains operationally exposed while UNPROTECTED."
       }
     }
   },
@@ -82,6 +104,8 @@
     {"timestampEuropeMadrid":"2026-08-24 02:58","positionId":"btc-20260822-1858","asset":"BTC","prs":10,"action":"HOLD","thesisState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":75300,"distanceToInvalidationATR":5.00528948,"dataQuality":"PARTIAL"},
     {"timestampEuropeMadrid":"2026-08-24 02:58","positionId":"sol-20260823-160608","asset":"SOL","prs":35,"action":"WATCH","thesisState":"WEAKENING","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":1.25735849,"dataQuality":"PARTIAL","event":"BREACH","note":"New intrabar breach below 94.15 verified; no completed 1H close or two consecutive completed 15m closes below invalidation as of 00:58 UTC."},
     {"timestampEuropeMadrid":"2026-08-24 04:11","positionId":"btc-20260822-1858","asset":"BTC","prs":20,"action":"HOLD","thesisState":"WEAKENING","protection":"UNPROTECTED","technicalInvalidation":75300,"distanceToInvalidationATR":4.0048513,"dataQuality":"PARTIAL"},
-    {"timestampEuropeMadrid":"2026-08-24 04:11","positionId":"sol-20260823-160608","asset":"SOL","prs":85,"action":"EXIT SIGNAL","thesisState":"INVALIDATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.01908657,"dataQuality":"PARTIAL","event":"CONFIRMED_INVALIDATION","note":"Completed 1H candle 03:00-04:00 Madrid closed 93.87 below 94.15; hard override to EXIT SIGNAL."}
+    {"timestampEuropeMadrid":"2026-08-24 04:11","positionId":"sol-20260823-160608","asset":"SOL","prs":85,"action":"EXIT SIGNAL","thesisState":"INVALIDATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.01908657,"dataQuality":"PARTIAL","event":"CONFIRMED_INVALIDATION","note":"Completed 1H candle 03:00-04:00 Madrid closed 93.87 below 94.15; hard override to EXIT SIGNAL."},
+    {"timestampEuropeMadrid":"2026-08-24 05:07","positionId":"btc-20260822-1858","asset":"BTC","prs":10,"action":"HOLD","thesisState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":75300,"distanceToInvalidationATR":3.97056722,"dataQuality":"PARTIAL"},
+    {"timestampEuropeMadrid":"2026-08-24 05:07","positionId":"sol-20260823-160608","asset":"SOL","prs":60,"action":"EXIT SIGNAL","thesisState":"INVALIDATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.00913242,"dataQuality":"PARTIAL","event":"INVALIDATION_PERSISTS","note":"The completed 04:00-05:00 Madrid 1H candle reclaimed 94.15 at 94.56, but the original TACTICAL thesis remains INVALIDATED after the prior confirmed 1H close below 94.15; no new setup/invalidation is confirmed."}
   ]
 }
