@@ -12,14 +12,85 @@ permissions:
 
 concurrency:
   group: "pages-${{ github.ref }}"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      deploy_ref: ${{ steps.radar_guard.outputs.deploy_ref }}
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Guard and auto-repair radar JSON
+        id: radar_guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="data/radar-state.json"
+
+          if python -m json.tool "$TARGET" >/dev/null 2>&1; then
+            echo "Radar JSON valid at ${GITHUB_SHA}"
+            echo "deploy_ref=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "::warning::Malformed ${TARGET} detected at ${GITHUB_SHA}."
+
+          # Pull requests are validation-only: never rewrite their branch.
+          if [[ "${GITHUB_EVENT_NAME}" != "push" || "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "deploy_ref=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          python - <<'PY'
+          import json
+          import pathlib
+          import subprocess
+
+          target = 'data/radar-state.json'
+          commits = subprocess.check_output(['git', 'rev-list', 'HEAD^'], text=True).splitlines()
+
+          for commit in commits:
+              try:
+                  raw = subprocess.check_output(['git', 'show', f'{commit}:{target}'])
+                  json.loads(raw.decode('utf-8'))
+              except Exception:
+                  continue
+
+              pathlib.Path(target).write_bytes(raw)
+              print(f'Restored last valid {target} from {commit}')
+              break
+          else:
+              raise SystemExit(f'No valid historical {target} found; refusing automatic repair')
+          PY
+
+          # Validate the restored file before touching main.
+          python -m json.tool "$TARGET" >/dev/null
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET"
+          git commit -m "auto-repair: restore last valid radar-state.json"
+          git push origin HEAD:main
+
+          REPAIRED_SHA="$(git rev-parse HEAD)"
+          echo "Auto-repair committed as ${REPAIRED_SHA}"
+          echo "deploy_ref=${REPAIRED_SHA}" >> "$GITHUB_OUTPUT"
+
   validate:
+    needs: prepare
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout guarded revision
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.deploy_ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -39,7 +110,7 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
-          import json, pathlib, re, sys
+          import json, pathlib, re
           root = pathlib.Path('.')
 
           json_files = sorted((root / 'data').glob('*.json')) + [root / 'manifest.webmanifest']
@@ -82,7 +153,7 @@ jobs:
 
   deploy:
     if: github.event_name != 'pull_request'
-    needs: validate
+    needs: [prepare, validate]
     permissions:
       contents: read
       pages: write
@@ -92,8 +163,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout guarded revision
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.deploy_ref }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
