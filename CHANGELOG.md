@@ -2,6 +2,20 @@
 
 All material changes to Crypto Reca Dashboard are recorded here.
 
+## [0.5.0] — 2026-08-24
+
+### Position Risk v2.2 — thesis validity vs exit urgency
+- Added canonical `docs/POSITION_RISK_SPEC_V2_2.md`.
+- Fixed the second-order exit-engine flaw that treated a historically `INVALIDATED` setup as a permanent `EXIT SIGNAL` even after current price/regime/momentum recovered.
+- Historical invalidation remains preserved and Structural Risk A remains 40; current B/C/D/E can improve or deteriorate independently.
+- `INVALIDATED` no longer hard-overrides every future evaluation to `EXIT SIGNAL`.
+- Base action is again determined by current PRS: 0–24 HOLD, 25–44 WATCH, 45–59 REDUCE REVIEW, 60–79 EXIT REVIEW, 80–100 EXIT SIGNAL.
+- An open position still managed under an invalidated original thesis has an action floor of `EXIT REVIEW`.
+- `EXIT SIGNAL` / red critical treatment is reserved for PRS >=80, touch of a contemporaneously frozen catastrophic boundary, or a documented market-discontinuity/execution-risk emergency.
+- UI language now distinguishes “original thesis invalidated” from “current critical exit urgency”.
+- SOL migration case with PRS 70 is reclassified from `EXIT SIGNAL` to `EXIT REVIEW`; prior historical EXIT SIGNAL records remain unchanged for audit.
+- Updated `DATA_CONTRACT.md`, `AI_HANDOFF.md`, Position Risk UI and PWA cache.
+
 ## [0.4.9] — 2026-08-23
 
 ### Position Risk v2.1 — breach / reclaim
