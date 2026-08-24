@@ -1,4 +1,4 @@
-// Crypto Reca v0.5.1 — Early Opportunity Alert Layer
+// Crypto Reca v0.5.2 — Early Opportunity Alert Layer
 (function(){
 'use strict';
 const num=v=>Number.isFinite(Number(v))?Number(v):null;
@@ -24,7 +24,8 @@ function reason(r,s){
   if(s==='WATCH')return 'Movimiento/estructura merece atención aunque aún no exista entrada completa.';
   return 'Sin aceleración material detectada.';
 }
-function location(r){return txt(r?.locationState)||'—'}
+function location(r){return txt(r?.locationState)||txt(r?.structure?.location)||'—'}
+function trigger(r){return txt(r?.nearestTrigger)||txt(r?.structure?.nearestTrigger)||''}
 function exposure(r){
   const reg=txt(r?.coreRegime),cur=num(r?.currentConfirmedCoreExposurePct),target=num(r?.coreTargetExposurePct);
   if(!reg&&!Number.isFinite(cur)&&!Number.isFinite(target))return '';
@@ -37,10 +38,11 @@ function watchPanel(compact=false){
   const rows=opportunityRows();
   if(!rows.length)return compact?'':`<div class="card info-card"><strong>Opportunity Watch</strong><p>No hay una oportunidad temprana material en el último radar.</p></div>`;
   const shown=compact?rows.slice(0,3):rows;
-  return `<div class="section-title"><h2>Opportunity Watch</h2><span>Alerta temprana · no es orden</span></div>${shown.map(({r,s})=>`<div class="card"><div class="row"><strong>${esc(r.asset)}</strong><span class="badge ${cls(s)}">${esc(s)}</span></div><div class="tiny">${esc(reason(r,s))}</div><div class="op-metrics"><span>ERS <b>${r.ers==null?'—':money(r.ers)}/100</b></span><span>Entry <b>${r.entryConfirmation==null?'—':esc(r.entryConfirmation)+'/5'}</b></span><span>${esc(r.d||'—')} / ${esc(r.e||'—')}</span></div><div class="tiny">Ubicación: <strong>${esc(location(r))}</strong>${r.nearestTrigger?` · Trigger: ${esc(r.nearestTrigger)}`:''}</div>${exposure(r)}<div class="tiny">${s==='ENTRY REVIEW'?'REVISAR ENTRADA — NO ORDER YET':s==='PREPARE'?'PREPARAR — NO ORDER YET':'VIGILAR — NO ORDER YET'}</div></div>`).join('')}`;
+  return `<div class="section-title"><h2>Opportunity Watch</h2><span>Alerta temprana · no es orden</span></div>${shown.map(({r,s})=>{const t=trigger(r);return `<div class="card"><div class="row"><strong>${esc(r.asset)}</strong><span class="badge ${cls(s)}">${esc(s)}</span></div><div class="tiny">${esc(reason(r,s))}</div><div class="op-metrics"><span>ERS <b>${r.ers==null?'—':money(r.ers)}/100</b></span><span>Entry <b>${r.entryConfirmation==null?'—':esc(r.entryConfirmation)+'/5'}</b></span><span>${esc(r.d||'—')} / ${esc(r.e||'—')}</span></div><div class="tiny">Ubicación: <strong>${esc(location(r))}</strong>${t?` · Trigger: ${esc(t)}`:''}</div>${exposure(r)}<div class="tiny">${s==='ENTRY REVIEW'?'REVISAR ENTRADA — NO ORDER YET':s==='PREPARE'?'PREPARAR — NO ORDER YET':'VIGILAR — NO ORDER YET'}</div></div>`}).join('')}`;
 }
 function install(){
-  if(!window.screens||window.__crOpportunityV1)return;
+  if(window.__crOpportunityV1)return;
+  if(typeof screens==='undefined'||typeof screens.dashboard!=='function'||typeof screens.radar!=='function')return;
   window.__crOpportunityV1=true;
   const baseDashboard=screens.dashboard,baseRadar=screens.radar;
   screens.dashboard=()=>watchPanel(true)+baseDashboard();
