@@ -1,16 +1,20 @@
 {
   "schemaVersion": "2.0",
   "module": "positionRisk",
-  "generatedAt": "2026-08-24T09:17:58+02:00",
-  "source": "Crypto Reca Position Risk; fresh Bybit spot 15m/1H/4H/1D; latest radar context 09:03 Europe/Madrid; Coinbase public cross-check used only as approximate sanity check, not calculation input",
+  "generatedAt": "2026-08-24T09:38:00+02:00",
+  "source": "Crypto Reca Position Risk; policy migration to v2.2 using preserved 09:17 market snapshot; no new market-data calculation",
   "positionRisk": {
-    "generatedAt": "2026-08-24T09:17:58+02:00",
+    "generatedAt": "2026-08-24T09:38:00+02:00",
     "source": "Crypto Reca Position Risk",
+    "policyVersion": "2.2",
     "dataQuality": "PARTIAL",
     "positions": {
       "btc-20260822-1858": {
         "asset": "BTC",
         "engine": "CORE",
+        "policyVersion": "2.2",
+        "structuralState": "INTACT",
+        "exitUrgency": "NORMAL",
         "entry": 77340.93,
         "currentPrice": 77628.2,
         "qty": 0.00946259,
@@ -34,20 +38,23 @@
           "1d": "HIGHER-TIMEFRAME UPTREND STILL CONSTRUCTIVE / prior completed day closed 77,730 after a strong multi-day advance; current day is consolidative above 75,300."
         },
         "trendConclusion": "BTC CORE remains structurally intact. Short-term price repaired back above entry, completed 1H momentum normalized, and 4H/1D remain constructive. No deterministic risk component other than lack of confirmed protection is active.",
-        "reason": "OPEN real 0.00946259 BTC @ 77,340.93, UNPROTECTED. Fresh Bybit reference ~77,628.2. ATR14(1H) ~484.97 and RSI14(1H) ~50.54 using completed candles. Price is above entry, so D=0. A=0 because price is ~3.00% / 4.80 ATR above 75,300. B=0 because 1H is repairing and 4H remains non-bearish. No verified bearish momentum/volume combination warrants C points. E=10 because no real Coinbase protection is confirmed. Gross P/L ~+2.72 USDC (+0.37%).",
+        "reason": "OPEN real 0.00946259 BTC @ 77,340.93, UNPROTECTED. Preserved 09:17 Bybit reference ~77,628.2. ATR14(1H) ~484.97 and RSI14(1H) ~50.54 using completed candles. Price is above entry, so D=0. A=0 because price is ~3.00% / 4.80 ATR above 75,300. B=0 because 1H is repairing and 4H remains non-bearish. No verified bearish momentum/volume combination warrants C points. E=10 because no real Coinbase protection is confirmed. Gross P/L ~+2.72 USDC (+0.37%). v2.2 migration does not change BTC action.",
         "upgradeCondition": "Confirmed real Coinbase protection removes the remaining 10 operational points. Sustained acceptance above roughly 77,550-77,650 followed by a clean challenge of 78,000 would further strengthen the CORE thesis but cannot reduce PRS below 10 while UNPROTECTED.",
-        "downgradeCondition": "A renewed material 1H deterioration while 4H stays non-bearish adds B=10. A fall to roughly 75,785 would place BTC within ~1 ATR of 75,300 and add A=15. A verified thesis-timeframe breach—two consecutive completed 15m closes or one completed 1H close below 75,300—confirms INVALIDATED / EXIT SIGNAL."
+        "downgradeCondition": "A renewed material 1H deterioration while 4H stays non-bearish adds B=10. A fall to roughly 75,785 would place BTC within ~1 ATR of 75,300 and add A=15. A verified thesis-timeframe invalidation makes thesisState INVALIDATED and sets an EXIT REVIEW floor; EXIT SIGNAL requires PRS >=80 or a documented catastrophic/discontinuity emergency under v2.2."
       },
       "sol-20260823-160608": {
         "asset": "SOL",
         "engine": "TACTICAL",
+        "policyVersion": "2.2",
+        "structuralState": "INVALIDATED",
+        "exitUrgency": "ELEVATED",
         "entry": 95.30,
         "currentPrice": 95.10,
         "qty": 16.80631246,
         "prs": 70,
         "breakdown": {"structural": 40, "regime": 20, "momentum": 0, "adverseMove": 0, "protection": 10},
         "thesisState": "INVALIDATED",
-        "action": "EXIT SIGNAL",
+        "action": "EXIT REVIEW",
         "protection": "UNPROTECTED",
         "modeledLossUSDC": 19.32725933,
         "modeledLossPctCapital": 0.13159209,
@@ -63,10 +70,10 @@
           "4h": "ORIGINAL TACTICAL THESIS REMAINS INVALIDATED / last completed 4H closed 93.68 below 94.15. Current 4H has reclaimed toward 95.0 but is incomplete.",
           "1d": "BROADER UPTREND STILL CONSTRUCTIVE / prior completed day closed 95.43 after a strong multi-day advance, but higher-timeframe strength does not reopen the invalidated Tactical setup."
         },
-        "trendConclusion": "SOL price has recovered materially and current P/L is close to flat, but the original TACTICAL breakout-retest thesis remains INVALIDATED because a completed 1H and completed 4H previously closed below 94.15. The rebound lowers adverse-move risk but does not reverse the hard structural override; EXIT SIGNAL persists for the original setup.",
-        "reason": "OPEN real 16.80631246 SOL @ 95.30, UNPROTECTED. Fresh Bybit reference ~95.10. Last completed 1H closed 94.52 above 94.15, but the last completed 4H remains 93.68 below the original invalidation; A=40 and B=20 persist for the invalidated Tactical thesis. ATR14(1H) ~0.994 and RSI14(1H) ~42.06. RSI is below 45 but the latest completed 1H is a reclaim, so no verified worsening bearish combination supports C>0. Price is only ~0.20 ATR below entry, so D=0. E=10. PRS=70 by components, while structural hard override independently forces EXIT SIGNAL. Gross P/L ~-3.36 USDC (-0.21%).",
-        "upgradeCondition": "There is no upgrade path inside the original invalidated TACTICAL thesis. If Coinbase confirms the position closed, it leaves OPEN-position scope. Any future SOL long thesis must be a separately documented contemporaneous setup with its own entry logic and invalidation before it can affect risk classification.",
-        "downgradeCondition": "Further completed 1H/4H closes below 94.15, a verified worsening bearish momentum/volume combination, or adverse movement beyond 0.5/1.0/1.5 ATR below entry would add deterministic risk points. Remaining UNPROTECTED keeps operational risk elevated."
+        "trendConclusion": "SOL's original TACTICAL thesis remains INVALIDATED by the previously confirmed 1H/4H closes below 94.15, but price and 1H have recovered materially and current adverse-move/momentum risk is no longer critical. Under Position Risk v2.2, PRS 70 maps to EXIT REVIEW, not EXIT SIGNAL. Historical invalidation remains preserved; current urgency is ELEVATED rather than CRITICAL.",
+        "reason": "OPEN real 16.80631246 SOL @ 95.30, UNPROTECTED. This policy migration preserves the 09:17 market snapshot: Bybit reference ~95.10, completed 1H 94.52 above 94.15, last completed 4H 93.68 below the legacy invalidation, ATR14(1H) ~0.994 and RSI14(1H) ~42.06. A=40 remains because the original thesis was genuinely invalidated; B=20 remains from the prior 4H thesis deterioration; C=0 because the latest verified 1H was a reclaim and RSI alone is insufficient; D=0 because price is only ~0.20 ATR below entry; E=10 because no real protection is confirmed. PRS=70. v2.2 removes the permanent structural hard override: current action is EXIT REVIEW, not critical EXIT SIGNAL.",
+        "upgradeCondition": "Further verified recovery can reduce current B/C/D components, but while the position remains open under the original invalidated setup, v2.2 keeps a minimum action floor of EXIT REVIEW. Leaving that floor requires either Coinbase-confirmed closure or a separately documented contemporaneous new SOL setup with its own thesis and invalidation; the old thesis is never rewritten.",
+        "downgradeCondition": "PRS rising to >=80 restores EXIT SIGNAL / CRITICAL urgency. Examples include renewed 1H/4H deterioration below 94.15 combined with verified bearish momentum/volume, adverse movement beyond deterministic ATR thresholds, or a contemporaneously frozen catastrophic-boundary / documented market-discontinuity emergency. Remaining UNPROTECTED continues to add E=10."
       }
     }
   },
@@ -114,6 +121,7 @@
     {"timestampEuropeMadrid":"2026-08-24 08:00","positionId":"btc-20260822-1858","asset":"BTC","prs":10,"action":"HOLD","thesisState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":75300,"distanceToInvalidationATR":3.90742631,"dataQuality":"PARTIAL"},
     {"timestampEuropeMadrid":"2026-08-24 08:00","positionId":"sol-20260823-160608","asset":"SOL","prs":80,"action":"EXIT SIGNAL","thesisState":"INVALIDATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.11290323,"dataQuality":"PARTIAL","event":"INVALIDATION_PERSISTS","note":"Latest completed 1H reclaimed 94.15, but prior completed 1H and completed 4H closes below 94.15 keep the original Tactical thesis invalidated. Position remains UNPROTECTED and within 1 ATR of legacy invalidation."},
     {"timestampEuropeMadrid":"2026-08-24 09:17","positionId":"btc-20260822-1858","asset":"BTC","prs":10,"action":"HOLD","thesisState":"INTACT","protection":"UNPROTECTED","technicalInvalidation":75300,"distanceToInvalidationATR":4.79910887,"dataQuality":"PARTIAL"},
-    {"timestampEuropeMadrid":"2026-08-24 09:17","positionId":"sol-20260823-160608","asset":"SOL","prs":70,"action":"EXIT SIGNAL","thesisState":"INVALIDATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.95545977,"dataQuality":"PARTIAL","event":"INVALIDATION_PERSISTS","note":"Price and 1H have reclaimed strongly, reducing adverse-move risk to zero, but the original Tactical thesis remains invalidated by prior completed 1H/4H closes below 94.15; structural hard override still forces EXIT SIGNAL."}
+    {"timestampEuropeMadrid":"2026-08-24 09:17","positionId":"sol-20260823-160608","asset":"SOL","prs":70,"action":"EXIT SIGNAL","thesisState":"INVALIDATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.95545977,"dataQuality":"PARTIAL","event":"INVALIDATION_PERSISTS","note":"Price and 1H have reclaimed strongly, reducing adverse-move risk to zero, but the original Tactical thesis remains invalidated by prior completed 1H/4H closes below 94.15; structural hard override still forces EXIT SIGNAL."},
+    {"timestampEuropeMadrid":"2026-08-24 09:38","positionId":"sol-20260823-160608","asset":"SOL","prs":70,"action":"EXIT REVIEW","thesisState":"INVALIDATED","structuralState":"INVALIDATED","exitUrgency":"ELEVATED","protection":"UNPROTECTED","technicalInvalidation":94.15,"distanceToInvalidationATR":0.95545977,"dataQuality":"PARTIAL","event":"POLICY_MIGRATION_V2_2","note":"Same preserved 09:17 market snapshot and PRS 70; v2.2 separates historical thesis invalidation from current exit urgency, removing the permanent EXIT SIGNAL hard override. Historical records remain unchanged."}
   ]
 }
