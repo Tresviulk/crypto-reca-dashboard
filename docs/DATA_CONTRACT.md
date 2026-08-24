@@ -96,7 +96,7 @@ Normal ledger behavior is append-only. Corrections must leave an audit note.
 
 ## 6. Position Risk module
 
-Canonical rules live in `docs/POSITION_RISK_SPEC_V2_1.md`.
+Canonical rules live in `docs/POSITION_RISK_SPEC_V2_2.md`; v2.2 supersedes the action-urgency semantics of v2.1 while preserving its breach/reclaim confirmation logic.
 
 `data/position-risk.json` may contain only:
 
@@ -106,7 +106,7 @@ Canonical rules live in `docs/POSITION_RISK_SPEC_V2_1.md`.
   "positionRisk": {
     "generatedAt": "...",
     "source": "Crypto Reca Position Risk",
-    "policyVersion": "2.1",
+    "policyVersion": "2.2",
     "dataQuality": "PASS|PARTIAL|FAIL",
     "positions": {}
   },
@@ -120,9 +120,10 @@ Each open-position risk object should support the structural state machine field
 
 ```json
 {
-  "policyVersion": "2.1",
+  "policyVersion": "2.2",
   "structuralState": "INTACT|BREACH|RECLAIMED|INVALIDATED",
   "technicalInvalidation": 0,
+  "exitUrgency": "NORMAL|ELEVATED|CRITICAL",
   "breach": {
     "occurred": false,
     "firstBreachAt": null,
@@ -139,11 +140,17 @@ Each open-position risk object should support the structural state machine field
 }
 ```
 
-An intrabar low below `technicalInvalidation` is a `BREACH`, not permanent invalidation by itself. Confirmed invalidation requires one of the deterministic conditions in the v2.1 spec: two consecutive completed 15m closes below the level, one completed 1H close below the level, touch of a contemporaneously defined catastrophic boundary, or an explicitly documented market-discontinuity override.
+An intrabar low below `technicalInvalidation` is a `BREACH`, not permanent invalidation by itself. Confirmed invalidation requires two consecutive completed 15m closes below the level, one completed 1H close below the level, touch of a contemporaneously defined catastrophic boundary, or an explicitly documented market-discontinuity override.
 
 If a completed 15m candle reclaims and closes at/above the technical invalidation before confirmation, structural state becomes `RECLAIMED`. The historical breach must remain preserved in `riskHistory`.
 
-Structural PRS mapping is: `INTACT=0`, `RECLAIMED=15`, `BREACH=25`, `INVALIDATED=40`. Other PRS components remain independent.
+Structural PRS mapping remains: `INTACT=0`, `RECLAIMED=15`, `BREACH=25`, `INVALIDATED=40`. Other PRS components remain independent and describe current conditions.
+
+**v2.2 separates thesis validity from current exit urgency.** Historical `INVALIDATED` no longer hard-overrides every future evaluation to `EXIT SIGNAL`. The base action is determined by PRS: 0–24 HOLD, 25–44 WATCH, 45–59 REDUCE REVIEW, 60–79 EXIT REVIEW, 80–100 EXIT SIGNAL. An `INVALIDATED` position has a minimum action floor of `EXIT REVIEW` while it remains open under that original setup.
+
+`EXIT SIGNAL` / red critical treatment is reserved for current PRS >=80, a contemporaneously frozen catastrophic-boundary touch, or a documented market-discontinuity/execution-risk emergency. A recovered invalidated thesis may remain `INVALIDATED` while action falls to `EXIT REVIEW`; history is not rewritten.
+
+Suggested urgency mapping: HOLD/WATCH=`NORMAL`; REDUCE REVIEW/EXIT REVIEW=`ELEVATED`; EXIT SIGNAL=`CRITICAL`.
 
 For CORE positions, 4H/1D structure has greater thesis weight than ordinary 15m/1H noise. Trend by timeframe should be stored when available rather than collapsed into one ambiguous “trend”.
 
