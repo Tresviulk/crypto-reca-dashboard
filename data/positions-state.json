@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "positions",
-  "updatedAt": "2026-08-23T16:48:00+02:00",
+  "updatedAt": "2026-08-25T17:09:00+02:00",
   "source": "USER_CONFIRMED_COINBASE_EVIDENCE",
   "positions": [
     {
@@ -27,8 +27,8 @@
       "pair": "SOL-USDC",
       "engine": "TACTICAL",
       "setup": "BREAKOUT-RETEST",
-      "status": "OPEN",
-      "protection": "UNPROTECTED",
+      "status": "OPEN_PENDING_EXIT_RECONCILIATION",
+      "protection": "EXIT_ORDER_EXECUTED_QTY_UNVERIFIED",
       "qty": 16.80631246,
       "entry": 95.30,
       "subtotal": 1601.64,
@@ -38,7 +38,20 @@
       "executionCount": 2,
       "recommendedStop": 94.15,
       "openedEuropeMadrid": "2026-08-23 16:06:08",
-      "note": "Coinbase order details confirm 16.80631246 SOL executed 100% at 95.30 USDC, subtotal 1601.64 USDC, displayed estimated commission 1.12 USDC, total 1602.76 USDC, across 2 executions. TP/SL absent. Manual-risk override applies."
+      "exitOrder": {
+        "side": "SELL",
+        "type": "STOP_LIMIT",
+        "orderPlacedEuropeMadrid": "2026-08-25 05:57:06",
+        "lastFilledEuropeMadrid": "2026-08-25 09:51:26",
+        "status": "FILLED_100_PERCENT_OF_ORDER",
+        "stopPrice": 99.70,
+        "limitPrice": 99.20,
+        "executedQty": null,
+        "averageFillPrice": null,
+        "exitFee": null,
+        "evidence": "User-supplied Coinbase order-details screenshot. Screenshot confirms SELL stop-limit order executed 100%, stop 99.70 USDC, limit 99.20 USDC, last fill 09:51:26. It does not display executed quantity, average fill price or exit fee; therefore full position closure and realized P&L are not inferred."
+      },
+      "note": "Original Coinbase evidence confirmed 16.80631246 SOL bought at 95.30 USDC. On 2026-08-25 user supplied Coinbase evidence of a SELL stop-limit order executed 100% of that order, but the screenshot does not show sell quantity or average execution price. Position awaits exit reconciliation before being marked CLOSED."
     }
   ],
   "ledger": [
@@ -64,6 +77,19 @@
       "total": "1602.76 USDC",
       "executionCount": 2,
       "status": "FILLED 100%"
+    },
+    {
+      "dateEuropeMadrid": "2026-08-25 09:51:26",
+      "asset": "SOL-USDC",
+      "side": "SELL",
+      "engine": "TACTICAL / BREAKOUT-RETEST EXIT",
+      "orderType": "STOP-LIMIT",
+      "stopPrice": "99.70 USDC",
+      "limitPrice": "99.20 USDC",
+      "qty": "NOT VISIBLE IN EVIDENCE",
+      "price": "NOT VISIBLE IN EVIDENCE",
+      "fee": "NOT VISIBLE IN EVIDENCE",
+      "status": "ORDER FILLED 100% — POSITION RECONCILIATION PENDING"
     }
   ],
   "journal": [
@@ -78,6 +104,12 @@
       "type": "FILL_DETAILS_CONFIRMED",
       "asset": "SOL-USDC",
       "note": "Coinbase evidence confirms quantity 16.80631246 SOL, subtotal 1601.64 USDC, displayed estimated commission 1.12 USDC, total 1602.76 USDC, 2 executions."
+    },
+    {
+      "timestampEuropeMadrid": "2026-08-25 09:51:26",
+      "type": "CONFIRMED_EXIT_ORDER_EXECUTION",
+      "asset": "SOL-USDC",
+      "note": "Coinbase screenshot confirms SELL stop-limit order executed 100%. Stop 99.70 USDC; limit 99.20 USDC; order placed 05:57:06; last filled 09:51:26. Executed quantity, average fill price and exit fee are not visible, so the SOL position is not marked CLOSED until reconciled."
     }
   ]
 }
