@@ -23,6 +23,21 @@ Engine name remains `Crypto Reca v3.0`; this document repairs lost rule continui
 
 A short-term 15m/1H decline does not automatically downgrade D2 if 4H/1D remain structurally constructive. Multi-timeframe trend must be reported separately.
 
+### 2.1 Deterministic D-state anti-flicker patch
+
+Use only completed 1D/4H candles. Classify each higher timeframe as `BULLISH`, `NEUTRAL` or `BEARISH` before assigning D.
+
+A timeframe is `BULLISH` when at least two of these are true and there is no confirmed structural breakdown: (a) close above EMA20 and EMA20 slope is positive over the last three completed bars; (b) close above EMA50; (c) completed swing structure is higher-high/higher-low or the latest confirmed swing low remains intact.
+
+A timeframe is `BEARISH` when at least two of these are true: (a) close below EMA20 and EMA20 slope is negative over the last three completed bars; (b) close below EMA50; (c) completed swing structure is lower-high/lower-low with the prior confirmed swing low broken on a completed close. Otherwise it is `NEUTRAL`.
+
+Assign D mechanically:
+- `D2` if neither 1D nor 4H is BEARISH and at least one is BULLISH.
+- `D1` if neither condition for D2 nor D0 is met; this includes BULLISH+BEARISH conflict, NEUTRAL+NEUTRAL, or a genuine range/transition.
+- `D0` if both 1D and 4H are BEARISH, or if a verified higher-timeframe structural invalidation directly contradicts a new long thesis.
+
+15m/1H may change Entry Engine timing but may not change D. A single 4H wick or intrabar low may not change D; use completed-bar evidence. If D changes from the prior scan, record the exact completed higher-timeframe evidence that caused the change. Never downgrade D2 merely because 1H momentum is weak.
+
 ## 3. E state — execution gate state
 
 `E` describes whether a long setup can be executed now. It is separate from ERS.
@@ -68,6 +83,32 @@ Total: 100.
 
 Additional Momentum requirements: a high/session-high price is not itself a rejection. The setup is rejected when structural invalidation or net R/R is no longer defensible. RVOL below 1.0 downgrades breakout confirmation and prevents `FULL CONFIRMATION` in the Entry Engine.
 
+### 4.3 Scoring-anchor patch — no freehand component scores
+
+Every component must use the following discrete anchors. Intermediate arbitrary values are prohibited unless an explicit measurable interpolation is shown in the scan notes.
+
+**Regime / higher-timeframe trend (max 20):** D2 with both 1D+4H BULLISH=20; D2 with one BULLISH and one NEUTRAL=16; D1=8; D0=0.
+
+**Pullback structure/location (max 20):** 20 = confirmed support/retest/reclaim zone, entry within 0.50 ATR1H of the defended level and structural invalidation defined; 15 = good location within 1.00 ATR1H; 10 = neutral location/base not yet confirmed; 5 = extended 1.00–1.50 ATR beyond support/reclaim; 0 = no defensible location, stale setup or invalidation unavailable.
+
+**Momentum breakout/continuation structure (max 20):** 20 = completed breakout plus hold/retest or fresh continuation base; 15 = completed reclaim/base with breakout level defined; 10 = constructive but incomplete continuation; 5 = extension without base or failed first breakout; 0 = no valid continuation structure.
+
+**1H/4H confirmation and momentum (max 15):** 15 = both constructive and aligned; 10 = one constructive, other neutral; 5 = mixed/conflicting; 0 = both bearish for the lane. RSI alone cannot earn this component.
+
+**15m confirmation/hold for Momentum (max 10):** 10 = completed verified hold/retest trigger; 5 = constructive 15m but trigger incomplete; 0 = absent, adverse or unverified.
+
+**Volume/liquidity (max 10):** 10 = RVOL1H >=1.50 with direction supportive; 7 = RVOL>=1.20; 5 = RVOL 0.80–1.19 or healthy pullback contraction; 2 = RVOL<0.80; 0 = adverse-volume expansion. Missing verified RVOL scores 0 and data quality becomes PARTIAL.
+
+**Market alignment / relative strength (max 10):** 10 = BTC plus at least four of the other five monitored assets are non-bearish on 4H and the asset is not materially underperforming; 7 = broad alignment positive but incomplete; 5 = mixed; 2 = broad weakness; 0 = asset materially diverges negatively from a weak market. Use contemporaneous monitored-universe data only.
+
+**Derivatives:** if reliable data are unavailable, score 0 exactly. If reliable, Pullback max10/Momentum max5: full points only for healthy/non-crowded positioning, half points for neutral, 0 for adverse/crowded.
+
+**Event/news risk (max 5):** 5 = no unresolved high-impact event inside 24h; 3 = known high-impact event inside 24h but outside 6h; 1 = inside 6h but outside 2h; 0 = inside 2h or unresolved critical direct asset event unless an existing lane-specific rule explicitly tolerates it. A 0 event component is not automatically E2 unless the current hard-gate rule says the event window is blocking.
+
+**Net R/R:** use executable entry, structural invalidation, defensible target and cost allowance. Pullback max10: >=3.0=10; >=2.5=8; >=2.0=6; >=1.8=5; >=1.5=2; <1.5=0. Momentum max5: >=3.0=5; >=2.0=4; >=1.8=3; >=1.5=1; <1.5=0. If stop or target is not defensible, score 0; if no defensible structural invalidation exists, E2 applies.
+
+These anchors do not change weights or ERS=max(P,M). They make R1 reproducible.
+
 ## 5. ERS definition
 
 `ERS = max(P, M)` using the two contemporaneously calculated lane scores. Store the winning lane in `ersLane = PULLBACK | MOMENTUM` and preserve both `pullbackScore` and `momentumScore` when available.
@@ -107,6 +148,35 @@ A 4/5 can be sufficient when all hard gates and the relevant engine/ERS rules pa
 
 ERS answers `how good is the setup?`; Entry Engine answers `is the timing ready?`; D answers `is higher-timeframe direction supportive?`; E answers `is execution currently clear or blocked?`.
 
+### 7.1 Deterministic Entry dimensions
+
+`Trend=true` only when price > EMA50 1H, EMA20 1H >= EMA50 1H, and 4H is non-bearish. If EMA50>EMA200 1H it is stronger but not required.
+
+`Location=true` only when a named support/retest/VWAP/EMA/prior-breakout level exists and the proposed entry is no more than 1.00 ATR1H from that defended level. A breakout entry more than 1.00 ATR1H above its breakout/reclaim level without a fresh base is CHASE and Location=false. `GOOD` means <=0.50 ATR1H; `NEUTRAL` means >0.50 and <=1.00 ATR1H; `CHASE` means >1.00 ATR1H or no defensible local invalidation.
+
+`Momentum=true` only with a completed constructive combination: MACD12/26/9 line/histogram improving plus RSI14 >=50, or a verified completed reclaim/reversal with RSI>=50. RSI alone never qualifies.
+
+`Volume=true` for breakout/reclaim only when completed 1H RVOL >=1.20. For a pullback, contraction may be acceptable but Volume becomes true only after renewed buying participation on the trigger/reclaim candle. RVOL<1.0 prevents Full Confirmation.
+
+`Trigger=true` only from completed candles. Valid trigger forms:
+- 1H reclaim: completed 1H close above the named level AND the next completed 15m candle closes at/above that level;
+- breakout-retest hold: completed breakout close, subsequent 15m/1H retest of the named level, then completed close back above/holding it;
+- rejection-high close: completed 15m candle rejects the named support and closes above the prior 15m candle high;
+- higher-low confirmation: a completed higher low plus completed close above the intervening minor swing high.
+
+An open/current candle never sets Trigger=true. If 15m required for the selected trigger is unavailable, Trigger=false/PARTIAL rather than inferred.
+
+### 7.2 Execution-status patch
+
+Every asset must expose an explicit `executionStatus` separate from ERS and Entry state:
+- `BLOCKED`: E2 or another explicit hard gate.
+- `WATCH`: ERS<80 or Entry<4, with no active executable package.
+- `ARMED`: ERS>=80 and Entry>=4, hard gates analytically clear/incomplete only for final package; trigger path and levels must be named.
+- `PREVIEW_REQUIRED`: all analytical gates, lane threshold, location, invalidation, sizing and net R/R pass; only fresh Coinbase Advanced Preview remains before final recommendation.
+- `EXECUTABLE`: fresh Coinbase Preview has been checked and still passes max price/slippage/R/R/risk. This is still a recommendation state, never auto-execution.
+
+For ERS>=85, anti-paralysis remains binding: after two consecutive qualifying scans without a hard gate, a generic NO ENTRY is prohibited. The scan must expose BUY NOW CANDIDATE, BUY RETEST CANDIDATE or BUY BREAKOUT CANDIDATE and its exact remaining gate.
+
 ## 8. System-health contract
 
 Each radar run must write:
@@ -140,6 +210,7 @@ Whenever core data permit:
   "ersLane": "PULLBACK|MOMENTUM|MIXED",
   "entryConfirmation": 0,
   "entryState": "NO TIMING|EARLY WATCH|PREPARE|STRONG CONFIRMATION|FULL CONFIRMATION|PARTIAL",
+  "executionStatus": "BLOCKED|WATCH|ARMED|PREVIEW_REQUIRED|EXECUTABLE",
   "decision": "..."
 }
 ```
@@ -149,3 +220,13 @@ Never populate a missing current value from an old seed or earlier scan.
 ## 10. Change control
 
 Any future change to weights, D/E meaning, ERS formula or execution thresholds must update this file, `CHANGELOG.md`, the automation prompt and the data contract together. Silent rule drift is prohibited.
+
+## 11. Deterministic risk-display arithmetic
+
+For an OPEN long position, modeled heat to a technical invalidation is purely position arithmetic and MUST NOT depend on current market price:
+
+`modeledHeatUSDC = qty * max(entryPrice - technicalInvalidation, 0)`
+
+If the technical invalidation is above entry, modeled downside heat is 0 and any locked-profit concept must be reported separately. Fees/slippage may be shown as a separate cost allowance, never silently added to `modeledHeatUSDC`.
+
+`ACTUAL PROTECTED HEAT` may be numeric only when `positions-state.json` confirms a real protective order/stop. Without confirmed protection it must read `NOT ESTABLISHED`, regardless of the recommended technical invalidation.
