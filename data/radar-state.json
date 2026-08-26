@@ -1,18 +1,18 @@
 {
   "schemaVersion": "2.0",
   "module": "radar",
-  "generatedAt": "2026-08-26T10:02:30+02:00",
-  "source": "Canonical ERS R1 loaded from GitHub and applied with HBAR replacing SUI. Fresh Bybit spot 1H OHLCV was checked for BTC, ETH, SOL, XRP, AVAX and HBAR; fresh completed 4H evidence was checked for all assets where a new 4H close could affect D, and HBAR 1D/4H/1H was explicitly established for its first post-replacement scan. Only completed bars were used for D/scoring/Entry timing. Optional derivatives were not fetched and score 0 exactly; fresh 15m was not fetched, so trigger forms requiring 15m remain false/PARTIAL. positions-state.json remains execution authority: BTC CORE OPEN and UNPROTECTED; SOL Tactical CLOSED with +69.98 USDC realized net P&L. BEA confirms GDP second estimate and Personal Income and Outlays for July 2026 today at 08:30 EDT / 14:30 Europe-Madrid; event-risk component is 1/5 because the release is inside 6h but outside 2h at this scan.",
+  "generatedAt": "2026-08-26T13:58:57+02:00",
+  "source": "Canonical ERS R1 loaded from GitHub and applied to BTC, ETH, SOL, XRP, AVAX and HBAR. positions-state.json was read first as execution truth: BTC CORE remains OPEN and UNPROTECTED; SOL Tactical remains CLOSED with +69.98 USDC realized net P&L. Fresh Bybit spot 1H OHLCV and current prices were checked for all six assets; because the current 11:00 UTC 1H candle was still open at scan time, scoring used the latest fully completed 10:00 UTC candle. No new completed 4H or 1D candle had closed since the prior synchronized 10:02 scan, so D states were preserved under the anti-flicker rule. Optional derivatives were not fetched and score 0 exactly. No asset completed its named 1H reclaim trigger, so Trigger remains false without needing to infer a 15m hold. BEA confirms GDP Second Estimate and Personal Income and Outlays for July 2026 at 08:30 EDT / 14:30 Europe-Madrid today; the release is inside 2h, so event-risk component is 0/5.",
   "engineVersion": "Crypto Reca v3.0",
   "validationCapital": 14687.25,
   "scan": {
-    "id": "CR30-20260826-1002",
-    "timestampEuropeMadrid": "2026-08-26 10:02",
+    "id": "CR30-20260826-1359",
+    "timestampEuropeMadrid": "2026-08-26 13:59",
     "dataQuality": "PARTIAL",
-    "bestCondition": "BTC remains the strongest portfolio condition only as the existing CORE hold. ETH and newly introduced HBAR tie for the highest fresh setup ERS in this scan, but both remain WATCH because timing, volume and completed trigger confirmation are insufficient.",
-    "closestSetup": "ETH/HBAR pullback-watch only. ETH is still around the 2,455-2,470 area; HBAR is near the 0.0773-0.0780 support/retracement area. Neither has a completed R1 trigger plus renewed volume plus a fresh executable invalidation/target/RR package.",
-    "realOrderThisScan": "NO NEW REAL ORDER — no asset reaches ERS 80 and no Entry Engine state reaches 4/5. Coinbase Advanced Preview is therefore not requested. HBAR is now the sixth monitored asset; SUI is no longer in the active radar universe.",
-    "conclusion": "The completed 09:00 Madrid hour did not improve long timing: all six assets had sub-1.20 RVOL, and BTC/XRP/HBAR closed the hour lower. D remains D2 for BTC/ETH/SOL, D1 for XRP/AVAX, and HBAR enters at D2 from bullish 1D plus neutral 4H evidence. BTC CORE remains OPEN and UNPROTECTED; MODELED HEAT is fixed at 19.31 USDC and ACTUAL PROTECTED HEAT is not established."
+    "bestCondition": "SOL has the highest fresh ERS at 46 because the latest completed 1H rebound had acceptable pullback-volume quality, but it remains WATCH and below the 97.2-97.8 reclaim ceiling. BTC remains the strongest portfolio condition only as the existing CORE hold.",
+    "closestSetup": "SOL/ETH/HBAR pullback watches. SOL closed the latest completed 1H at 97.46 but has not completed acceptance above 97.8; ETH closed 2,468.91 but not above 2,470; HBAR closed 0.07788 but not above 0.0781-0.0783. All remain below an R1 trigger and lack a fresh executable invalidation/target/RR package.",
+    "realOrderThisScan": "NO NEW REAL ORDER — no asset reaches ERS 80 and no Entry Engine state reaches 4/5. Coinbase Advanced Preview is therefore not requested.",
+    "conclusion": "The latest completed 1H showed rebound attempts in BTC/ETH/SOL/XRP/AVAX/HBAR, but only XRP had supportive RVOL >=1.20; XRP still remains below its 1.46 reclaim and in D1. Event risk is now 0/5 because the BEA release is inside 2h. BTC CORE remains OPEN and UNPROTECTED; MODELED HEAT is fixed at 19.31 USDC and ACTUAL PROTECTED HEAT is not established."
   },
   "radar": [
     {
@@ -20,20 +20,26 @@
       "pair": "BTC-USDC",
       "d": "D2",
       "e": "E1",
-      "pullbackScore": 39,
-      "momentumScore": 39,
-      "ers": 39,
-      "ersLane": "MIXED",
+      "pullbackScore": 43,
+      "momentumScore": 38,
+      "ers": 43,
+      "ersLane": "PULLBACK",
       "entryConfirmation": 1,
       "entryState": "PARTIAL",
       "executionStatus": "WATCH",
-      "decision": "HOLD EXISTING CORE / NO ADD. The latest completed 1H closed at 78,921.6 after opening at 78,941.5, with RVOL about 0.66. That is inside/near the 78,900-79,200 reclaim area but not a completed breakout/hold with renewed volume; no fresh 15m trigger or executable RR package is verified.",
-      "entryDimensions": {"trend": false,"location": true,"momentum": false,"volume": false,"trigger": false},
+      "decision": "HOLD EXISTING CORE / NO ADD. Latest fully completed 1H closed 78,722.3 after opening 78,444.9, but RVOL was about 0.77 and price still failed to complete acceptance above the 78,900-79,200 reclaim area. Event risk is 0/5 inside two hours of the BEA release; no fresh executable RR package exists.",
+      "entryDimensions": {
+        "trend": false,
+        "location": true,
+        "momentum": false,
+        "volume": false,
+        "trigger": false
+      },
       "structure": {
-        "priceRef": 78884.5,
-        "location": "GOOD/NEUTRAL RECLAIM VICINITY — TRIGGER INCOMPLETE",
-        "nearestTrigger": "Completed 1H acceptance above the 78,900-79,200 reclaim area followed by the required completed 15m hold, with renewed 1H participation >=1.20 RVOL.",
-        "trendConclusion": "D2 remains intact on completed higher-timeframe evidence; the newly completed 4H bar closed 78,921.6 and does not create the two-condition bearish classification required to downgrade D.",
+        "priceRef": 78541.2,
+        "location": "GOOD/NEUTRAL SUPPORT-RECLAIM VICINITY — TRIGGER INCOMPLETE",
+        "nearestTrigger": "Completed 1H acceptance above the 78,900-79,200 reclaim area followed by the required completed hold/retest confirmation with renewed 1H participation >=1.20 RVOL.",
+        "trendConclusion": "D2 unchanged. No new completed 4H/1D evidence has closed since the prior synchronized scan, so intrahour weakness/rebound cannot alter D.",
         "entryPrice": 77340.93,
         "qty": 0.00946259,
         "protection": "UNPROTECTED",
@@ -41,9 +47,9 @@
         "modeledLossToInvalidationUSDC": 19.31,
         "modeledLossPctValidationCapital": 0.13,
         "actualProtectedHeat": "NOT ESTABLISHED — no confirmed protective order",
-        "approxGrossPnLUSDC": 14.61,
-        "approxPnLAfterEntryFeeBeforeExitUSDC": 13.44,
-        "rvol1h": 0.66
+        "approxGrossPnLUSDC": 11.36,
+        "approxPnLAfterEntryFeeBeforeExitUSDC": 10.19,
+        "rvol1h": 0.77
       }
     },
     {
@@ -51,21 +57,27 @@
       "pair": "ETH-USDC",
       "d": "D2",
       "e": "E1",
-      "pullbackScore": 44,
-      "momentumScore": 39,
-      "ers": 44,
-      "ersLane": "PULLBACK",
+      "pullbackScore": 43,
+      "momentumScore": 43,
+      "ers": 43,
+      "ersLane": "MIXED",
       "entryConfirmation": 1,
       "entryState": "PARTIAL",
       "executionStatus": "WATCH",
-      "decision": "WATCH ONLY. ETH remains near the 2,455-2,470 pullback/reclaim area, but the latest completed 1H RVOL is only about 0.70 and no completed 15m hold trigger or executable RR package is verified.",
-      "entryDimensions": {"trend": false,"location": true,"momentum": false,"volume": false,"trigger": false},
+      "decision": "WATCH ONLY. The latest completed 1H rebounded from 2,447.92 to 2,468.91, but remained below the 2,470 reclaim ceiling and RVOL was only about 0.73. No completed trigger or executable RR package is verified.",
+      "entryDimensions": {
+        "trend": false,
+        "location": true,
+        "momentum": false,
+        "volume": false,
+        "trigger": false
+      },
       "structure": {
-        "priceRef": 2460.19,
-        "location": "GOOD LOCATION / RECLAIM AREA, NOT A COMPLETED TRIGGER",
-        "nearestTrigger": "Completed 1H reclaim/acceptance above 2,470 followed by the required completed 15m hold and renewed participation before rebuilding a Tactical package.",
-        "trendConclusion": "D2 unchanged; completed 1D remains strongly constructive and the newly completed 4H bar is corrective/neutral rather than a deterministic bearish breakdown.",
-        "rvol1h": 0.7
+        "priceRef": 2463.97,
+        "location": "GOOD/NEUTRAL RECLAIM VICINITY — NOT CONFIRMED",
+        "nearestTrigger": "Completed 1H close above 2,470 followed by a completed hold/retest with renewed participation before rebuilding a Tactical package.",
+        "trendConclusion": "D2 unchanged because no new completed 4H/1D evidence has closed since the prior synchronized scan.",
+        "rvol1h": 0.73
       }
     },
     {
@@ -73,21 +85,27 @@
       "pair": "SOL-USDC",
       "d": "D2",
       "e": "E1",
-      "pullbackScore": 42,
-      "momentumScore": 42,
-      "ers": 42,
+      "pullbackScore": 46,
+      "momentumScore": 46,
+      "ers": 46,
       "ersLane": "MIXED",
       "entryConfirmation": 1,
       "entryState": "PARTIAL",
       "executionStatus": "WATCH",
-      "decision": "WATCH / FRESH RESET ONLY. The prior real SOL trade remains CLOSED. The latest completed 1H closed 96.94 with RVOL about 0.82, still below confirmation. The newly completed 4H bar closed 96.94 without breaking the 95.32 washout low on a completed close; D2 therefore remains intact. No retired invalidation is reused.",
-      "entryDimensions": {"trend": false,"location": true,"momentum": false,"volume": false,"trigger": false},
+      "decision": "WATCH / FRESH RESET ONLY. The prior real SOL trade remains CLOSED. Latest completed 1H rebounded from 96.16 to 97.46 with RVOL about 0.84, but it did not complete acceptance above the 97.2-97.8 reclaim zone and no fresh invalidation/target/RR package is defined.",
+      "entryDimensions": {
+        "trend": false,
+        "location": true,
+        "momentum": false,
+        "volume": false,
+        "trigger": false
+      },
       "structure": {
-        "priceRef": 96.93,
-        "location": "NEUTRAL / RESET BELOW RECLAIM",
-        "nearestTrigger": "Build a fresh base and complete a reclaim through roughly 97.2-97.8 with renewed 1H participation and a completed 15m hold; only then define a new invalidation and target.",
-        "trendConclusion": "D2 unchanged: 1D remains constructive and the new completed 4H bar is corrective/neutral, not a confirmed higher-timeframe bearish breakdown.",
-        "rvol1h": 0.82
+        "priceRef": 97.02,
+        "location": "NEUTRAL / RECLAIM ATTEMPT INCOMPLETE",
+        "nearestTrigger": "Complete acceptance above roughly 97.8, then hold/retest it with renewed participation; only then define a new structural invalidation and target.",
+        "trendConclusion": "D2 unchanged; no new completed 4H/1D bar has closed since the prior synchronized scan.",
+        "rvol1h": 0.84
       }
     },
     {
@@ -95,21 +113,27 @@
       "pair": "XRP-USDC",
       "d": "D1",
       "e": "E1",
-      "pullbackScore": 31,
-      "momentumScore": 26,
-      "ers": 31,
-      "ersLane": "PULLBACK",
-      "entryConfirmation": 0,
+      "pullbackScore": 28,
+      "momentumScore": 33,
+      "ers": 33,
+      "ersLane": "MOMENTUM",
+      "entryConfirmation": 1,
       "entryState": "PARTIAL",
       "executionStatus": "WATCH",
-      "decision": "WATCH ONLY. XRP remains below the roughly 1.46 reclaim reference. The latest completed 1H closed lower at 1.4331 with RVOL about 0.77. The newly completed 4H close at 1.4331 does not restore higher-timeframe alignment, so D1 remains.",
-      "entryDimensions": {"trend": false,"location": false,"momentum": false,"volume": false,"trigger": false},
+      "decision": "WATCH ONLY. XRP produced the strongest completed-hour participation: the latest fully completed 1H rose from 1.4098 to 1.4309 on RVOL about 1.57. But it remains well below the roughly 1.46 reclaim level and D1 remains unchanged, so high volume alone is not a long trigger.",
+      "entryDimensions": {
+        "trend": false,
+        "location": false,
+        "momentum": false,
+        "volume": true,
+        "trigger": false
+      },
       "structure": {
-        "priceRef": 1.4292,
+        "priceRef": 1.4129,
         "location": "WEAK / BELOW RECLAIM LEVEL",
         "nearestTrigger": "Recover roughly 1.46 first, then form a completed reclaim/hold with explicit structural invalidation before considering a long thesis.",
-        "trendConclusion": "D1 transitional unchanged after the new completed 4H bar; no completed higher-timeframe evidence justifies D2.",
-        "rvol1h": 0.77
+        "trendConclusion": "D1 unchanged; no new completed 4H/1D evidence has closed since the prior synchronized scan.",
+        "rvol1h": 1.57
       }
     },
     {
@@ -117,21 +141,27 @@
       "pair": "AVAX-USDC",
       "d": "D1",
       "e": "E1",
-      "pullbackScore": 31,
-      "momentumScore": 26,
-      "ers": 31,
-      "ersLane": "PULLBACK",
+      "pullbackScore": 20,
+      "momentumScore": 25,
+      "ers": 25,
+      "ersLane": "MOMENTUM",
       "entryConfirmation": 0,
       "entryState": "PARTIAL",
       "executionStatus": "WATCH",
-      "decision": "WATCH ONLY. AVAX remains below the 7.43-7.46 reclaim reference. The latest completed 1H closed 7.394 on RVOL about 0.40. The new completed 4H bar recovered to 7.394 but does not restore decisive higher-timeframe alignment, so D1 remains.",
-      "entryDimensions": {"trend": false,"location": false,"momentum": false,"volume": false,"trigger": false},
+      "decision": "WATCH ONLY. Latest completed 1H rebounded from 7.319 to 7.402, but RVOL was only about 0.56 and price remains below the 7.43-7.46 reclaim reference. No valid trigger or executable long package exists.",
+      "entryDimensions": {
+        "trend": false,
+        "location": false,
+        "momentum": false,
+        "volume": false,
+        "trigger": false
+      },
       "structure": {
-        "priceRef": 7.381,
+        "priceRef": 7.335,
         "location": "WEAK / BELOW RECLAIM LEVEL",
-        "nearestTrigger": "Reclaim 7.43-7.46 on a completed candle, then hold/retest it with renewed participation and define a fresh structural invalidation before rebuilding a long setup.",
-        "trendConclusion": "D1 transitional unchanged; the newly completed 4H recovery is not sufficient to classify 1D/4H as decisively aligned bullish.",
-        "rvol1h": 0.4
+        "nearestTrigger": "Reclaim 7.43-7.46 on a completed candle, then hold/retest it with renewed participation and define a fresh structural invalidation.",
+        "trendConclusion": "D1 unchanged; no new completed 4H/1D evidence has closed since the prior synchronized scan.",
+        "rvol1h": 0.56
       }
     },
     {
@@ -139,21 +169,27 @@
       "pair": "HBAR-USDC",
       "d": "D2",
       "e": "E1",
-      "pullbackScore": 44,
-      "momentumScore": 34,
-      "ers": 44,
-      "ersLane": "PULLBACK",
+      "pullbackScore": 43,
+      "momentumScore": 43,
+      "ers": 43,
+      "ersLane": "MIXED",
       "entryConfirmation": 1,
       "entryState": "PARTIAL",
       "executionStatus": "WATCH",
-      "decision": "WATCH ONLY — FIRST HBAR POST-REPLACEMENT SCAN. HBAR 1D is bullish/constructive while completed 4H is corrective/neutral, giving D2 mechanically. Price is near the 0.0773-0.0780 pullback area, but the latest completed 1H closed lower at 0.07785 with RVOL about 0.39. No completed trigger, renewed volume or executable RR package exists.",
-      "entryDimensions": {"trend": false,"location": true,"momentum": false,"volume": false,"trigger": false},
+      "decision": "WATCH ONLY. HBAR rebounded in the latest fully completed 1H from 0.07712 to 0.07788, but RVOL was only about 0.71 and the candle did not complete acceptance above the 0.0781-0.0783 reclaim zone. No completed trigger or executable RR package exists.",
+      "entryDimensions": {
+        "trend": false,
+        "location": true,
+        "momentum": false,
+        "volume": false,
+        "trigger": false
+      },
       "structure": {
-        "priceRef": 0.07769,
-        "location": "NEUTRAL/GOOD PULLBACK VICINITY — NO TRIGGER",
-        "nearestTrigger": "First stabilize above roughly 0.0773-0.0775, then complete a reclaim/hold through roughly 0.0781-0.0783 with renewed 1H participation and a completed 15m hold before defining a Tactical package.",
-        "trendConclusion": "HBAR enters the active universe at D2: completed 1D structure remains bullish above its recent base while completed 4H is corrective/neutral rather than deterministically bearish.",
-        "rvol1h": 0.39
+        "priceRef": 0.07747,
+        "location": "GOOD/NEUTRAL PULLBACK VICINITY — NO TRIGGER",
+        "nearestTrigger": "Complete a reclaim above roughly 0.0781-0.0783, then hold/retest it with renewed 1H participation before defining a Tactical package.",
+        "trendConclusion": "D2 unchanged; no new completed 4H/1D evidence has closed since the prior synchronized scan.",
+        "rvol1h": 0.71
       }
     }
   ],
@@ -191,14 +227,15 @@
     {"id":"CR30-20260826-0500","timestampEuropeMadrid":"2026-08-26 05:00","dataQuality":"PARTIAL","bestCondition":"BTC strongest overall as existing CORE hold; weak participation and no completed fresh trigger.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":51,"entryConfirmation":1},"ETH":{"ers":46,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":30,"entryConfirmation":0},"AVAX":{"ers":30,"entryConfirmation":0},"SUI":{"ers":20,"entryConfirmation":0}}},
     {"id":"CR30-20260826-0558","timestampEuropeMadrid":"2026-08-26 05:58","dataQuality":"PARTIAL","bestCondition":"BTC strongest overall as existing CORE hold; no new completed 1H evidence since 05:00 and no fresh trigger.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":51,"entryConfirmation":1},"ETH":{"ers":46,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":30,"entryConfirmation":0},"AVAX":{"ers":30,"entryConfirmation":0},"SUI":{"ers":20,"entryConfirmation":0}}},
     {"id":"CR30-20260826-0701","timestampEuropeMadrid":"2026-08-26 07:01","dataQuality":"PARTIAL","bestCondition":"BTC strongest portfolio condition as existing CORE; ETH highest fresh setup score; no executable new long.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":46,"entryConfirmation":1},"ETH":{"ers":49,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":33,"entryConfirmation":0},"AVAX":{"ers":33,"entryConfirmation":0},"SUI":{"ers":18,"entryConfirmation":0}}},
-    {"id":"CR30-20260826-1002","timestampEuropeMadrid":"2026-08-26 10:02","dataQuality":"PARTIAL","bestCondition":"BTC strongest portfolio condition as existing CORE; ETH/HBAR highest fresh setup score; no executable new long.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":39,"entryConfirmation":1},"ETH":{"ers":44,"entryConfirmation":1},"SOL":{"ers":42,"entryConfirmation":1},"XRP":{"ers":31,"entryConfirmation":0},"AVAX":{"ers":31,"entryConfirmation":0},"HBAR":{"ers":44,"entryConfirmation":1}}}
+    {"id":"CR30-20260826-1002","timestampEuropeMadrid":"2026-08-26 10:02","dataQuality":"PARTIAL","bestCondition":"BTC strongest portfolio condition as existing CORE; ETH/HBAR highest fresh setup score; no executable new long.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":39,"entryConfirmation":1},"ETH":{"ers":44,"entryConfirmation":1},"SOL":{"ers":42,"entryConfirmation":1},"XRP":{"ers":31,"entryConfirmation":0},"AVAX":{"ers":31,"entryConfirmation":0},"HBAR":{"ers":44,"entryConfirmation":1}}},
+    {"id":"CR30-20260826-1359","timestampEuropeMadrid":"2026-08-26 13:59","dataQuality":"PARTIAL","bestCondition":"SOL highest fresh ERS; BTC strongest portfolio condition as existing CORE; no executable new long.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":43,"entryConfirmation":1},"ETH":{"ers":43,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":33,"entryConfirmation":1},"AVAX":{"ers":25,"entryConfirmation":0},"HBAR":{"ers":43,"entryConfirmation":1}}}
   ],
   "engineHealth": {
     "ers": {
       "status": "PARTIAL",
       "spec": "docs/ENGINE_SPEC_V3_ERS.md",
       "specRevision": "R1",
-      "reason": "Canonical R1 including HBAR replacement, anti-flicker, discrete scoring anchors, deterministic Entry dimensions, executionStatus and modeled-heat arithmetic was loaded and applied. All six active assets have contemporaneous numeric P/M/ERS. Optional derivatives were unavailable and score 0 exactly; fresh 15m was not fetched, so 15m confirmation scores 0 and triggers requiring 15m remain false/PARTIAL. Entry Trend/Momentum remain conservatively false where the required completed EMA/MACD/RSI combination was not independently re-verified."
+      "reason": "Canonical R1 including HBAR replacement, anti-flicker, discrete scoring anchors, deterministic Entry dimensions, executionStatus and modeled-heat arithmetic was loaded and applied. All six active assets have contemporaneous numeric P/M/ERS from completed core data. Optional derivatives were unavailable and score 0 exactly. No named 1H reclaim was completed, so Trigger remains false without inferring 15m confirmation. Entry Trend/Momentum remain conservatively false where the required completed EMA/MACD/RSI combination was not independently re-verified. Event-risk component is 0/5 because the scheduled BEA release is inside 2h."
     }
   },
   "shadowPortfolio": {
