@@ -61,11 +61,14 @@ Each radar asset should contain, when core data permit:
   "ersLane": "PULLBACK|MOMENTUM|MIXED",
   "entryConfirmation": 0,
   "entryState": "...",
+  "executionStatus": "BLOCKED|WATCH|ARMED|PREVIEW_REQUIRED|EXECUTABLE",
   "decision": "..."
 }
 ```
 
 Canonical D/E and ERS rules live in `docs/ENGINE_SPEC_V3_ERS.md`. If sufficient core data exist, a missing optional source must not suppress every numeric score. If core data are genuinely insufficient, set `ers=null` and report ERS health accordingly. Never reuse an old score.
+
+`executionStatus` is mandatory when core data permit and is separate from ERS/Entry: `BLOCKED` for E2/hard gate; `WATCH` when quality/timing is not armed; `ARMED` when ERS/Entry analytically qualify and an explicit prospective package exists; `PREVIEW_REQUIRED` when every analytical/risk/RR gate passes and only fresh Coinbase Preview remains; `EXECUTABLE` only after a fresh Preview still passes. `EXECUTABLE` never means auto-executed.
 
 ## 4. ERS health
 
@@ -93,6 +96,16 @@ A position requires user-confirmed Coinbase evidence. Recommendation, signal, tr
 `PROTECTED` requires confirmed real protection. A recommended technical stop remains `UNPROTECTED` until confirmed.
 
 Normal ledger behavior is append-only. Corrections must leave an audit note.
+
+### 5.1 Modeled heat arithmetic — mandatory
+
+For an OPEN long position, modeled downside heat to a technical invalidation is:
+
+`modeledHeatUSDC = qty * max(entryPrice - technicalInvalidation, 0)`
+
+This value MUST NOT use current market price and MUST NOT silently include fees/slippage. If fees/slippage are modeled, store/report them separately. For the confirmed BTC CORE example `0.00946259 * (77340.93 - 75300)`, modeled heat is approximately `19.31 USDC`.
+
+`actualProtectedHeatUSDC` may be numeric only when `positions-state.json` confirms a real protective stop/order. A recommended stop with `UNPROTECTED` status means actual protected heat is `NOT ESTABLISHED`.
 
 ## 6. Position Risk module
 
@@ -172,6 +185,8 @@ A source remains `VALIDATING` until the forward sample meets the configured qual
 
 Freeze a candidate prospectively when useful for system research (for example PREPARE, strong ERS rejected by a gate, CHASE, or R/R failure). Store the original scan ID, asset, setup/lane, ERS, Entry Engine, frozen entry/zone, invalidation/target only when defensible, rejection reason and lifecycle. Later price outcomes may update lifecycle, but original decision variables must never be reconstructed or edited with hindsight.
 
+Every 07:00 audit should additionally summarize Shadow leakage metrics from forward-only records: count of candidates, filled/activated candidates, resolved target-first, stopped-first, ambiguous, unresolved, rejected setups that later hit target, accepted/armed setups that later stopped, and net R expectancy only where entry/stop/target and path ordering are unambiguous. Small samples must be labelled insufficient; no retrospective candidate creation is allowed.
+
 ## 10. System Health
 
 System Health is computed by the frontend from module availability, freshness and engine-health fields. It does not need a separate writer. Expected current cadences are approximately hourly for Radar, Position Risk and Intelligence. Missing/stale modules are shown as PASS/PARTIAL/FAIL independently.
@@ -196,3 +211,20 @@ Never write API secrets, private keys, passwords, JWTs, cookies, recovery codes 
 ## 14. Migration compatibility
 
 During v0.4.5 migration, the PWA first loads `data/crypto-reca-state.json` and then overlays any non-empty modular files. Empty migration placeholders therefore cannot erase the confirmed legacy state. After all active writers have migrated and modular files are populated, `crypto-reca-state.json` becomes compatibility-only and should no longer receive routine writes.
+
+## 15. Radar sync safety contract — mandatory
+
+`data/radar-state.json` remains the sole Radar writer surface under the current architecture. To prevent the prior truncation/corruption failure mode:
+
+1. Read the latest file immediately before every write.
+2. If a connector display is truncated, read the returned response resource and recover the complete underlying `content`; truncation of display alone is not file failure.
+3. Parse the complete JSON before mutation. If complete content cannot be recovered or parsed, fail safely without writing.
+4. Obtain the current blob SHA immediately before write; never reuse a stale SHA.
+5. Preserve all valid top-level fields and all existing history/audits/shadow content except contemporaneous fields explicitly updated.
+6. History is compact, deduped by Scan ID and capped at 168. Shadow candidates are capped at 300 active+resolved. Caps are normal retention policy, not ad hoc deletion.
+7. Serialize `radar-state.json` pretty-printed with two-space indentation. Do not minify it.
+8. After `update_file`, re-read and verify the new Scan ID plus valid JSON before reporting APP SYNC OK.
+9. On SHA conflict, re-read latest full state, merge the current scan once and retry; never overwrite concurrent changes blindly.
+10. A connector message saying `response truncated` is not a valid APP SYNC failure if the complete response resource is recoverable.
+
+If whole-file replacement remains intermittently impossible despite the resource fallback and current SHA, report the exact transport limitation. Do not claim the engine failed; analytical output remains independent of sync.
