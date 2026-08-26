@@ -2,6 +2,19 @@
 
 All material changes to Crypto Reca Dashboard are recorded here.
 
+## [0.5.1] — 2026-08-26
+
+### Crypto Reca v3.0 determinism and integrity patch — engine version unchanged
+- Kept engine name `Crypto Reca v3.0` and ERS spec revision `R1`; this is a repair patch, not a new trading-engine version.
+- Added deterministic completed-candle 1D/4H classification for D0/D1/D2 to eliminate regime flicker caused by 15m/1H noise or intrabar wicks.
+- Added discrete scoring anchors for every Pullback/Momentum component so ERS component scores are reproducible rather than freehand; missing reliable derivatives now score exactly zero with PARTIAL data quality.
+- Hardened Entry Engine: ATR-based GOOD/NEUTRAL/CHASE location, completed-candle-only Trigger rules, objective Momentum/Volume conditions and no trigger inference from an open candle.
+- Added explicit `executionStatus` (`BLOCKED`, `WATCH`, `ARMED`, `PREVIEW_REQUIRED`, `EXECUTABLE`) separate from ERS and Entry Engine so setup quality cannot be confused with order readiness.
+- Corrected modeled-heat arithmetic for long positions to `qty * max(entryPrice - technicalInvalidation, 0)`; current price is excluded. Current BTC CORE example is approximately 19.31 USDC to 75,300, with actual protected heat remaining NOT ESTABLISHED while protection is unconfirmed.
+- Added forward-only Shadow leakage metrics to the 07:00 audit, including target-first/stop-first/ambiguous/unresolved and R expectancy only where path ordering and frozen levels are unambiguous.
+- Codified safe `radar-state.json` sync recovery: response-resource fallback for truncated displays, current-SHA write, pretty-printed JSON, post-write verification and one merge retry on SHA conflict.
+- Updated `docs/ENGINE_SPEC_V3_ERS.md`, `docs/DATA_CONTRACT.md`, `docs/POSITION_RISK_SPEC_V2_2.md`, the active hourly Radar automation and Position Risk automation. No historical decision variables were rewritten.
+
 ## [0.5.0] — 2026-08-24
 
 ### Position Risk v2.2 — thesis validity vs exit urgency
@@ -25,7 +38,7 @@ All material changes to Crypto Reca Dashboard are recorded here.
 - Confirmed invalidation now requires two consecutive completed 15m closes below invalidation, one completed 1H close below invalidation, touch of a contemporaneously defined catastrophic boundary, or an explicitly documented market-discontinuity override.
 - Structural PRS mapping is now deterministic: `INTACT=0`, `RECLAIMED=15`, `BREACH=25`, `INVALIDATED=40`.
 - A reclaimed wick no longer forces `EXIT SIGNAL`; the historical breach remains preserved for audit.
-- Catastrophic boundaries may not be invented retroactively. If not frozen before/at entry, a later level must be labelled `RECOMMENDED` or `UNDEFINED`.
+- Catastrophic boundaries may not be invented retroactively. If not frozen before/at entry, a later level must be labelled `RECOMMENDED` or `UNDEFINED`, never `FROZEN`.
 - Updated `DATA_CONTRACT.md` and `AI_HANDOFF.md` so future Position Risk writers must obey v2.1.
 - SOL migration test case: post-fill 15m low near 93.36 with close 94.42 above technical invalidation 94.15 is classified `BREACH -> RECLAIMED`, not permanent `INVALIDATED`.
 
