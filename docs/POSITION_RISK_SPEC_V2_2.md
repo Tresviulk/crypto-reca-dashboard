@@ -127,3 +127,15 @@ If an open SOL TACTICAL position has historical confirmed invalidation at 94.15 
 - urgency: `ELEVATED`, **not CRITICAL**.
 
 The historical invalidation remains true. The current operational label becomes less severe because present adverse move and momentum no longer justify a critical exit.
+
+## 10. Deterministic modeled-loss arithmetic
+
+For an OPEN long position, modeled downside to the current technical invalidation is position arithmetic only:
+
+`modeledLossUSDC = qty * max(entryPrice - technicalInvalidation, 0)`
+
+This value MUST NOT depend on current market price. Fees and slippage, if modeled, must be stored and displayed separately and must never be silently folded into `modeledLossUSDC`.
+
+For BTC CORE `0.00946259 BTC @ 77,340.93` with technical invalidation `75,300`, the modeled downside is approximately `19.31 USDC`.
+
+`actualProtectedHeat` or any equivalent protected-risk field may be numeric only when `data/positions-state.json` confirms a real protective stop/order. A recommended technical stop does not constitute protection. If protection is `UNPROTECTED`, actual protected heat is `NOT ESTABLISHED`.
