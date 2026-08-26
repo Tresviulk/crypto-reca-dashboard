@@ -6,7 +6,7 @@ Engine name remains `Crypto Reca v3.0`; this document repairs lost rule continui
 
 ## 1. Non-negotiable principles
 
-1. Universe: BTC, ETH, SOL, XRP, AVAX, SUI, HBAR; spot-long only; no leverage.
+1. Universe: BTC, ETH, SOL, XRP, AVAX, HBAR; spot-long only; no leverage.
 2. ERS is setup quality, not probability of profit.
 3. ERS never overrides a hard gate, CORE exposure logic, Entry Engine timing, risk limits, event risk, execution validity or Coinbase Preview requirements.
 4. Scores are contemporaneous only. Missing historical scores are never reconstructed with hindsight.
@@ -99,7 +99,7 @@ Every component must use the following discrete anchors. Intermediate arbitrary 
 
 **Volume/liquidity (max 10):** 10 = RVOL1H >=1.50 with direction supportive; 7 = RVOL>=1.20; 5 = RVOL 0.80–1.19 or healthy pullback contraction; 2 = RVOL<0.80; 0 = adverse-volume expansion. Missing verified RVOL scores 0 and data quality becomes PARTIAL.
 
-**Market alignment / relative strength (max 10):** 10 = BTC plus at least five of the other six monitored assets are non-bearish on 4H and the asset is not materially underperforming; 7 = broad alignment positive but incomplete; 5 = mixed; 2 = broad weakness; 0 = asset materially diverges negatively from a weak market. Use contemporaneous monitored-universe data only.
+**Market alignment / relative strength (max 10):** 10 = BTC plus at least four of the other five monitored assets are non-bearish on 4H and the asset is not materially underperforming; 7 = broad alignment positive but incomplete; 5 = mixed; 2 = broad weakness; 0 = asset materially diverges negatively from a weak market. Use contemporaneous monitored-universe data only.
 
 **Derivatives:** if reliable data are unavailable, score 0 exactly. If reliable, Pullback max10/Momentum max5: full points only for healthy/non-crowded positioning, half points for neutral, 0 for adverse/crowded.
 
@@ -192,7 +192,7 @@ Each radar run must write:
 }
 ```
 
-PASS requires all seven assets to have a contemporaneous numeric ERS when their core data are available, with D/E and lane traceability. PARTIAL is allowed for isolated asset/source limitations. FAIL applies when the scoring rulebook cannot be loaded/applied or ERS is suppressed despite sufficient core data.
+PASS requires all six assets to have a contemporaneous numeric ERS when their core data are available, with D/E and lane traceability. PARTIAL is allowed for isolated asset/source limitations. FAIL applies when the scoring rulebook cannot be loaded/applied or ERS is suppressed despite sufficient core data.
 
 ## 9. Required radar record per asset
 
