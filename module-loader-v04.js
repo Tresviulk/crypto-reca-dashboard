@@ -8,7 +8,7 @@ const oldLoad=loadState, oldShow=show;
 const age=ts=>{const t=Date.parse(ts||'');return Number.isFinite(t)?Math.max(0,(Date.now()-t)/60000):null};
 async function read(name,url){try{const d=await fetchJSON(`${url}?t=${Date.now()}`);meta[name]={ok:true,url,generatedAt:d.generatedAt||d.updatedAt||null};return d}catch(e){meta[name]={ok:false,url,error:String(e?.message||e)};return null}}
 function merge(m){
- const r=m.radar;if(r){if(r.scan?.id)state.scan=r.scan;if(a(r.radar).length)state.radar=r.radar;if(a(r.history).length)state.history=r.history;if(a(r.audits).length)state.audits=r.audits;if(r.engineHealth)state.engineHealth=r.engineHealth;if(r.shadowPortfolio)state.shadowPortfolio=r.shadowPortfolio;if(r.generatedAt){state.generatedAt=r.generatedAt;state.source=r.source||state.source}if(r.validationCapital!=null)state.validationCapital=r.validationCapital}
+ const r=m.radar;if(r){if(r.scan?.id)state.scan=r.scan;if(a(r.radar).length){const modular=r.radar;const extra=a(state.radar).filter(x=>!modular.some(y=>y.asset===x.asset));state.radar=[...modular,...extra]}if(a(r.history).length)state.history=r.history;if(a(r.audits).length)state.audits=r.audits;if(r.engineHealth)state.engineHealth=r.engineHealth;if(r.shadowPortfolio)state.shadowPortfolio=r.shadowPortfolio;if(r.generatedAt){state.generatedAt=r.generatedAt;state.source=r.source||state.source}if(r.validationCapital!=null)state.validationCapital=r.validationCapital}
  const p=m.positions;if(p){if(a(p.positions).length)state.positions=p.positions;if(a(p.ledger).length)state.ledger=p.ledger;if(a(p.journal).length)state.journal=p.journal}
  const k=m.risk;if(k){if(k.positionRisk)state.positionRisk=k.positionRisk;if(a(k.riskHistory).length)state.riskHistory=k.riskHistory}
  const i=m.intelligence;if(i){if(i.newsOverlay)state.newsOverlay=i.newsOverlay;if(a(i.catalysts).length)state.catalysts=i.catalysts;if(a(i.newsHistory).length)state.newsHistory=i.newsHistory}
@@ -18,7 +18,7 @@ async function loadModules(){const e=await Promise.all(Object.entries(urls).map(
 loadState=async function(){await oldLoad();await loadModules()};
 function fresh(ts,good=90,bad=180){const x=age(ts);if(x==null)return ['PARTIAL','sin timestamp'];return x<=good?['PASS',`${Math.round(x)} min`]:x<=bad?['PARTIAL',`${Math.round(x)} min`]:['FAIL',`${Math.round(x)} min`]}
 function health(){
- const ers=a(state.radar).map(r=>num(r.ers)),missing=ers.filter(v=>v==null).length;let eh=missing===0&&ers.length>=6?['PASS',`${ers.length}/6`]:missing===ers.length&&ers.length?['FAIL','ERS no calculado']:['PARTIAL',`faltan ${missing}`];
+ const ers=a(state.radar).map(r=>num(r.ers)),missing=ers.filter(v=>v==null).length;let eh=missing===0&&ers.length>=7?['PASS',`${ers.length}/7`]:missing===ers.length&&ers.length?['FAIL','ERS no calculado']:['PARTIAL',`faltan ${missing}`];
  if(state?.engineHealth?.ers)eh=[state.engineHealth.ers.status||eh[0],state.engineHealth.ers.reason||eh[1]];
  return [ ['Radar',...fresh(state.generatedAt||state?.scan?.timestampEuropeMadrid)],['ERS Engine',...eh],['Position Risk',...fresh(state?.positionRisk?.generatedAt,95,190)],['Intelligence',...fresh(state?.newsOverlay?.generatedAt,100,200)],['External Signals',...fresh(state?.externalSignals?.generatedAt,100,200)],['Coinbase público',...fresh(market.updatedAt,3,10)] ];
 }
