@@ -139,3 +139,62 @@ This value MUST NOT depend on current market price. Fees and slippage, if modele
 For BTC CORE `0.00946259 BTC @ 77,340.93` with technical invalidation `75,300`, the modeled downside is approximately `19.31 USDC`.
 
 `actualProtectedHeat` or any equivalent protected-risk field may be numeric only when `data/positions-state.json` confirms a real protective stop/order. A recommended technical stop does not constitute protection. If protection is `UNPROTECTED`, actual protected heat is `NOT ESTABLISHED`.
+
+## 11. Missing-entry-lineage management patch — effective 2026-08-27
+
+A user-confirmed real fill may occasionally exist without a contemporaneously persisted Crypto Reca engine/setup/invalidation. That is a process/persistence gap, but the Position Risk engine must not leave the position unmanaged indefinitely.
+
+### 11.1 Preserve historical truth
+
+If `data/positions-state.json` confirms an OPEN fill but its engine/setup/technical invalidation is absent or explicitly unclassified:
+
+- NEVER invent or backfill the original entry thesis;
+- keep `originalThesisState = UNKNOWN` (or equivalent) for audit;
+- keep the confirmed execution fields exactly as recorded;
+- do not mutate `data/positions-state.json` merely to make Position Risk calculable.
+
+### 11.2 Create a prospective management thesis
+
+The Position Risk engine MUST create a separate prospective `managementThesis` from the first successful run after the gap is detected. This is current risk management, not a reconstruction of why the user bought.
+
+Use completed candles only and require sufficient 1H + 4H structure. 15m may refine timing; 1D supplies regime context.
+
+For an unclassified long, assign `managementLane = MANAGEMENT_ONLY` and derive a current management invalidation as follows:
+
+1. identify the nearest defensible completed support below current price, preferring a completed 4H swing/base/reclaim low that has not been invalidated;
+2. if no usable 4H level exists, use a completed 1H support/base that has been respected by at least two completed 1H closes;
+3. place the management invalidation below that support using a structural buffer of `max(0.25 * ATR14(1H), 0.15% of current price)`;
+4. the level must be below current price and technically defensible; never force an invalidation simply to create a numeric PRS;
+5. freeze the first valid level contemporaneously in `data/position-risk.json` with `invalidationStatus = MANAGEMENT_CURRENT`, `managementThesisCreatedAt`, source timeframe and defended support.
+
+### 11.3 Ratchet rule
+
+For a long position, once a `managementInvalidation` is frozen it may NEVER be moved lower merely to avoid an exit or reduce PRS. It may only:
+
+- remain unchanged; or
+- move upward after a new completed higher support/base is established and defended.
+
+Every upward change must be contemporaneously logged in `riskHistory` with the old level, new level and structural evidence.
+
+### 11.4 PRS calculation under management thesis
+
+When the original thesis is UNKNOWN but a valid management invalidation exists:
+
+- calculate Structural A from `managementStructuralState` using the same 0/15/25/40 scale;
+- calculate B/C/D/E normally from current verified market state and protection;
+- produce a numeric PRS and normal action map;
+- keep `thesisState = UNKNOWN_ORIGINAL` and expose a separate `managementThesisState = ACTIVE|BREACH|INVALIDATED|RECLAIMED`;
+- never report `original thesis intact` or `original thesis invalidated` because those facts are unknown.
+
+If the management thesis later invalidates, the action floor rules apply to the MANAGEMENT thesis, while the audit must still state that original entry lineage was unknown.
+
+### 11.5 Data-gap fallback
+
+If a defensible prospective management invalidation cannot be established after the primary OHLCV source plus one reliable fallback attempt:
+
+- `prs = null` is allowed temporarily;
+- action must be `WATCH — RISK DATA GAP` rather than a fabricated HOLD/EXIT signal;
+- retry on every subsequent run;
+- expose the missing requirement explicitly.
+
+A confirmed OPEN position with missing original lineage must therefore transition as soon as data permit from `PRS null` to a prospectively managed numeric PRS; it must not remain permanently unscored simply because the original entry record was incomplete.
