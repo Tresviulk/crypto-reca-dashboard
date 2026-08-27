@@ -177,6 +177,36 @@ Every asset must expose an explicit `executionStatus` separate from ERS and Entr
 
 For ERS>=85, anti-paralysis remains binding: after two consecutive qualifying scans without a hard gate, a generic NO ENTRY is prohibited. The scan must expose BUY NOW CANDIDATE, BUY RETEST CANDIDATE or BUY BREAKOUT CANDIDATE and its exact remaining gate.
 
+### 7.3 Mandatory verification escalation for high-ERS setups
+
+A high ERS may never remain artificially non-actionable merely because indicators derivable from already-available OHLCV were not calculated.
+
+When any asset reaches **ERS >=80**, the same run MUST actively attempt the full execution-verification package for that asset before final decision:
+- completed 1H EMA20, EMA50 and EMA200 when sufficient history exists;
+- completed 4H EMA20 and EMA50;
+- RSI14 1H;
+- MACD12/26/9 1H;
+- ATR14 1H;
+- completed 1H RVOL versus the previous 20 completed 1H candles;
+- completed 15m trigger/hold evidence when required by the selected path;
+- named defended/reclaim/base level and ATR distance for Location;
+- defensible structural invalidation, target, cost allowance and net R/R for every technically plausible execution path.
+
+When **ERS >=85**, this escalation is mandatory and has priority over optional contextual work. `Trend`, `Location` or `Momentum` may not be left `PARTIAL` solely because the run did not calculate indicators that can be calculated from sufficient OHLCV already obtained. If sufficient candle history is available, calculate them. If the primary source lacks enough history, make at least one reliable public OHLCV fallback attempt before declaring the dimension unavailable.
+
+For ERS >=85, the final state must be one of these with an exact reason:
+- `BLOCKED`: a real hard gate exists; name it.
+- `WATCH — CHASE`: quality is high but current executable location is >1.00 ATR from the defended level or no local invalidation exists; immediately define a prospective retest/base path when technically defensible.
+- `ARMED`: ERS>=80, Entry>=4 and analytical gates pass, but final execution package/Preview is not yet complete.
+- `PREVIEW_REQUIRED`: all analytical and risk gates pass and only fresh Coinbase Advanced Preview remains.
+- `EXECUTABLE`: Preview is fresh and still passes.
+
+A generic `PARTIAL because EMA/MACD/RSI were not revalidated` is prohibited for ERS>=85 when sufficient OHLCV exists to calculate them.
+
+**Anti-late-entry rule:** when an asset first crosses ERS 80, freeze or update a prospective execution path contemporaneously if defensible. If the asset later becomes CHASE, the scan must state whether a valid earlier ARMED/PREVIEW_REQUIRED state existed. Never reconstruct such a state with hindsight; if it was not captured contemporaneously, record it as a process miss in the next 07:00 leakage audit rather than pretending an earlier entry existed.
+
+This section does not lower any ERS threshold, does not weaken anti-chase, does not override hard gates, and does not remove the Coinbase Preview requirement. Its purpose is to prevent avoidable analytical incompleteness from causing the system to recognize a high-quality setup only after the actionable window has passed.
+
 ## 8. System-health contract
 
 Each radar run must write:
