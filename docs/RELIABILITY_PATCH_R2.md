@@ -100,3 +100,16 @@ The next 07:00 audit must explicitly record the SOL 2026-08-26/27 incident as PR
 ## 11. Change control
 
 This patch must be read after `docs/ENGINE_SPEC_V3_ERS.md` at the start of every Crypto Reca Radar and Guard run. If the two conflict, the canonical ERS/scoring definitions remain authoritative; this patch governs reliability, trigger escalation, persistence and alert delivery. Silent drift is prohibited.
+
+## 12. Mandatory v3.3 runtime repair handoff
+
+For every Crypto Reca v3.3 Radar and Guard run, after loading this R2 file, also load and apply `docs/V3_3_RUNTIME_REPAIR.md`.
+
+That repair is mandatory and additive. It does not create a new engine version. It is authoritative for:
+- deterministic v3.3 Early Reversal EMA configuration (`EMA20` fast / `EMA50` slow on completed 15m, 1H and 2H candles);
+- exact EMA state mapping for EMA WATCH / EARLY REVERSAL / 1H CONFIRMING / 2H MOMENTUM CONFIRMED;
+- resource-backed recovery of complete `radar-state.json` content when connector display is truncated;
+- prospective recovery from a stale radar after a successful current write/re-read;
+- the rule that sufficient current 1D/4H/1H core OHLCV must produce numeric ERS even when optional derivatives or secondary inputs are unavailable.
+
+If `docs/V3_3_RUNTIME_REPAIR.md` cannot be read in a v3.3 run, set the v3.3 runtime repair health to FAIL and do not silently revert to undefined EMA periods or the old truncated-display failure mode.
