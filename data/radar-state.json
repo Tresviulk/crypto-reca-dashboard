@@ -1,225 +1,1678 @@
 {
   "schemaVersion": "2.0",
   "module": "radar",
-  "generatedAt": "2026-08-26T20:01:49+02:00",
-  "source": "Canonical ERS R1 loaded from GitHub and applied to BTC, ETH, SOL, XRP, AVAX and HBAR. positions-state.json was read first as execution truth: BTC CORE remains OPEN and UNPROTECTED; SOL Tactical remains CLOSED with +69.98 USDC realized net P&L. Fresh Bybit spot 1H and 4H OHLCV were checked; scoring uses only completed candles, so the current 18:00 UTC 1H and 16:00 UTC 4H candles were excluded. The latest completed 17:00 UTC 1H candle rebounded in all six assets but no asset had verified supportive RVOL >=1.20. A newly completed 12:00 UTC 4H candle was reviewed; no D change is made because the deterministic two-of-three 4H classification threshold was not fully established for a different state. Optional derivatives were not fetched and score 0 exactly. No asset completed its named reclaim trigger, so Trigger remains false. The next scheduled US weekly claims release is inside 24h but outside 6h, so event-risk scores 3/5.",
+  "generatedAt": "2026-09-05T17:49:34+02:00",
+  "source": "GitHub Actions Hourly State Sync — deterministic public market data",
   "engineVersion": "Crypto Reca v3.0",
   "validationCapital": 14687.25,
   "scan": {
-    "id": "CR30-20260826-2001",
-    "timestampEuropeMadrid": "2026-08-26 20:01",
+    "id": "CRSYNC-202609051749",
+    "timestampEuropeMadrid": "2026-09-05 17:49",
     "dataQuality": "PARTIAL",
-    "bestCondition": "BTC, ETH and SOL share the strongest fresh setup quality around ERS 49, but all remain WATCH with only 1/5 Entry confirmation. BTC remains the strongest portfolio condition only as the existing CORE hold.",
-    "closestSetup": "BTC/ETH/SOL are rebuilding after the afternoon washout, but all remain below their named reclaim ceilings: BTC 78,900-79,200; ETH 2,470; SOL about 97.8. HBAR also remains below 0.0781-0.0783. None has a completed trigger or a fresh executable invalidation/target/RR package.",
-    "realOrderThisScan": "NO NEW REAL ORDER — every asset is below ERS 70 and Entry Engine remains 1/5 or lower. Coinbase Advanced Preview is therefore not requested.",
-    "conclusion": "The latest completed 1H rebounded across all six assets, but participation was sub-confirmation and the move has not rebuilt a valid long trigger. BTC CORE remains OPEN and UNPROTECTED; MODELED HEAT is fixed at 19.31 USDC and ACTUAL PROTECTED HEAT is not established."
+    "bestCondition": "NONE",
+    "realOrderThisScan": "NO",
+    "conclusion": "Autonomous persistence cycle completed. Scores are setup quality, not win probability. No auto-execution.",
+    "sourceFailures": [
+      "BTC: HTTP 403",
+      "ETH: HTTP 403",
+      "SOL: HTTP 403",
+      "XRP: HTTP 403",
+      "AVAX: HTTP 403",
+      "HBAR: HTTP 403",
+      "ONDO: HTTP 403"
+    ]
   },
   "radar": [
     {
       "asset": "BTC",
       "pair": "BTC-USDC",
-      "d": "D2",
-      "e": "E1",
-      "pullbackScore": 49,
-      "momentumScore": 49,
-      "ers": 49,
-      "ersLane": "MIXED",
-      "entryConfirmation": 1,
-      "entryState": "PARTIAL",
-      "executionStatus": "WATCH",
-      "decision": "HOLD EXISTING CORE / NO ADD. Latest completed 1H closed 78,442 after opening 77,986.6, but estimated RVOL was near 1.0 rather than the >=1.20 confirmation threshold. Price remains below the 78,900-79,200 reclaim ceiling and no completed trigger or executable RR package is verified.",
-      "entryDimensions": {"trend": false, "location": true, "momentum": false, "volume": false, "trigger": false},
-      "structure": {
-        "priceRef": 78474.7,
-        "location": "NEUTRAL LOCAL SUPPORT REBOUND — RECLAIM INCOMPLETE",
-        "nearestTrigger": "Completed 1H acceptance above 78,900-79,200 followed by the required completed hold/retest confirmation with renewed 1H participation >=1.20 RVOL.",
-        "trendConclusion": "D2 maintained. The newly completed 12:00 UTC 4H candle weakened but did not establish a deterministic two-of-three higher-timeframe bearish classification sufficient to change D.",
-        "entryPrice": 77340.93,
-        "qty": 0.00946259,
-        "protection": "UNPROTECTED",
-        "technicalInvalidation": 75300,
-        "modeledLossToInvalidationUSDC": 19.31,
-        "modeledLossPctValidationCapital": 0.13,
-        "actualProtectedHeat": "NOT ESTABLISHED — no confirmed protective order",
-        "approxGrossPnLUSDC": 10.73,
-        "approxPnLAfterEntryFeeBeforeExitUSDC": 9.56,
-        "rvol1h": 1.0
-      }
+      "d": null,
+      "e": null,
+      "pullbackScore": null,
+      "momentumScore": null,
+      "ers": null,
+      "ersLane": null,
+      "entryConfirmation": null,
+      "entryState": "DATA GAP",
+      "executionStatus": "BLOCKED",
+      "decision": "NO TRADE — DATA GAP",
+      "dataQuality": "FAIL"
     },
     {
       "asset": "ETH",
       "pair": "ETH-USDC",
-      "d": "D2",
-      "e": "E1",
-      "pullbackScore": 49,
-      "momentumScore": 49,
-      "ers": 49,
-      "ersLane": "MIXED",
-      "entryConfirmation": 1,
-      "entryState": "PARTIAL",
-      "executionStatus": "WATCH",
-      "decision": "WATCH ONLY. Latest completed 1H rose from 2,444.46 to 2,460.71 but did not reclaim 2,470 and volume remained below the >=1.20 RVOL confirmation threshold. No completed trigger or executable RR package exists.",
-      "entryDimensions": {"trend": false, "location": true, "momentum": false, "volume": false, "trigger": false},
-      "structure": {
-        "priceRef": 2459.27,
-        "location": "NEUTRAL LOCAL SUPPORT REBOUND — BELOW RECLAIM",
-        "nearestTrigger": "Completed 1H close above 2,470 followed by a completed hold/retest with renewed participation before rebuilding a Tactical package.",
-        "trendConclusion": "D2 maintained; the completed 12:00 UTC 4H decline does not by itself satisfy the deterministic two-of-three bearish test needed to change D.",
-        "rvol1h": 1.0
-      }
+      "d": null,
+      "e": null,
+      "pullbackScore": null,
+      "momentumScore": null,
+      "ers": null,
+      "ersLane": null,
+      "entryConfirmation": null,
+      "entryState": "DATA GAP",
+      "executionStatus": "BLOCKED",
+      "decision": "NO TRADE — DATA GAP",
+      "dataQuality": "FAIL"
     },
     {
       "asset": "SOL",
       "pair": "SOL-USDC",
-      "d": "D2",
-      "e": "E1",
-      "pullbackScore": 49,
-      "momentumScore": 49,
-      "ers": 49,
-      "ersLane": "MIXED",
-      "entryConfirmation": 1,
-      "entryState": "PARTIAL",
-      "executionStatus": "WATCH",
-      "decision": "WATCH / FRESH RESET ONLY. The confirmed prior SOL trade remains CLOSED. Latest completed 1H rose from 95.95 to 96.97 but failed to complete acceptance above roughly 97.8; participation was not strong enough for Volume=true and no new invalidation/target/RR package is defined.",
-      "entryDimensions": {"trend": false, "location": true, "momentum": false, "volume": false, "trigger": false},
-      "structure": {
-        "priceRef": 97.0097,
-        "location": "NEUTRAL REBOUND / RECLAIM INCOMPLETE",
-        "nearestTrigger": "Complete acceptance above roughly 97.8, then hold/retest it with renewed participation; only then define a new structural invalidation and target.",
-        "trendConclusion": "D2 maintained. The completed 12:00 UTC 4H candle remained corrective, but the deterministic higher-timeframe classification threshold for D1 was not fully established.",
-        "rvol1h": 1.17
-      }
+      "d": null,
+      "e": null,
+      "pullbackScore": null,
+      "momentumScore": null,
+      "ers": null,
+      "ersLane": null,
+      "entryConfirmation": null,
+      "entryState": "DATA GAP",
+      "executionStatus": "BLOCKED",
+      "decision": "NO TRADE — DATA GAP",
+      "dataQuality": "FAIL"
     },
     {
       "asset": "XRP",
       "pair": "XRP-USDC",
-      "d": "D1",
-      "e": "E1",
-      "pullbackScore": 36,
-      "momentumScore": 31,
-      "ers": 36,
-      "ersLane": "PULLBACK",
-      "entryConfirmation": 1,
-      "entryState": "PARTIAL",
-      "executionStatus": "WATCH",
-      "decision": "WATCH ONLY. Latest completed 1H rebounded from 1.3747 to 1.3866, but XRP remains far below the roughly 1.46 reclaim and its completed 4H structure remains transitional/weak. No valid long trigger or executable package exists.",
-      "entryDimensions": {"trend": false, "location": true, "momentum": false, "volume": false, "trigger": false},
-      "structure": {
-        "priceRef": 1.38578,
-        "location": "NEUTRAL LOCAL REBOUND — MATERIAL DISTANCE TO RECLAIM",
-        "nearestTrigger": "Recover roughly 1.46 first, then form a completed reclaim/hold with explicit structural invalidation before considering a long thesis.",
-        "trendConclusion": "D1 maintained; the latest completed 12:00 UTC 4H candle extended the lower-high/lower-low corrective structure rather than resolving it.",
-        "rvol1h": 0.82
-      }
+      "d": null,
+      "e": null,
+      "pullbackScore": null,
+      "momentumScore": null,
+      "ers": null,
+      "ersLane": null,
+      "entryConfirmation": null,
+      "entryState": "DATA GAP",
+      "executionStatus": "BLOCKED",
+      "decision": "NO TRADE — DATA GAP",
+      "dataQuality": "FAIL"
     },
     {
       "asset": "AVAX",
       "pair": "AVAX-USDC",
-      "d": "D1",
-      "e": "E1",
-      "pullbackScore": 38,
-      "momentumScore": 28,
-      "ers": 38,
-      "ersLane": "PULLBACK",
-      "entryConfirmation": 1,
-      "entryState": "PARTIAL",
-      "executionStatus": "WATCH",
-      "decision": "WATCH ONLY. Latest completed 1H rose from 7.213 to 7.246 from local support, but RVOL remained weak and price is still below the 7.43-7.46 reclaim reference. No valid trigger or executable long package exists.",
-      "entryDimensions": {"trend": false, "location": true, "momentum": false, "volume": false, "trigger": false},
-      "structure": {
-        "priceRef": 7.24726,
-        "location": "GOOD/NEUTRAL LOCAL SUPPORT REBOUND — BELOW PRIMARY RECLAIM",
-        "nearestTrigger": "Reclaim 7.43-7.46 on a completed candle, then hold/retest it with renewed participation and define a fresh structural invalidation.",
-        "trendConclusion": "D1 maintained; the latest completed 4H remains corrective and does not restore decisive higher-timeframe long alignment.",
-        "rvol1h": 0.7
-      }
+      "d": null,
+      "e": null,
+      "pullbackScore": null,
+      "momentumScore": null,
+      "ers": null,
+      "ersLane": null,
+      "entryConfirmation": null,
+      "entryState": "DATA GAP",
+      "executionStatus": "BLOCKED",
+      "decision": "NO TRADE — DATA GAP",
+      "dataQuality": "FAIL"
     },
     {
       "asset": "HBAR",
       "pair": "HBAR-USDC",
-      "d": "D2",
-      "e": "E1",
-      "pullbackScore": 46,
-      "momentumScore": 46,
-      "ers": 46,
-      "ersLane": "MIXED",
-      "entryConfirmation": 1,
-      "entryState": "PARTIAL",
-      "executionStatus": "WATCH",
-      "decision": "WATCH ONLY. Latest completed 1H rose from 0.07681 to 0.07724, but volume remained below the >=1.20 RVOL confirmation threshold and HBAR did not reclaim 0.0781-0.0783. No completed trigger or executable Tactical package exists.",
-      "entryDimensions": {"trend": false, "location": true, "momentum": false, "volume": false, "trigger": false},
-      "structure": {
-        "priceRef": 0.077198,
-        "location": "NEUTRAL LOCAL SUPPORT REBOUND — RECLAIM INCOMPLETE",
-        "nearestTrigger": "Complete a reclaim above roughly 0.0781-0.0783, then hold/retest it with renewed 1H participation before defining a Tactical package.",
-        "trendConclusion": "D2 maintained pending a fully deterministic higher-timeframe reclassification; the latest completed 4H is corrective but one completed bar alone does not justify a regime flip.",
-        "rvol1h": 0.82
-      }
+      "d": null,
+      "e": null,
+      "pullbackScore": null,
+      "momentumScore": null,
+      "ers": null,
+      "ersLane": null,
+      "entryConfirmation": null,
+      "entryState": "DATA GAP",
+      "executionStatus": "BLOCKED",
+      "decision": "NO TRADE — DATA GAP",
+      "dataQuality": "FAIL"
+    },
+    {
+      "asset": "ONDO",
+      "pair": "ONDO-USDC",
+      "d": null,
+      "e": null,
+      "pullbackScore": null,
+      "momentumScore": null,
+      "ers": null,
+      "ersLane": null,
+      "entryConfirmation": null,
+      "entryState": "DATA GAP",
+      "executionStatus": "BLOCKED",
+      "decision": "NO TRADE — DATA GAP",
+      "dataQuality": "FAIL"
     }
   ],
   "history": [
-    {"id":"CR30-20260824-0200","timestampEuropeMadrid":"2026-08-24 02:00","dataQuality":"PARTIAL","bestCondition":"BTC CORE hold / XRP fresh research watch","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":83,"entryConfirmation":3},"ETH":{"ers":80,"entryConfirmation":3},"SOL":{"ers":80,"entryConfirmation":3},"XRP":{"ers":84,"entryConfirmation":3},"AVAX":{"ers":81,"entryConfirmation":3},"SUI":{"ers":82,"entryConfirmation":3}}},
-    {"id":"CR30-20260824-0258","timestampEuropeMadrid":"2026-08-24 02:58","dataQuality":"PARTIAL","bestCondition":"BTC strongest technical confirmation; no validated CORE add-on","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":86,"entryConfirmation":5},"ETH":{"ers":82,"entryConfirmation":4},"SOL":{"ers":82,"entryConfirmation":4},"XRP":{"ers":82,"entryConfirmation":3},"AVAX":{"ers":79,"entryConfirmation":3},"SUI":{"ers":81,"entryConfirmation":3}}},
-    {"id":"CR30-20260824-0402","timestampEuropeMadrid":"2026-08-24 04:02","dataQuality":"PARTIAL","bestCondition":"No executable long; broad short-term risk deterioration","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":76,"entryConfirmation":1},"ETH":{"ers":73,"entryConfirmation":1},"SOL":{"ers":70,"entryConfirmation":0},"XRP":{"ers":68,"entryConfirmation":0},"AVAX":{"ers":70,"entryConfirmation":1},"SUI":{"ers":65,"entryConfirmation":0}}},
-    {"id":"CR30-20260824-0500","timestampEuropeMadrid":"2026-08-24 05:00","dataQuality":"PARTIAL","bestCondition":"BTC rebound strongest; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":79,"entryConfirmation":4},"ETH":{"ers":76,"entryConfirmation":3},"SOL":{"ers":72,"entryConfirmation":2},"XRP":{"ers":72,"entryConfirmation":2},"AVAX":{"ers":74,"entryConfirmation":2},"SUI":{"ers":69,"entryConfirmation":2}}},
-    {"id":"CR30-20260824-0600","timestampEuropeMadrid":"2026-08-24 06:00","dataQuality":"PARTIAL","bestCondition":"BTC higher-timeframe structure strongest; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":75,"entryConfirmation":2},"ETH":{"ers":72,"entryConfirmation":2},"SOL":{"ers":67,"entryConfirmation":1},"XRP":{"ers":68,"entryConfirmation":1},"AVAX":{"ers":71,"entryConfirmation":2},"SUI":{"ers":65,"entryConfirmation":1}}},
-    {"id":"CR30-20260824-0700","timestampEuropeMadrid":"2026-08-24 07:00","dataQuality":"PARTIAL","bestCondition":"BTC HTF strongest; AVAX closest fresh timing; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":76,"entryConfirmation":2},"ETH":{"ers":73,"entryConfirmation":2},"SOL":{"ers":68,"entryConfirmation":1},"XRP":{"ers":70,"entryConfirmation":2},"AVAX":{"ers":74,"entryConfirmation":3},"SUI":{"ers":67,"entryConfirmation":2}}},
-    {"id":"CR30-20260824-0800","timestampEuropeMadrid":"2026-08-24 08:00","dataQuality":"PARTIAL","bestCondition":"BTC recovery strongest; AVAX best fresh research candidate; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":78,"entryConfirmation":4},"ETH":{"ers":76,"entryConfirmation":3},"SOL":{"ers":70,"entryConfirmation":2},"XRP":{"ers":71,"entryConfirmation":2},"AVAX":{"ers":76,"entryConfirmation":3},"SUI":{"ers":69,"entryConfirmation":2}}},
-    {"id":"CR30-20260824-0903","timestampEuropeMadrid":"2026-08-24 09:03","dataQuality":"PARTIAL","bestCondition":"BTC strongest current condition; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":84,"entryConfirmation":5},"ETH":{"ers":81,"entryConfirmation":4},"SOL":{"ers":74,"entryConfirmation":3},"XRP":{"ers":75,"entryConfirmation":3},"AVAX":{"ers":76,"entryConfirmation":3},"SUI":{"ers":68,"entryConfirmation":2}}},
-    {"id":"CR30-20260824-1012","timestampEuropeMadrid":"2026-08-24 10:12","dataQuality":"PARTIAL","bestCondition":"ETH best fresh pullback research; BTC strongest CORE hold; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":79,"entryConfirmation":2},"ETH":{"ers":80,"entryConfirmation":4},"SOL":{"ers":68,"entryConfirmation":2},"XRP":{"ers":68,"entryConfirmation":2},"AVAX":{"ers":71,"entryConfirmation":1},"SUI":{"ers":62,"entryConfirmation":1}}},
-    {"id":"CR30-20260824-1103","timestampEuropeMadrid":"2026-08-24 11:03","dataQuality":"PARTIAL","bestCondition":"ETH best fresh pullback research; BTC strongest CORE hold; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":77,"entryConfirmation":2},"ETH":{"ers":79,"entryConfirmation":2},"SOL":{"ers":67,"entryConfirmation":2},"XRP":{"ers":66,"entryConfirmation":2},"AVAX":{"ers":69,"entryConfirmation":2},"SUI":{"ers":61,"entryConfirmation":1}}},
-    {"id":"CR30-20260824-1302","timestampEuropeMadrid":"2026-08-24 13:02","dataQuality":"PARTIAL","bestCondition":"BTC CORE hold; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":81,"entryConfirmation":3},"ETH":{"ers":80,"entryConfirmation":3},"SOL":{"ers":68,"entryConfirmation":2},"XRP":{"ers":69,"entryConfirmation":1},"AVAX":{"ers":70,"entryConfirmation":1},"SUI":{"ers":62,"entryConfirmation":1}}},
-    {"id":"CR30-20260824-1403","timestampEuropeMadrid":"2026-08-24 14:03","dataQuality":"PARTIAL","bestCondition":"BTC CORE add-on timing analytically valid; Coinbase Preview required","realOrderThisScan":"CORE ADD-ON CANDIDATE ONLY","radar":{"BTC":{"ers":89,"entryConfirmation":5},"ETH":{"ers":87,"entryConfirmation":4},"SOL":{"ers":83,"entryConfirmation":4},"XRP":{"ers":81,"entryConfirmation":4},"AVAX":{"ers":76,"entryConfirmation":3},"SUI":{"ers":70,"entryConfirmation":2}}},
-    {"id":"CR30-20260824-1807","timestampEuropeMadrid":"2026-08-24 18:07","dataQuality":"PARTIAL","bestCondition":"BTC strongest HTF but current add-on location is chase","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":88,"entryConfirmation":4},"ETH":{"ers":84,"entryConfirmation":4},"SOL":{"ers":86,"entryConfirmation":4},"XRP":{"ers":83,"entryConfirmation":4},"AVAX":{"ers":77,"entryConfirmation":3},"SUI":{"ers":68,"entryConfirmation":2}}},
-    {"id":"CR30-20260824-1905","timestampEuropeMadrid":"2026-08-24 19:05","dataQuality":"PARTIAL","bestCondition":"BTC remains strongest HTF, but 15m/1H rejection from 80k removes executable timing; no new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":80,"entryConfirmation":3},"ETH":{"ers":76,"entryConfirmation":2},"SOL":{"ers":78,"entryConfirmation":2},"XRP":{"ers":72,"entryConfirmation":2},"AVAX":{"ers":72,"entryConfirmation":2},"SUI":{"ers":64,"entryConfirmation":1}}},
-    {"id":"CR30-20260824-2000","timestampEuropeMadrid":"2026-08-24 20:00","dataQuality":"PARTIAL","bestCondition":"BTC pullback/base remains the strongest condition, but no confirmed long trigger; no new order","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":78,"entryConfirmation":2},"ETH":{"ers":76,"entryConfirmation":2},"SOL":{"ers":74,"entryConfirmation":2},"XRP":{"ers":68,"entryConfirmation":1},"AVAX":{"ers":73,"entryConfirmation":2},"SUI":{"ers":64,"entryConfirmation":1}}},
-    {"id":"CR30-20260824-2100","timestampEuropeMadrid":"2026-08-24 21:00","dataQuality":"PARTIAL","bestCondition":"BTC pullback stabilization is strongest; timing improved to PREPARE but no completed trigger","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":77,"entryConfirmation":3},"ETH":{"ers":75,"entryConfirmation":2},"SOL":{"ers":73,"entryConfirmation":2},"XRP":{"ers":66,"entryConfirmation":2},"AVAX":{"ers":72,"entryConfirmation":2},"SUI":{"ers":58,"entryConfirmation":1}}},
-    {"id":"CR30-20260824-2258","timestampEuropeMadrid":"2026-08-24 22:58","dataQuality":"PARTIAL","bestCondition":"BTC strongest HTF; reclaim incomplete; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":78,"entryConfirmation":3},"ETH":{"ers":75,"entryConfirmation":2},"SOL":{"ers":76,"entryConfirmation":2},"XRP":{"ers":65,"entryConfirmation":2},"AVAX":{"ers":71,"entryConfirmation":2},"SUI":{"ers":56,"entryConfirmation":1}}},
-    {"id":"CR30-20260825-0002","timestampEuropeMadrid":"2026-08-25 00:02","dataQuality":"PARTIAL","bestCondition":"BTC strongest overall; reclaim still incomplete; no executable new long","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":79,"entryConfirmation":3},"ETH":{"ers":77,"entryConfirmation":3},"SOL":{"ers":76,"entryConfirmation":2},"XRP":{"ers":66,"entryConfirmation":2},"AVAX":{"ers":73,"entryConfirmation":3},"SUI":{"ers":54,"entryConfirmation":1}}},
-    {"id":"CR30-20260825-0223","timestampEuropeMadrid":"2026-08-25 02:23","dataQuality":"PARTIAL","bestCondition":"SOL raw momentum strongest but blocked for a fresh add; BTC best actionable watch","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":75,"entryConfirmation":2},"ETH":{"ers":71,"entryConfirmation":2},"SOL":{"ers":84,"entryConfirmation":3},"XRP":{"ers":62,"entryConfirmation":2},"AVAX":{"ers":64,"entryConfirmation":2},"SUI":{"ers":48,"entryConfirmation":1}}},
-    {"id":"CR30-20260825-0358","timestampEuropeMadrid":"2026-08-25 03:58","dataQuality":"PARTIAL","bestCondition":"BTC completed the 79k reclaim/hold and is the closest fresh setup, but breakout volume remains sub-quality and executable net R/R has not been validated; no real order without fresh Coinbase Preview.","realOrderThisScan":"NO NEW ORDER","radar":{"BTC":{"ers":83,"entryConfirmation":4},"ETH":{"ers":79,"entryConfirmation":4},"SOL":{"ers":87,"entryConfirmation":4},"XRP":{"ers":75,"entryConfirmation":3},"AVAX":{"ers":71,"entryConfirmation":2},"SUI":{"ers":58,"entryConfirmation":2}}},
-    {"id":"CR30-20260825-0700","timestampEuropeMadrid":"2026-08-25 07:00","dataQuality":"PARTIAL","bestCondition":"BTC strongest fresh setup; ENTRY READY but not a final real order without validated RR/sizing and Coinbase Preview","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":86,"entryConfirmation":4},"ETH":{"ers":82,"entryConfirmation":3},"SOL":{"ers":86,"entryConfirmation":4},"XRP":{"ers":79,"entryConfirmation":3},"AVAX":{"ers":76,"entryConfirmation":3},"SUI":{"ers":62,"entryConfirmation":2}}},
-    {"id":"CR30-20260825-0757","timestampEuropeMadrid":"2026-08-25 07:57","dataQuality":"PARTIAL","bestCondition":"BTC strongest fresh setup; second consecutive ERS>=85 scan activates anti-paralysis and requires explicit BUY RETEST / BUY BREAKOUT candidate paths","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":88,"entryConfirmation":4},"ETH":{"ers":82,"entryConfirmation":3},"SOL":{"ers":88,"entryConfirmation":3},"XRP":{"ers":81,"entryConfirmation":3},"AVAX":{"ers":80,"entryConfirmation":3},"SUI":{"ers":69,"entryConfirmation":2}}},
-    {"id":"CR30-20260825-1300","timestampEuropeMadrid":"2026-08-25 13:00","dataQuality":"PARTIAL","bestCondition":"BTC strongest CORE management asset; no executable fresh long timing","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":79,"entryConfirmation":2},"ETH":{"ers":79,"entryConfirmation":2},"SOL":{"ers":80,"entryConfirmation":2},"XRP":{"ers":76,"entryConfirmation":2},"AVAX":{"ers":75,"entryConfirmation":2},"SUI":{"ers":62,"entryConfirmation":1}}},
-    {"id":"CR30-20260825-1400","timestampEuropeMadrid":"2026-08-25 14:01","dataQuality":"PARTIAL","bestCondition":"BTC strongest CORE management asset; no executable fresh long timing","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":78,"entryConfirmation":2},"ETH":{"ers":77,"entryConfirmation":2},"SOL":{"ers":78,"entryConfirmation":2},"XRP":{"ers":74,"entryConfirmation":2},"AVAX":{"ers":73,"entryConfirmation":2},"SUI":{"ers":58,"entryConfirmation":1}}},
-    {"id":"CR30-20260825-1800","timestampEuropeMadrid":"2026-08-25 18:00","dataQuality":"PARTIAL","bestCondition":"BTC strongest overall; rebound restored 4/5 timing but current price is above preferred retest max","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":84,"entryConfirmation":4},"ETH":{"ers":81,"entryConfirmation":4},"SOL":{"ers":81,"entryConfirmation":4},"XRP":{"ers":77,"entryConfirmation":3},"AVAX":{"ers":76,"entryConfirmation":3},"SUI":{"ers":58,"entryConfirmation":2}}},
-    {"id":"CR30-20260825-2100","timestampEuropeMadrid":"2026-08-25 21:00","dataQuality":"PARTIAL","bestCondition":"BTC strongest structural asset; SOL best fresh intrahour reclaim, but no executable new long","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":78,"entryConfirmation":2},"ETH":{"ers":74,"entryConfirmation":2},"SOL":{"ers":76,"entryConfirmation":3},"XRP":{"ers":68,"entryConfirmation":2},"AVAX":{"ers":69,"entryConfirmation":2},"SUI":{"ers":49,"entryConfirmation":1}}},
-    {"id":"CR30-20260825-2158","timestampEuropeMadrid":"2026-08-25 21:58","dataQuality":"PARTIAL","bestCondition":"BTC strongest structural asset; broad 1H softening and no executable fresh long","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":76,"entryConfirmation":2},"ETH":{"ers":72,"entryConfirmation":2},"SOL":{"ers":74,"entryConfirmation":2},"XRP":{"ers":66,"entryConfirmation":2},"AVAX":{"ers":67,"entryConfirmation":2},"SUI":{"ers":45,"entryConfirmation":1}}},
-    {"id":"CR30-20260825-2301","timestampEuropeMadrid":"2026-08-25 23:01","dataQuality":"PARTIAL","bestCondition":"BTC remains the strongest asset only as an existing CORE hold; all six fresh-long scores weakened after the broad 22:00-23:00 selloff and no new executable long is present.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":63,"entryConfirmation":2},"ETH":{"ers":57,"entryConfirmation":2},"SOL":{"ers":56,"entryConfirmation":2},"XRP":{"ers":48,"entryConfirmation":1},"AVAX":{"ers":50,"entryConfirmation":1},"SUI":{"ers":31,"entryConfirmation":0}}},
-    {"id":"CR30-20260826-0002","timestampEuropeMadrid":"2026-08-26 00:02","dataQuality":"PARTIAL","bestCondition":"SOL has the strongest short-term rebound after the 95.08 washout; BTC remains the strongest overall structural asset. No fresh long is executable.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":73,"entryConfirmation":3},"ETH":{"ers":69,"entryConfirmation":3},"SOL":{"ers":72,"entryConfirmation":4},"XRP":{"ers":58,"entryConfirmation":2},"AVAX":{"ers":60,"entryConfirmation":2},"SUI":{"ers":36,"entryConfirmation":1}}},
-    {"id":"CR30-20260826-0300","timestampEuropeMadrid":"2026-08-26 03:00","dataQuality":"PARTIAL","bestCondition":"BTC strongest overall structural asset; 15m stabilization but no fresh long reaches ERS 80.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":71,"entryConfirmation":3},"ETH":{"ers":67,"entryConfirmation":2},"SOL":{"ers":68,"entryConfirmation":3},"XRP":{"ers":52,"entryConfirmation":2},"AVAX":{"ers":55,"entryConfirmation":2},"SUI":{"ers":32,"entryConfirmation":0}}},
-    {"id":"CR30-20260826-0500","timestampEuropeMadrid":"2026-08-26 05:00","dataQuality":"PARTIAL","bestCondition":"BTC strongest overall as existing CORE hold; weak participation and no completed fresh trigger.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":51,"entryConfirmation":1},"ETH":{"ers":46,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":30,"entryConfirmation":0},"AVAX":{"ers":30,"entryConfirmation":0},"SUI":{"ers":20,"entryConfirmation":0}}},
-    {"id":"CR30-20260826-0558","timestampEuropeMadrid":"2026-08-26 05:58","dataQuality":"PARTIAL","bestCondition":"BTC strongest overall as existing CORE hold; no new completed 1H evidence since 05:00 and no fresh trigger.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":51,"entryConfirmation":1},"ETH":{"ers":46,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":30,"entryConfirmation":0},"AVAX":{"ers":30,"entryConfirmation":0},"SUI":{"ers":20,"entryConfirmation":0}}},
-    {"id":"CR30-20260826-0701","timestampEuropeMadrid":"2026-08-26 07:01","dataQuality":"PARTIAL","bestCondition":"BTC strongest portfolio condition as existing CORE; ETH highest fresh setup score; no executable new long.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":46,"entryConfirmation":1},"ETH":{"ers":49,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":33,"entryConfirmation":0},"AVAX":{"ers":33,"entryConfirmation":0},"SUI":{"ers":18,"entryConfirmation":0}}},
-    {"id":"CR30-20260826-1002","timestampEuropeMadrid":"2026-08-26 10:02","dataQuality":"PARTIAL","bestCondition":"BTC strongest portfolio condition as existing CORE; ETH/HBAR highest fresh setup score; no executable new long.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":39,"entryConfirmation":1},"ETH":{"ers":44,"entryConfirmation":1},"SOL":{"ers":42,"entryConfirmation":1},"XRP":{"ers":31,"entryConfirmation":0},"AVAX":{"ers":31,"entryConfirmation":0},"HBAR":{"ers":44,"entryConfirmation":1}}},
-    {"id":"CR30-20260826-1359","timestampEuropeMadrid":"2026-08-26 13:59","dataQuality":"PARTIAL","bestCondition":"SOL highest fresh ERS; BTC strongest portfolio condition as existing CORE; no executable new long.","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":43,"entryConfirmation":1},"ETH":{"ers":43,"entryConfirmation":1},"SOL":{"ers":46,"entryConfirmation":1},"XRP":{"ers":33,"entryConfirmation":1},"AVAX":{"ers":25,"entryConfirmation":0},"HBAR":{"ers":43,"entryConfirmation":1}}},
-    {"id":"CR30-20260826-2001","timestampEuropeMadrid":"2026-08-26 20:01","dataQuality":"PARTIAL","bestCondition":"BTC/ETH/SOL strongest fresh watches; BTC remains existing CORE hold","realOrderThisScan":"NO NEW REAL ORDER","radar":{"BTC":{"ers":49,"entryConfirmation":1},"ETH":{"ers":49,"entryConfirmation":1},"SOL":{"ers":49,"entryConfirmation":1},"XRP":{"ers":36,"entryConfirmation":1},"AVAX":{"ers":38,"entryConfirmation":1},"HBAR":{"ers":46,"entryConfirmation":1}}}
+    {
+      "id": "CR30-20260824-0200",
+      "timestampEuropeMadrid": "2026-08-24 02:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC CORE hold / XRP fresh research watch",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 83,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 80,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 80,
+          "entryConfirmation": 3
+        },
+        "XRP": {
+          "ers": 84,
+          "entryConfirmation": 3
+        },
+        "AVAX": {
+          "ers": 81,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 82,
+          "entryConfirmation": 3
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-0258",
+      "timestampEuropeMadrid": "2026-08-24 02:58",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest technical confirmation; no validated CORE add-on",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 86,
+          "entryConfirmation": 5
+        },
+        "ETH": {
+          "ers": 82,
+          "entryConfirmation": 4
+        },
+        "SOL": {
+          "ers": 82,
+          "entryConfirmation": 4
+        },
+        "XRP": {
+          "ers": 82,
+          "entryConfirmation": 3
+        },
+        "AVAX": {
+          "ers": 79,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 81,
+          "entryConfirmation": 3
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-0402",
+      "timestampEuropeMadrid": "2026-08-24 04:02",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "No executable long; broad short-term risk deterioration",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 76,
+          "entryConfirmation": 1
+        },
+        "ETH": {
+          "ers": 73,
+          "entryConfirmation": 1
+        },
+        "SOL": {
+          "ers": 70,
+          "entryConfirmation": 0
+        },
+        "XRP": {
+          "ers": 68,
+          "entryConfirmation": 0
+        },
+        "AVAX": {
+          "ers": 70,
+          "entryConfirmation": 1
+        },
+        "SUI": {
+          "ers": 65,
+          "entryConfirmation": 0
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-0500",
+      "timestampEuropeMadrid": "2026-08-24 05:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC rebound strongest; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 79,
+          "entryConfirmation": 4
+        },
+        "ETH": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 72,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 72,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 74,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 69,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-0600",
+      "timestampEuropeMadrid": "2026-08-24 06:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC higher-timeframe structure strongest; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 75,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 72,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 67,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 68,
+          "entryConfirmation": 1
+        },
+        "AVAX": {
+          "ers": 71,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 65,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-0700",
+      "timestampEuropeMadrid": "2026-08-24 07:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC HTF strongest; AVAX closest fresh timing; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 76,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 73,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 68,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 70,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 74,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 67,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-0800",
+      "timestampEuropeMadrid": "2026-08-24 08:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC recovery strongest; AVAX best fresh research candidate; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 78,
+          "entryConfirmation": 4
+        },
+        "ETH": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 70,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 71,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 69,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-0903",
+      "timestampEuropeMadrid": "2026-08-24 09:03",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest current condition; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 84,
+          "entryConfirmation": 5
+        },
+        "ETH": {
+          "ers": 81,
+          "entryConfirmation": 4
+        },
+        "SOL": {
+          "ers": 74,
+          "entryConfirmation": 3
+        },
+        "XRP": {
+          "ers": 75,
+          "entryConfirmation": 3
+        },
+        "AVAX": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 68,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-1012",
+      "timestampEuropeMadrid": "2026-08-24 10:12",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "ETH best fresh pullback research; BTC strongest CORE hold; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 79,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 80,
+          "entryConfirmation": 4
+        },
+        "SOL": {
+          "ers": 68,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 68,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 71,
+          "entryConfirmation": 1
+        },
+        "SUI": {
+          "ers": 62,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-1103",
+      "timestampEuropeMadrid": "2026-08-24 11:03",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "ETH best fresh pullback research; BTC strongest CORE hold; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 77,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 79,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 67,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 66,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 69,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 61,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-1302",
+      "timestampEuropeMadrid": "2026-08-24 13:02",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC CORE hold; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 81,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 80,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 68,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 69,
+          "entryConfirmation": 1
+        },
+        "AVAX": {
+          "ers": 70,
+          "entryConfirmation": 1
+        },
+        "SUI": {
+          "ers": 62,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-1403",
+      "timestampEuropeMadrid": "2026-08-24 14:03",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC CORE add-on timing analytically valid; Coinbase Preview required",
+      "realOrderThisScan": "CORE ADD-ON CANDIDATE ONLY",
+      "radar": {
+        "BTC": {
+          "ers": 89,
+          "entryConfirmation": 5
+        },
+        "ETH": {
+          "ers": 87,
+          "entryConfirmation": 4
+        },
+        "SOL": {
+          "ers": 83,
+          "entryConfirmation": 4
+        },
+        "XRP": {
+          "ers": 81,
+          "entryConfirmation": 4
+        },
+        "AVAX": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 70,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-1807",
+      "timestampEuropeMadrid": "2026-08-24 18:07",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest HTF but current add-on location is chase",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 88,
+          "entryConfirmation": 4
+        },
+        "ETH": {
+          "ers": 84,
+          "entryConfirmation": 4
+        },
+        "SOL": {
+          "ers": 86,
+          "entryConfirmation": 4
+        },
+        "XRP": {
+          "ers": 83,
+          "entryConfirmation": 4
+        },
+        "AVAX": {
+          "ers": 77,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 68,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-1905",
+      "timestampEuropeMadrid": "2026-08-24 19:05",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC remains strongest HTF, but 15m/1H rejection from 80k removes executable timing; no new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 80,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 76,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 78,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 72,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 72,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 64,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-2000",
+      "timestampEuropeMadrid": "2026-08-24 20:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC pullback/base remains the strongest condition, but no confirmed long trigger; no new order",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 78,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 76,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 74,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 68,
+          "entryConfirmation": 1
+        },
+        "AVAX": {
+          "ers": 73,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 64,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-2100",
+      "timestampEuropeMadrid": "2026-08-24 21:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC pullback stabilization is strongest; timing improved to PREPARE but no completed trigger",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 77,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 75,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 73,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 66,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 72,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 58,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260824-2258",
+      "timestampEuropeMadrid": "2026-08-24 22:58",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest HTF; reclaim incomplete; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 78,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 75,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 76,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 65,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 71,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 56,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-0002",
+      "timestampEuropeMadrid": "2026-08-25 00:02",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest overall; reclaim still incomplete; no executable new long",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 79,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 77,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 76,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 66,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 73,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 54,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-0223",
+      "timestampEuropeMadrid": "2026-08-25 02:23",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "SOL raw momentum strongest but blocked for a fresh add; BTC best actionable watch",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 75,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 71,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 84,
+          "entryConfirmation": 3
+        },
+        "XRP": {
+          "ers": 62,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 64,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 48,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-0358",
+      "timestampEuropeMadrid": "2026-08-25 03:58",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC completed the 79k reclaim/hold and is the closest fresh setup, but breakout volume remains sub-quality and executable net R/R has not been validated; no real order without fresh Coinbase Preview.",
+      "realOrderThisScan": "NO NEW ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 83,
+          "entryConfirmation": 4
+        },
+        "ETH": {
+          "ers": 79,
+          "entryConfirmation": 4
+        },
+        "SOL": {
+          "ers": 87,
+          "entryConfirmation": 4
+        },
+        "XRP": {
+          "ers": 75,
+          "entryConfirmation": 3
+        },
+        "AVAX": {
+          "ers": 71,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 58,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-0700",
+      "timestampEuropeMadrid": "2026-08-25 07:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest fresh setup; ENTRY READY but not a final real order without validated RR/sizing and Coinbase Preview",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 86,
+          "entryConfirmation": 4
+        },
+        "ETH": {
+          "ers": 82,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 86,
+          "entryConfirmation": 4
+        },
+        "XRP": {
+          "ers": 79,
+          "entryConfirmation": 3
+        },
+        "AVAX": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 62,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-0757",
+      "timestampEuropeMadrid": "2026-08-25 07:57",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest fresh setup; second consecutive ERS>=85 scan activates anti-paralysis and requires explicit BUY RETEST / BUY BREAKOUT candidate paths",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 88,
+          "entryConfirmation": 4
+        },
+        "ETH": {
+          "ers": 82,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 88,
+          "entryConfirmation": 3
+        },
+        "XRP": {
+          "ers": 81,
+          "entryConfirmation": 3
+        },
+        "AVAX": {
+          "ers": 80,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 69,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-1300",
+      "timestampEuropeMadrid": "2026-08-25 13:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest CORE management asset; no executable fresh long timing",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 79,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 79,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 80,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 76,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 75,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 62,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-1400",
+      "timestampEuropeMadrid": "2026-08-25 14:01",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest CORE management asset; no executable fresh long timing",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 78,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 77,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 78,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 74,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 73,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 58,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-1800",
+      "timestampEuropeMadrid": "2026-08-25 18:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest overall; rebound restored 4/5 timing but current price is above preferred retest max",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 84,
+          "entryConfirmation": 4
+        },
+        "ETH": {
+          "ers": 81,
+          "entryConfirmation": 4
+        },
+        "SOL": {
+          "ers": 81,
+          "entryConfirmation": 4
+        },
+        "XRP": {
+          "ers": 77,
+          "entryConfirmation": 3
+        },
+        "AVAX": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "SUI": {
+          "ers": 58,
+          "entryConfirmation": 2
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-2100",
+      "timestampEuropeMadrid": "2026-08-25 21:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest structural asset; SOL best fresh intrahour reclaim, but no executable new long",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 78,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 74,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 76,
+          "entryConfirmation": 3
+        },
+        "XRP": {
+          "ers": 68,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 69,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 49,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-2158",
+      "timestampEuropeMadrid": "2026-08-25 21:58",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest structural asset; broad 1H softening and no executable fresh long",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 76,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 72,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 74,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 66,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 67,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 45,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260825-2301",
+      "timestampEuropeMadrid": "2026-08-25 23:01",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC remains the strongest asset only as an existing CORE hold; all six fresh-long scores weakened after the broad 22:00-23:00 selloff and no new executable long is present.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 63,
+          "entryConfirmation": 2
+        },
+        "ETH": {
+          "ers": 57,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 56,
+          "entryConfirmation": 2
+        },
+        "XRP": {
+          "ers": 48,
+          "entryConfirmation": 1
+        },
+        "AVAX": {
+          "ers": 50,
+          "entryConfirmation": 1
+        },
+        "SUI": {
+          "ers": 31,
+          "entryConfirmation": 0
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-0002",
+      "timestampEuropeMadrid": "2026-08-26 00:02",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "SOL has the strongest short-term rebound after the 95.08 washout; BTC remains the strongest overall structural asset. No fresh long is executable.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 73,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 69,
+          "entryConfirmation": 3
+        },
+        "SOL": {
+          "ers": 72,
+          "entryConfirmation": 4
+        },
+        "XRP": {
+          "ers": 58,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 60,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 36,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-0300",
+      "timestampEuropeMadrid": "2026-08-26 03:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest overall structural asset; 15m stabilization but no fresh long reaches ERS 80.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 71,
+          "entryConfirmation": 3
+        },
+        "ETH": {
+          "ers": 67,
+          "entryConfirmation": 2
+        },
+        "SOL": {
+          "ers": 68,
+          "entryConfirmation": 3
+        },
+        "XRP": {
+          "ers": 52,
+          "entryConfirmation": 2
+        },
+        "AVAX": {
+          "ers": 55,
+          "entryConfirmation": 2
+        },
+        "SUI": {
+          "ers": 32,
+          "entryConfirmation": 0
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-0500",
+      "timestampEuropeMadrid": "2026-08-26 05:00",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest overall as existing CORE hold; weak participation and no completed fresh trigger.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 51,
+          "entryConfirmation": 1
+        },
+        "ETH": {
+          "ers": 46,
+          "entryConfirmation": 1
+        },
+        "SOL": {
+          "ers": 46,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 30,
+          "entryConfirmation": 0
+        },
+        "AVAX": {
+          "ers": 30,
+          "entryConfirmation": 0
+        },
+        "SUI": {
+          "ers": 20,
+          "entryConfirmation": 0
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-0558",
+      "timestampEuropeMadrid": "2026-08-26 05:58",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest overall as existing CORE hold; no new completed 1H evidence since 05:00 and no fresh trigger.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 51,
+          "entryConfirmation": 1
+        },
+        "ETH": {
+          "ers": 46,
+          "entryConfirmation": 1
+        },
+        "SOL": {
+          "ers": 46,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 30,
+          "entryConfirmation": 0
+        },
+        "AVAX": {
+          "ers": 30,
+          "entryConfirmation": 0
+        },
+        "SUI": {
+          "ers": 20,
+          "entryConfirmation": 0
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-0701",
+      "timestampEuropeMadrid": "2026-08-26 07:01",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest portfolio condition as existing CORE; ETH highest fresh setup score; no executable new long.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 46,
+          "entryConfirmation": 1
+        },
+        "ETH": {
+          "ers": 49,
+          "entryConfirmation": 1
+        },
+        "SOL": {
+          "ers": 46,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 33,
+          "entryConfirmation": 0
+        },
+        "AVAX": {
+          "ers": 33,
+          "entryConfirmation": 0
+        },
+        "SUI": {
+          "ers": 18,
+          "entryConfirmation": 0
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-1002",
+      "timestampEuropeMadrid": "2026-08-26 10:02",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC strongest portfolio condition as existing CORE; ETH/HBAR highest fresh setup score; no executable new long.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 39,
+          "entryConfirmation": 1
+        },
+        "ETH": {
+          "ers": 44,
+          "entryConfirmation": 1
+        },
+        "SOL": {
+          "ers": 42,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 31,
+          "entryConfirmation": 0
+        },
+        "AVAX": {
+          "ers": 31,
+          "entryConfirmation": 0
+        },
+        "HBAR": {
+          "ers": 44,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-1359",
+      "timestampEuropeMadrid": "2026-08-26 13:59",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "SOL highest fresh ERS; BTC strongest portfolio condition as existing CORE; no executable new long.",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 43,
+          "entryConfirmation": 1
+        },
+        "ETH": {
+          "ers": 43,
+          "entryConfirmation": 1
+        },
+        "SOL": {
+          "ers": 46,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 33,
+          "entryConfirmation": 1
+        },
+        "AVAX": {
+          "ers": 25,
+          "entryConfirmation": 0
+        },
+        "HBAR": {
+          "ers": 43,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CR30-20260826-2001",
+      "timestampEuropeMadrid": "2026-08-26 20:01",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "BTC/ETH/SOL strongest fresh watches; BTC remains existing CORE hold",
+      "realOrderThisScan": "NO NEW REAL ORDER",
+      "radar": {
+        "BTC": {
+          "ers": 49,
+          "entryConfirmation": 1
+        },
+        "ETH": {
+          "ers": 49,
+          "entryConfirmation": 1
+        },
+        "SOL": {
+          "ers": 49,
+          "entryConfirmation": 1
+        },
+        "XRP": {
+          "ers": 36,
+          "entryConfirmation": 1
+        },
+        "AVAX": {
+          "ers": 38,
+          "entryConfirmation": 1
+        },
+        "HBAR": {
+          "ers": 46,
+          "entryConfirmation": 1
+        }
+      }
+    },
+    {
+      "id": "CRSYNC-202609051749",
+      "timestampEuropeMadrid": "2026-09-05 17:49",
+      "dataQuality": "PARTIAL",
+      "bestCondition": "NONE",
+      "realOrderThisScan": "NO",
+      "assets": {
+        "BTC": {
+          "ers": null,
+          "entryConfirmation": null,
+          "executionStatus": "BLOCKED"
+        },
+        "ETH": {
+          "ers": null,
+          "entryConfirmation": null,
+          "executionStatus": "BLOCKED"
+        },
+        "SOL": {
+          "ers": null,
+          "entryConfirmation": null,
+          "executionStatus": "BLOCKED"
+        },
+        "XRP": {
+          "ers": null,
+          "entryConfirmation": null,
+          "executionStatus": "BLOCKED"
+        },
+        "AVAX": {
+          "ers": null,
+          "entryConfirmation": null,
+          "executionStatus": "BLOCKED"
+        },
+        "HBAR": {
+          "ers": null,
+          "entryConfirmation": null,
+          "executionStatus": "BLOCKED"
+        },
+        "ONDO": {
+          "ers": null,
+          "entryConfirmation": null,
+          "executionStatus": "BLOCKED"
+        }
+      }
+    }
   ],
+  "audits": [],
   "engineHealth": {
     "ers": {
       "status": "PARTIAL",
       "spec": "docs/ENGINE_SPEC_V3_ERS.md",
       "specRevision": "R1",
-      "reason": "Canonical R1 including HBAR replacement, anti-flicker, discrete scoring anchors, deterministic Entry dimensions, executionStatus and modeled-heat arithmetic was loaded and applied. All six active assets have contemporaneous numeric P/M/ERS from completed core data. Optional derivatives were unavailable and score 0 exactly. The current 18:00 UTC 1H and 16:00 UTC 4H candles were excluded because they were open at scan time. No named reclaim trigger was completed; 15m was therefore not inferred. Entry Trend/Momentum remain conservatively false where the required completed EMA/MACD/RSI combination was not independently re-verified. Event-risk component is 3/5 for the next scheduled US weekly claims release inside 24h but outside 6h."
+      "reason": "Public-data gaps: BTC: HTTP 403; ETH: HTTP 403; SOL: HTTP 403; XRP: HTTP 403; AVAX: HTTP 403; HBAR: HTTP 403; ONDO: HTTP 403"
+    },
+    "persistence": {
+      "status": "PASS",
+      "writer": "GitHub Actions",
+      "verification": "workflow validates JSON before commit"
     }
   },
   "shadowPortfolio": {
     "candidates": [
-      {"id":"SH-XRP-20260824-0258","scanId":"CR30-20260824-0258","timestampEuropeMadrid":"2026-08-24 02:58","asset":"XRP","pair":"XRP-USDC","lane":"PULLBACK","setup":"REJECTION-RETEST-RESEARCH","pullbackScore":82,"momentumScore":79,"ers":82,"entryConfirmation":3,"frozenEntryZone":{"low":1.495,"high":1.505},"invalidation":1.481,"target":1.5468,"rejectionReason":"PREPARE only: momentum and completed-hour volume not confirmed; executable net R/R still needs validation and Coinbase Preview would be required for any real order.","gate":"E1 WATCH / NO REAL ORDER","lifecycle":"STOPPED","outcome":{"verifiedAtEuropeMadrid":"2026-08-24 04:02","reason":"Subsequent verified Bybit 15m low 1.4643 breached frozen 1.481 invalidation before target."}},
-      {"id":"SH-AVAX-20260824-0800","scanId":"CR30-20260824-0800","timestampEuropeMadrid":"2026-08-24 08:00","asset":"AVAX","pair":"AVAX-USDC","lane":"PULLBACK","setup":"SUPPORT-RECLAIM-RESEARCH","pullbackScore":76,"momentumScore":72,"ers":76,"entryConfirmation":3,"frozenEntryZone":{"low":7.47,"high":7.5},"invalidation":7.43,"target":7.676,"rejectionReason":"PREPARE only: completed 1H volume is weak, ERS is below AVAX Tactical threshold, and no real execution package or Coinbase Preview is authorized.","gate":"E1 WATCH / NO REAL ORDER","lifecycle":"STOPPED","outcome":{"verifiedAtEuropeMadrid":"2026-08-24 10:12","reason":"Fresh Bybit 15m candle traded to exactly 7.430, touching the frozen 7.43 invalidation before the 7.676 target."}},
-      {"id":"SH-ETH-20260824-1012","scanId":"CR30-20260824-1012","timestampEuropeMadrid":"2026-08-24 10:12","asset":"ETH","pair":"ETH-USDC","lane":"PULLBACK","setup":"PULLBACK-RR-RESEARCH","pullbackScore":80,"momentumScore":77,"ers":80,"entryConfirmation":4,"frozenEntryZone":{"low":2448,"high":2455},"invalidation":2428,"target":2485,"rejectionReason":"Strong timing but no real order: ERS is below the BTC/ETH Tactical threshold and, at the current executable reference near 2452.5, gross R/R to 2485 versus 2428 is only about 1.3 before costs, below the required 1.80 net minimum.","gate":"E1 WATCH / NO REAL ORDER","lifecycle":"TARGET_HIT","outcome":{"verifiedAtEuropeMadrid":"2026-08-24 13:02","reason":"After prospective freeze, verified Bybit price reached 2,490.22 before any subsequent touch of the 2,428 invalidation; frozen 2,485 target was therefore hit first."}},
-      {"id":"SH-BTC-20260824-1403","scanId":"CR30-20260824-1403","timestampEuropeMadrid":"2026-08-24 14:03","asset":"BTC","pair":"BTC-USDC","lane":"MOMENTUM","setup":"CORE-ADDON-78K-ACCEPTANCE","pullbackScore":86,"momentumScore":89,"ers":89,"entryConfirmation":5,"frozenEntryZone":{"low":78150,"high":78300},"invalidation":77450,"target":79550,"rejectionReason":"Research freeze while real execution waits for fresh Coinbase Advanced Preview. Frozen local invalidation/target are for Shadow outcome tracking only; CORE management retains 75,300 as the structural invalidation.","gate":"E0 CLEAR ANALYTICALLY / PREVIEW REQUIRED FOR REAL EXECUTION","lifecycle":"TARGET_HIT","outcome":{"verifiedAtEuropeMadrid":"2026-08-24 18:07","reason":"After prospective freeze at 14:03 Madrid, verified Bybit price reached 79,550 target before any touch of the frozen 77,450 local invalidation."}},
-      {"id":"SH-BTC-20260824-2100","scanId":"CR30-20260824-2100","timestampEuropeMadrid":"2026-08-24 21:00","asset":"BTC","pair":"BTC-USDC","lane":"PULLBACK","setup":"79K-RECLAIM-RESEARCH","pullbackScore":77,"momentumScore":72,"ers":77,"entryConfirmation":3,"frozenEntryZone":{"low":78900,"high":79050},"invalidation":78440,"target":79950,"rejectionReason":"PREPARE only: the pullback has stabilized, but the completed 1H reclaim/hold above roughly 79.0k-79.2k and renewed volume participation are not yet confirmed; any real order also requires a fresh Coinbase Advanced Preview.","gate":"E1 WATCH / NO REAL ORDER","lifecycle":"TARGET_HIT","outcome":{"verifiedAtEuropeMadrid":"2026-08-25 03:58","reason":"After prospective freeze, verified Bybit price reached 79,995 before any touch of the frozen 78,440 invalidation; frozen 79,950 target was hit first."}},
-      {"id":"SH-BTC-20260825-0700","scanId":"CR30-20260825-0700","timestampEuropeMadrid":"2026-08-25 07:00","asset":"BTC","pair":"BTC-USDC","lane":"MOMENTUM","setup":"80K-BREAKOUT-RETEST-RESEARCH","pullbackScore":82,"momentumScore":86,"ers":86,"entryConfirmation":4,"frozenEntryZone":{"low":79800,"high":80100},"invalidation":78700,"rejectionReason":"ENTRY READY research freeze. Real add was not authorized because fresh trigger, final executable R/R/sizing and Coinbase Advanced Preview remained outstanding.","gate":"E1 WATCH / REAL EXECUTION PACKAGE INCOMPLETE","lifecycle":"STOPPED","outcome":{"verifiedAtEuropeMadrid":"2026-08-25 15:45","reason":"After the 07:00 prospective freeze, verified Bybit 15m price later traded to 78,124.4, breaching the frozen 78,700 invalidation. No target had been frozen."}},
-      {"id":"SH-BTC-20260825-0757","scanId":"CR30-20260825-0757","timestampEuropeMadrid":"2026-08-25 07:57","asset":"BTC","pair":"BTC-USDC","lane":"MOMENTUM","setup":"ANTI-PARALYSIS-80K-CONTINUATION","pullbackScore":84,"momentumScore":88,"ers":88,"entryConfirmation":4,"frozenEntryZone":{"low":80000,"high":80300},"invalidation":79400,"rejectionReason":"ENTRY READY and anti-paralysis active. Research candidate was frozen prospectively, but no real add was authorized without executable target/RR, sizing and Coinbase Advanced Preview.","gate":"E1 WATCH / FINAL EXECUTION PACKAGE INCOMPLETE","lifecycle":"STOPPED","outcome":{"verifiedAtEuropeMadrid":"2026-08-25 13:00","reason":"After the 07:57 Madrid freeze, verified Bybit price subsequently traded through the 80.0k-80.3k entry zone and then printed a 79,354 low, breaching the frozen 79,400 invalidation before any target was frozen."}},
-      {"id":"SH-BTC-20260825-1300","scanId":"CR30-20260825-1300","timestampEuropeMadrid":"2026-08-25 13:00","asset":"BTC","pair":"BTC-USDC","lane":"PULLBACK","setup":"79K-SUPPORT-RECLAIM-RESEARCH","pullbackScore":79,"momentumScore":72,"ers":79,"entryConfirmation":2,"frozenEntryZone":{"low":78900,"high":79300},"invalidation":78400,"target":81272,"rejectionReason":"EARLY WATCH only: location was attractive but momentum, volume and trigger were not confirmed. Frozen target was the recent 81,272 structural high for forward-only research; no real order was authorized without a completed reclaim, compliant net R/R/sizing and fresh Coinbase Advanced Preview.","gate":"E1 WATCH / TIMING INCOMPLETE","lifecycle":"STOPPED","outcome":{"verifiedAtEuropeMadrid":"2026-08-25 15:45","reason":"After the 13:00 prospective freeze, verified Bybit 15m price later reached 78,124.4, breaching the frozen 78,400 invalidation before the 81,272 target."}},
-      {"id":"SH-BTC-20260825-1800","scanId":"CR30-20260825-1800","timestampEuropeMadrid":"2026-08-25 18:00","asset":"BTC","pair":"BTC-USDC","lane":"PULLBACK","setup":"79.3K-RETEST-RECLAIM-RR","pullbackScore":84,"momentumScore":82,"ers":84,"entryConfirmation":4,"frozenEntryZone":{"low":79250,"high":79400},"invalidation":78500,"target":81272,"rejectionReason":"ENTRY CANDIDATE research freeze. Current spot near 79,543 is above the preferred max price for preserving a comfortable net R/R to 81,272, completed-hour volume remains sub-ideal, and a fresh Coinbase Advanced Preview is required for any real add.","gate":"E1 WATCH / ANTI-CHASE RETEST CANDIDATE","lifecycle":"STOPPED","outcome":{"verifiedAtEuropeMadrid":"2026-08-25 23:01","reason":"After the 18:00 prospective freeze, verified Bybit 15m price traded to 78,103.4, breaching the frozen 78,500 invalidation before the 81,272 target."}},
-      {"id":"SH-SOL-20260825-1800","scanId":"CR30-20260825-1800","timestampEuropeMadrid":"2026-08-25 18:00","asset":"SOL","pair":"SOL-USDC","lane":"PULLBACK","setup":"FRESH-POST-EXIT-RECLAIM","pullbackScore":81,"momentumScore":76,"ers":81,"entryConfirmation":4,"frozenEntryZone":{"low":98.1,"high":98.4},"invalidation":96.8,"target":103.1,"rejectionReason":"Fresh setup is analytically interesting after the confirmed full exit, but SOL Tactical ERS threshold remains unmet and no Coinbase Preview has been supplied. The old 94.15 invalidation is historical only and does not block this new prospective thesis.","gate":"E1 WATCH / BELOW SOL TACTICAL ERS THRESHOLD","lifecycle":"STOPPED","outcome":{"verifiedAtEuropeMadrid":"2026-08-25 23:01","reason":"After the 18:00 prospective freeze, verified Bybit 1H/4H price traded to 96.60, breaching the frozen 96.80 invalidation before the 103.10 target."}}
+      {
+        "id": "SH-XRP-20260824-0258",
+        "scanId": "CR30-20260824-0258",
+        "timestampEuropeMadrid": "2026-08-24 02:58",
+        "asset": "XRP",
+        "pair": "XRP-USDC",
+        "lane": "PULLBACK",
+        "setup": "REJECTION-RETEST-RESEARCH",
+        "pullbackScore": 82,
+        "momentumScore": 79,
+        "ers": 82,
+        "entryConfirmation": 3,
+        "frozenEntryZone": {
+          "low": 1.495,
+          "high": 1.505
+        },
+        "invalidation": 1.481,
+        "target": 1.5468,
+        "rejectionReason": "PREPARE only: momentum and completed-hour volume not confirmed; executable net R/R still needs validation and Coinbase Preview would be required for any real order.",
+        "gate": "E1 WATCH / NO REAL ORDER",
+        "lifecycle": "STOPPED",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-24 04:02",
+          "reason": "Subsequent verified Bybit 15m low 1.4643 breached frozen 1.481 invalidation before target."
+        }
+      },
+      {
+        "id": "SH-AVAX-20260824-0800",
+        "scanId": "CR30-20260824-0800",
+        "timestampEuropeMadrid": "2026-08-24 08:00",
+        "asset": "AVAX",
+        "pair": "AVAX-USDC",
+        "lane": "PULLBACK",
+        "setup": "SUPPORT-RECLAIM-RESEARCH",
+        "pullbackScore": 76,
+        "momentumScore": 72,
+        "ers": 76,
+        "entryConfirmation": 3,
+        "frozenEntryZone": {
+          "low": 7.47,
+          "high": 7.5
+        },
+        "invalidation": 7.43,
+        "target": 7.676,
+        "rejectionReason": "PREPARE only: completed 1H volume is weak, ERS is below AVAX Tactical threshold, and no real execution package or Coinbase Preview is authorized.",
+        "gate": "E1 WATCH / NO REAL ORDER",
+        "lifecycle": "STOPPED",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-24 10:12",
+          "reason": "Fresh Bybit 15m candle traded to exactly 7.430, touching the frozen 7.43 invalidation before the 7.676 target."
+        }
+      },
+      {
+        "id": "SH-ETH-20260824-1012",
+        "scanId": "CR30-20260824-1012",
+        "timestampEuropeMadrid": "2026-08-24 10:12",
+        "asset": "ETH",
+        "pair": "ETH-USDC",
+        "lane": "PULLBACK",
+        "setup": "PULLBACK-RR-RESEARCH",
+        "pullbackScore": 80,
+        "momentumScore": 77,
+        "ers": 80,
+        "entryConfirmation": 4,
+        "frozenEntryZone": {
+          "low": 2448,
+          "high": 2455
+        },
+        "invalidation": 2428,
+        "target": 2485,
+        "rejectionReason": "Strong timing but no real order: ERS is below the BTC/ETH Tactical threshold and, at the current executable reference near 2452.5, gross R/R to 2485 versus 2428 is only about 1.3 before costs, below the required 1.80 net minimum.",
+        "gate": "E1 WATCH / NO REAL ORDER",
+        "lifecycle": "TARGET_HIT",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-24 13:02",
+          "reason": "After prospective freeze, verified Bybit price reached 2,490.22 before any subsequent touch of the 2,428 invalidation; frozen 2,485 target was therefore hit first."
+        }
+      },
+      {
+        "id": "SH-BTC-20260824-1403",
+        "scanId": "CR30-20260824-1403",
+        "timestampEuropeMadrid": "2026-08-24 14:03",
+        "asset": "BTC",
+        "pair": "BTC-USDC",
+        "lane": "MOMENTUM",
+        "setup": "CORE-ADDON-78K-ACCEPTANCE",
+        "pullbackScore": 86,
+        "momentumScore": 89,
+        "ers": 89,
+        "entryConfirmation": 5,
+        "frozenEntryZone": {
+          "low": 78150,
+          "high": 78300
+        },
+        "invalidation": 77450,
+        "target": 79550,
+        "rejectionReason": "Research freeze while real execution waits for fresh Coinbase Advanced Preview. Frozen local invalidation/target are for Shadow outcome tracking only; CORE management retains 75,300 as the structural invalidation.",
+        "gate": "E0 CLEAR ANALYTICALLY / PREVIEW REQUIRED FOR REAL EXECUTION",
+        "lifecycle": "TARGET_HIT",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-24 18:07",
+          "reason": "After prospective freeze at 14:03 Madrid, verified Bybit price reached 79,550 target before any touch of the frozen 77,450 local invalidation."
+        }
+      },
+      {
+        "id": "SH-BTC-20260824-2100",
+        "scanId": "CR30-20260824-2100",
+        "timestampEuropeMadrid": "2026-08-24 21:00",
+        "asset": "BTC",
+        "pair": "BTC-USDC",
+        "lane": "PULLBACK",
+        "setup": "79K-RECLAIM-RESEARCH",
+        "pullbackScore": 77,
+        "momentumScore": 72,
+        "ers": 77,
+        "entryConfirmation": 3,
+        "frozenEntryZone": {
+          "low": 78900,
+          "high": 79050
+        },
+        "invalidation": 78440,
+        "target": 79950,
+        "rejectionReason": "PREPARE only: the pullback has stabilized, but the completed 1H reclaim/hold above roughly 79.0k-79.2k and renewed volume participation are not yet confirmed; any real order also requires a fresh Coinbase Advanced Preview.",
+        "gate": "E1 WATCH / NO REAL ORDER",
+        "lifecycle": "TARGET_HIT",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-25 03:58",
+          "reason": "After prospective freeze, verified Bybit price reached 79,995 before any touch of the frozen 78,440 invalidation; frozen 79,950 target was hit first."
+        }
+      },
+      {
+        "id": "SH-BTC-20260825-0700",
+        "scanId": "CR30-20260825-0700",
+        "timestampEuropeMadrid": "2026-08-25 07:00",
+        "asset": "BTC",
+        "pair": "BTC-USDC",
+        "lane": "MOMENTUM",
+        "setup": "80K-BREAKOUT-RETEST-RESEARCH",
+        "pullbackScore": 82,
+        "momentumScore": 86,
+        "ers": 86,
+        "entryConfirmation": 4,
+        "frozenEntryZone": {
+          "low": 79800,
+          "high": 80100
+        },
+        "invalidation": 78700,
+        "rejectionReason": "ENTRY READY research freeze. Real add was not authorized because fresh trigger, final executable R/R/sizing and Coinbase Advanced Preview remained outstanding.",
+        "gate": "E1 WATCH / REAL EXECUTION PACKAGE INCOMPLETE",
+        "lifecycle": "STOPPED",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-25 15:45",
+          "reason": "After the 07:00 prospective freeze, verified Bybit 15m price later traded to 78,124.4, breaching the frozen 78,700 invalidation. No target had been frozen."
+        }
+      },
+      {
+        "id": "SH-BTC-20260825-0757",
+        "scanId": "CR30-20260825-0757",
+        "timestampEuropeMadrid": "2026-08-25 07:57",
+        "asset": "BTC",
+        "pair": "BTC-USDC",
+        "lane": "MOMENTUM",
+        "setup": "ANTI-PARALYSIS-80K-CONTINUATION",
+        "pullbackScore": 84,
+        "momentumScore": 88,
+        "ers": 88,
+        "entryConfirmation": 4,
+        "frozenEntryZone": {
+          "low": 80000,
+          "high": 80300
+        },
+        "invalidation": 79400,
+        "rejectionReason": "ENTRY READY and anti-paralysis active. Research candidate was frozen prospectively, but no real add was authorized without executable target/RR, sizing and Coinbase Advanced Preview.",
+        "gate": "E1 WATCH / FINAL EXECUTION PACKAGE INCOMPLETE",
+        "lifecycle": "STOPPED",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-25 13:00",
+          "reason": "After the 07:57 Madrid freeze, verified Bybit price subsequently traded through the 80.0k-80.3k entry zone and then printed a 79,354 low, breaching the frozen 79,400 invalidation before any target was frozen."
+        }
+      },
+      {
+        "id": "SH-BTC-20260825-1300",
+        "scanId": "CR30-20260825-1300",
+        "timestampEuropeMadrid": "2026-08-25 13:00",
+        "asset": "BTC",
+        "pair": "BTC-USDC",
+        "lane": "PULLBACK",
+        "setup": "79K-SUPPORT-RECLAIM-RESEARCH",
+        "pullbackScore": 79,
+        "momentumScore": 72,
+        "ers": 79,
+        "entryConfirmation": 2,
+        "frozenEntryZone": {
+          "low": 78900,
+          "high": 79300
+        },
+        "invalidation": 78400,
+        "target": 81272,
+        "rejectionReason": "EARLY WATCH only: location was attractive but momentum, volume and trigger were not confirmed. Frozen target was the recent 81,272 structural high for forward-only research; no real order was authorized without a completed reclaim, compliant net R/R/sizing and fresh Coinbase Advanced Preview.",
+        "gate": "E1 WATCH / TIMING INCOMPLETE",
+        "lifecycle": "STOPPED",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-25 15:45",
+          "reason": "After the 13:00 prospective freeze, verified Bybit 15m price later reached 78,124.4, breaching the frozen 78,400 invalidation before the 81,272 target."
+        }
+      },
+      {
+        "id": "SH-BTC-20260825-1800",
+        "scanId": "CR30-20260825-1800",
+        "timestampEuropeMadrid": "2026-08-25 18:00",
+        "asset": "BTC",
+        "pair": "BTC-USDC",
+        "lane": "PULLBACK",
+        "setup": "79.3K-RETEST-RECLAIM-RR",
+        "pullbackScore": 84,
+        "momentumScore": 82,
+        "ers": 84,
+        "entryConfirmation": 4,
+        "frozenEntryZone": {
+          "low": 79250,
+          "high": 79400
+        },
+        "invalidation": 78500,
+        "target": 81272,
+        "rejectionReason": "ENTRY CANDIDATE research freeze. Current spot near 79,543 is above the preferred max price for preserving a comfortable net R/R to 81,272, completed-hour volume remains sub-ideal, and a fresh Coinbase Advanced Preview is required for any real add.",
+        "gate": "E1 WATCH / ANTI-CHASE RETEST CANDIDATE",
+        "lifecycle": "STOPPED",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-25 23:01",
+          "reason": "After the 18:00 prospective freeze, verified Bybit 15m price traded to 78,103.4, breaching the frozen 78,500 invalidation before the 81,272 target."
+        }
+      },
+      {
+        "id": "SH-SOL-20260825-1800",
+        "scanId": "CR30-20260825-1800",
+        "timestampEuropeMadrid": "2026-08-25 18:00",
+        "asset": "SOL",
+        "pair": "SOL-USDC",
+        "lane": "PULLBACK",
+        "setup": "FRESH-POST-EXIT-RECLAIM",
+        "pullbackScore": 81,
+        "momentumScore": 76,
+        "ers": 81,
+        "entryConfirmation": 4,
+        "frozenEntryZone": {
+          "low": 98.1,
+          "high": 98.4
+        },
+        "invalidation": 96.8,
+        "target": 103.1,
+        "rejectionReason": "Fresh setup is analytically interesting after the confirmed full exit, but SOL Tactical ERS threshold remains unmet and no Coinbase Preview has been supplied. The old 94.15 invalidation is historical only and does not block this new prospective thesis.",
+        "gate": "E1 WATCH / BELOW SOL TACTICAL ERS THRESHOLD",
+        "lifecycle": "STOPPED",
+        "outcome": {
+          "verifiedAtEuropeMadrid": "2026-08-25 23:01",
+          "reason": "After the 18:00 prospective freeze, verified Bybit 1H/4H price traded to 96.60, breaching the frozen 96.80 invalidation before the 103.10 target."
+        }
+      }
     ],
     "audits": [
-      {"id":"AUDIT-20260824-0700","timestampEuropeMadrid":"2026-08-24 07:00","scope":"Contemporaneous 07:00 daily audit; no hindsight reconstruction","entryEngineHistory":"Overnight Entry confirmations were volatile: BTC 3/5 at 02:00, 5/5 at 02:58, 1/5 at 04:02, 4/5 at 05:00, 2/5 at 06:00 and 2/5 now. This shows timing confirmation can reverse quickly and must not override hard gates/CORE exposure logic.","ersEngineHealth":"PARTIAL, not FAIL: canonical R1 loaded/applied; numeric scores produced; optional derivatives unavailable.","missingScans":"History currently contains 02:00, 02:58, 04:02, 05:00, 06:00 and 07:00. No 03:00 history record is present in radar-state; do not reconstruct it retrospectively.","leakageReview":"No evidence in current state of a retrospectively created winning candidate. The only frozen Shadow candidate, XRP 02:58, was prospectively recorded and later stopped by verified price action.","shadowObservations":"XRP shadow candidate stopped at 1.481 invalidation before target. Useful evidence that PREPARE/no-real-order discipline avoided a losing entry. No new shadow candidate frozen at 07:00 because no fresh setup simultaneously has defensible entry/invalidation/target and meets the research-freeze usefulness threshold without forcing levels."},
-      {"id":"AUDIT-20260825-0700","timestampEuropeMadrid":"2026-08-25 07:00","scope":"Contemporaneous 07:00 daily audit; no hindsight reconstruction","entryEngineHistory":"BTC moved from 2-4/5 during the prior day, reached 5/5 at 14:03, weakened after the 80k rejection, then rebuilt to 4/5 by 03:58 and remained 4/5 into the overnight breakout. ETH was 3/5; SOL 4/5 but blocked for a fresh add by setup-specific E2; XRP/AVAX 3/5; SUI 2/5.","ersEngineHealth":"PARTIAL, not FAIL: canonical R1 loaded and applied; all six assets received fresh numeric P/M/ERS. Limitation was missing fresh 15m plus optional derivatives, not a scoring-engine fault.","missingScans":"No hindsight fill-in. The stored history has material gaps during the last 24h, notably around 12:00, 15:00-17:00, around 01:00, and between the 03:58 record and the 07:00 run. Those intervals remain MISSING rather than reconstructed.","leakageReview":"Shadow outcomes remain forward-only. XRP and AVAX stopped; ETH and both earlier BTC candidates hit their frozen targets. These outcomes do not retroactively alter the original decisions. No evidence of hindsight-created winning entries was added.","shadowObservations":"A BTC 80k breakout/retest research candidate was frozen prospectively at the 07:00 run with 79.8k-80.1k entry zone and 78.7k invalidation; no target was frozen because a defensible structural target supporting required net R/R had not yet been validated."},
-      {"id":"AUDIT-20260826-0701","timestampEuropeMadrid":"2026-08-26 07:01","scope":"Contemporaneous 07:00 daily audit covering the prior 24h; no hindsight reconstruction","period":"2026-08-25 08:00 through 2026-08-26 07:01 Europe/Madrid","scanCoverage":"24 hourly slots expected; 12 contemporaneous records are present including this run and 12 are missing. Missing approximate slots: 09:00, 10:00, 11:00, 12:00, 15:00, 16:00, 17:00, 19:00, 20:00, 01:00, 02:00 and 04:00. No scores or decisions are reconstructed for those hours.","entryEngineHistory":"Across the stored 24h records, BTC was 4/5 at 07:57, fell to 2/5 at 13:00-14:01, rebuilt to 4/5 at 18:00, weakened to 2/5 through 21:00-23:01, briefly recovered to 3/5 at 00:02 and 03:00, then fell to 1/5 from 05:00 through this run. SOL showed 3/5 at 07:57, 2/5 at 13:00-14:01, 4/5 at 18:00, 3/5 at 21:00, 4/5 at 00:02, 3/5 at 03:00 and 1/5 now. Raw ERS before the 05:00 determinism patch is preserved as historical evidence and must not be restated or compared as though the scoring implementation were identical to post-patch scans.","ersEngineHealth":"PARTIAL, not FAIL. Canonical R1 was loaded and all six assets received contemporaneous numeric P/M/ERS from completed 1D/4H/1H data. Optional derivatives score 0; fresh 15m was unavailable; required completed EMA/MACD/RSI combinations were not independently re-verified for Entry Trend/Momentum, so those dimensions remain conservatively false/PARTIAL.","realExecutionReview":"Within the window, the only confirmed real execution event is the full SOL exit at 2026-08-25 09:51:26, preserving +69.98 USDC net realized P&L from Coinbase-displayed totals. No new real buy is confirmed. BTC CORE remains OPEN and UNPROTECTED; modeled heat to 75,300 is 19.31 USDC while actual protected heat is not established.","leakageReview":"Ten Shadow candidates are prospectively frozen and resolved: 3 TARGET_HIT and 7 STOPPED, with 0 ambiguous and 0 unresolved. Three rejected/non-executed research setups later reached their frozen target first. This cannot be converted into a missed-profit claim because actual activation/fill conditions were not prospectively stored for every candidate. The post-05:00 deterministic scoring patch is a rule-continuity boundary and earlier ERS values are not rewritten.","shadowMetrics":"candidates=10; resolved=10; targetFirst=3; stopFirst=7; ambiguous=0; unresolved=0; rejectedSetupsLaterTargetFirst=3. activatedOrFillable=NOT RELIABLY MEASURABLE from frozen fields; armedLaterStopped=NOT MEASURABLE without hindsight because executionStatus was not contemporaneously stored for those candidates; netRExpectancy=NOT COMPUTED because activation/fill path is incomplete and two stopped candidates have no frozen target. Sample verdict=INSUFFICIENT SAMPLE.","shadowObservations":"The Shadow sample currently argues against loosening gates from outcome anecdotes alone: seven candidates stopped, while three rejected candidates reached target first. The dataset is useful for gate-attribution research but is not yet a valid expectancy sample. No new Shadow candidate is added this run because no fresh setup has ERS>=75 with a defensible full entry/invalidation/target package.","systemAssessment":"PARTIAL. Main weaknesses are missing hourly scans, incomplete prospective activation/fill metadata in older Shadow candidates, missing optional derivatives, and missing fresh 15m confirmation in the current run. No evidence justifies a threshold change from this sample."}
+      {
+        "id": "AUDIT-20260824-0700",
+        "timestampEuropeMadrid": "2026-08-24 07:00",
+        "scope": "Contemporaneous 07:00 daily audit; no hindsight reconstruction",
+        "entryEngineHistory": "Overnight Entry confirmations were volatile: BTC 3/5 at 02:00, 5/5 at 02:58, 1/5 at 04:02, 4/5 at 05:00, 2/5 at 06:00 and 2/5 now. This shows timing confirmation can reverse quickly and must not override hard gates/CORE exposure logic.",
+        "ersEngineHealth": "PARTIAL, not FAIL: canonical R1 loaded/applied; numeric scores produced; optional derivatives unavailable.",
+        "missingScans": "History currently contains 02:00, 02:58, 04:02, 05:00, 06:00 and 07:00. No 03:00 history record is present in radar-state; do not reconstruct it retrospectively.",
+        "leakageReview": "No evidence in current state of a retrospectively created winning candidate. The only frozen Shadow candidate, XRP 02:58, was prospectively recorded and later stopped by verified price action.",
+        "shadowObservations": "XRP shadow candidate stopped at 1.481 invalidation before target. Useful evidence that PREPARE/no-real-order discipline avoided a losing entry. No new shadow candidate frozen at 07:00 because no fresh setup simultaneously has defensible entry/invalidation/target and meets the research-freeze usefulness threshold without forcing levels."
+      },
+      {
+        "id": "AUDIT-20260825-0700",
+        "timestampEuropeMadrid": "2026-08-25 07:00",
+        "scope": "Contemporaneous 07:00 daily audit; no hindsight reconstruction",
+        "entryEngineHistory": "BTC moved from 2-4/5 during the prior day, reached 5/5 at 14:03, weakened after the 80k rejection, then rebuilt to 4/5 by 03:58 and remained 4/5 into the overnight breakout. ETH was 3/5; SOL 4/5 but blocked for a fresh add by setup-specific E2; XRP/AVAX 3/5; SUI 2/5.",
+        "ersEngineHealth": "PARTIAL, not FAIL: canonical R1 loaded and applied; all six assets received fresh numeric P/M/ERS. Limitation was missing fresh 15m plus optional derivatives, not a scoring-engine fault.",
+        "missingScans": "No hindsight fill-in. The stored history has material gaps during the last 24h, notably around 12:00, 15:00-17:00, around 01:00, and between the 03:58 record and the 07:00 run. Those intervals remain MISSING rather than reconstructed.",
+        "leakageReview": "Shadow outcomes remain forward-only. XRP and AVAX stopped; ETH and both earlier BTC candidates hit their frozen targets. These outcomes do not retroactively alter the original decisions. No evidence of hindsight-created winning entries was added.",
+        "shadowObservations": "A BTC 80k breakout/retest research candidate was frozen prospectively at the 07:00 run with 79.8k-80.1k entry zone and 78.7k invalidation; no target was frozen because a defensible structural target supporting required net R/R had not yet been validated."
+      },
+      {
+        "id": "AUDIT-20260826-0701",
+        "timestampEuropeMadrid": "2026-08-26 07:01",
+        "scope": "Contemporaneous 07:00 daily audit covering the prior 24h; no hindsight reconstruction",
+        "period": "2026-08-25 08:00 through 2026-08-26 07:01 Europe/Madrid",
+        "scanCoverage": "24 hourly slots expected; 12 contemporaneous records are present including this run and 12 are missing. Missing approximate slots: 09:00, 10:00, 11:00, 12:00, 15:00, 16:00, 17:00, 19:00, 20:00, 01:00, 02:00 and 04:00. No scores or decisions are reconstructed for those hours.",
+        "entryEngineHistory": "Across the stored 24h records, BTC was 4/5 at 07:57, fell to 2/5 at 13:00-14:01, rebuilt to 4/5 at 18:00, weakened to 2/5 through 21:00-23:01, briefly recovered to 3/5 at 00:02 and 03:00, then fell to 1/5 from 05:00 through this run. SOL showed 3/5 at 07:57, 2/5 at 13:00-14:01, 4/5 at 18:00, 3/5 at 21:00, 4/5 at 00:02, 3/5 at 03:00 and 1/5 now. Raw ERS before the 05:00 determinism patch is preserved as historical evidence and must not be restated or compared as though the scoring implementation were identical to post-patch scans.",
+        "ersEngineHealth": "PARTIAL, not FAIL. Canonical R1 was loaded and all six assets received contemporaneous numeric P/M/ERS from completed 1D/4H/1H data. Optional derivatives score 0; fresh 15m was unavailable; required completed EMA/MACD/RSI combinations were not independently re-verified for Entry Trend/Momentum, so those dimensions remain conservatively false/PARTIAL.",
+        "realExecutionReview": "Within the window, the only confirmed real execution event is the full SOL exit at 2026-08-25 09:51:26, preserving +69.98 USDC net realized P&L from Coinbase-displayed totals. No new real buy is confirmed. BTC CORE remains OPEN and UNPROTECTED; modeled heat to 75,300 is 19.31 USDC while actual protected heat is not established.",
+        "leakageReview": "Ten Shadow candidates are prospectively frozen and resolved: 3 TARGET_HIT and 7 STOPPED, with 0 ambiguous and 0 unresolved. Three rejected/non-executed research setups later reached their frozen target first. This cannot be converted into a missed-profit claim because actual activation/fill conditions were not prospectively stored for every candidate. The post-05:00 deterministic scoring patch is a rule-continuity boundary and earlier ERS values are not rewritten.",
+        "shadowMetrics": "candidates=10; resolved=10; targetFirst=3; stopFirst=7; ambiguous=0; unresolved=0; rejectedSetupsLaterTargetFirst=3. activatedOrFillable=NOT RELIABLY MEASURABLE from frozen fields; armedLaterStopped=NOT MEASURABLE without hindsight because executionStatus was not contemporaneously stored for those candidates; netRExpectancy=NOT COMPUTED because activation/fill path is incomplete and two stopped candidates have no frozen target. Sample verdict=INSUFFICIENT SAMPLE.",
+        "shadowObservations": "The Shadow sample currently argues against loosening gates from outcome anecdotes alone: seven candidates stopped, while three rejected candidates reached target first. The dataset is useful for gate-attribution research but is not yet a valid expectancy sample. No new Shadow candidate is added this run because no fresh setup has ERS>=75 with a defensible full entry/invalidation/target package.",
+        "systemAssessment": "PARTIAL. Main weaknesses are missing hourly scans, incomplete prospective activation/fill metadata in older Shadow candidates, missing optional derivatives, and missing fresh 15m confirmation in the current run. No evidence justifies a threshold change from this sample."
+      }
     ]
   }
 }
