@@ -1,0 +1,85 @@
+name: Hourly Crypto Reca State Sync
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'scripts/hourly-state-sync.mjs'
+      - '.github/workflows/hourly-state-sync.yml'
+      - 'docs/ENGINE_SPEC_V3_ERS.md'
+      - 'docs/POSITION_RISK_SPEC_V2_2.md'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: crypto-reca-hourly-state-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run deterministic public-data sync
+        run: node scripts/hourly-state-sync.mjs
+
+      - name: Validate modular JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/radar-state.json >/dev/null
+          python -m json.tool data/position-risk.json >/dev/null
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          for p in ('data/radar-state.json','data/position-risk.json'):
+              d=json.load(open(p,encoding='utf-8'))
+              if not d.get('generatedAt'):
+                  raise SystemExit(f'{p}: missing generatedAt')
+              print(f"{p}: generatedAt={d['generatedAt']}")
+          r=json.load(open('data/radar-state.json',encoding='utf-8'))
+          if not r.get('scan',{}).get('id'):
+              raise SystemExit('radar-state.json: missing scan.id')
+          if len(r.get('radar',[])) != 7:
+              raise SystemExit(f"radar-state.json: expected 7 CORE assets, got {len(r.get('radar',[]))}")
+          print('Hourly state validation PASS')
+          PY
+
+      - name: Commit fresh states
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/radar-state.json data/position-risk.json; then
+            echo 'No state change to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/radar-state.json data/position-risk.json
+          git commit -m "state-sync: refresh radar and position risk [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Verify persisted state from repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:data/radar-state.json | python -m json.tool >/dev/null
+          git show origin/main:data/position-risk.json | python -m json.tool >/dev/null
+          echo 'PERSISTENCE VERIFICATION PASS'
