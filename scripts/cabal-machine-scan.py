@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 OUT = os.environ.get('CABAL_OUT', 'data/cabal-machine.json')
-UA = 'CABAL-Discovery-Guard/1.0'
+UA = 'CABAL-Discovery-Guard/1.1'
 STABLES = {'usdt','usdc','dai','fdusd','tusd','usde','usds','pyusd','usdd','frax','crvusd','gho','usd1','usdp','gusd'}
 WRAPPED_PREFIXES = ('wbtc','weth','wsteth','steth','cbeth','reth','weeth','ezeth','solvbtc')
 
@@ -30,24 +30,27 @@ def med(xs):
     xs = [x for x in xs if x is not None and x >= 0]
     return statistics.median(xs) if xs else 0.0
 
-def bybit_1h(symbol, limit=168):
-    q = urlencode({'category':'spot','symbol':symbol,'interval':'60','limit':str(limit)})
-    j = http_json('https://api.bybit.com/v5/market/kline?' + q, 15, 2)
-    if j.get('retCode') != 0:
-        raise RuntimeError(j.get('retMsg') or 'Bybit error')
-    now_ms = int(time.time() * 1000)
+def gate_1h(pair, limit=168):
+    q = urlencode({'currency_pair':pair,'interval':'1h','limit':str(limit)})
+    rows = http_json('https://api.gateio.ws/api/v4/spot/candlesticks?' + q, 15, 2)
+    if not isinstance(rows, list):
+        raise RuntimeError('Gate malformed candles')
+    now_s = int(time.time())
     bars = []
-    for r in reversed(j.get('result', {}).get('list') or []):
-        t = int(r[0])
-        if t + 3600000 > now_ms:
+    for r in rows:
+        if not isinstance(r, list) or len(r) < 6:
             continue
-        bars.append({'t':t,'o':float(r[1]),'h':float(r[2]),'l':float(r[3]),'c':float(r[4]),'v':float(r[5])})
+        t = int(float(r[0]))
+        if t + 3600 > now_s:
+            continue
+        bars.append({'t':t*1000,'o':float(r[5]),'h':float(r[3]),'l':float(r[4]),'c':float(r[2]),'v':float(r[1])})
+    bars.sort(key=lambda x:x['t'])
     if len(bars) < 30:
-        raise RuntimeError('insufficient completed 1h bars')
+        raise RuntimeError('insufficient completed Gate 1h bars')
     return bars
 
-def analyze(symbol, meta, btc):
-    bars = bybit_1h(symbol)
+def analyze(pair, meta, btc):
+    bars = gate_1h(pair)
     last = bars[-1]
     p1 = pct(last['c'], bars[-2]['c'])
     p4 = pct(last['c'], bars[-5]['c']) if len(bars) >= 5 else 0
@@ -126,7 +129,7 @@ def analyze(symbol, meta, btc):
     support = min(x['l'] for x in bars[-6:])
     score = max(p1,0)*2 + max(p4,0)*0.8 + max(rvol1-1,0)*5 + max(rvol4-1,0)*4 + max(rs1,0)*1.5 + (5 if C else 0) + (8 if second_trigger else 0)
     return {
-        'asset':meta['symbol'].upper(),'symbol':symbol,'name':meta.get('name'),'price':last['c'],
+        'asset':meta['symbol'].upper(),'symbol':pair,'venue':'Gate Spot','name':meta.get('name'),'price':last['c'],
         'marketCap':meta.get('market_cap'),'volume24h':meta.get('total_volume'),
         'priceChange1hPct':round(p1,4),'priceChange4hPct':round(p4,4),'priceChange24hPct':round(p24,4),'priceChange7dPct':round(p7,4),
         'rvol1h':round(rvol1,4),'rvol4h':round(rvol4,4),'volumeState':vstate,
@@ -139,7 +142,7 @@ def analyze(symbol, meta, btc):
 
 def main():
     generated = datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
-    sources = {'coinGecko':'FAIL','bybit':'FAIL'}
+    sources = {'coinGecko':'FAIL','gateSpot':'FAIL'}
     errors=[]; markets=[]
     try:
         for page in range(1,5):
@@ -151,33 +154,32 @@ def main():
         errors.append('CoinGecko: '+repr(e))
 
     try:
-        jt=http_json('https://api.bybit.com/v5/market/tickers?category=spot',20,2)
-        if jt.get('retCode') != 0: raise RuntimeError(jt.get('retMsg'))
-        symbols={x['symbol'] for x in jt.get('result',{}).get('list',[]) if x.get('symbol','').endswith('USDT')}
-        sources['bybit']='PASS'
+        gt=http_json('https://api.gateio.ws/api/v4/spot/tickers',20,2)
+        pairs={x.get('currency_pair') for x in gt if isinstance(x,dict) and str(x.get('currency_pair','')).endswith('_USDT')}
+        sources['gateSpot']='PASS'
     except Exception as e:
-        symbols=set(); errors.append('Bybit tickers: '+repr(e))
+        pairs=set(); errors.append('Gate tickers: '+repr(e))
 
     eligible=[]; seen=set()
     for m in markets:
         s=(m.get('symbol') or '').lower(); mc=m.get('market_cap') or 0; vol=m.get('total_volume') or 0
         if not s or s in seen or s in STABLES or s.startswith(WRAPPED_PREFIXES): continue
         if not (15_000_000 <= mc <= 3_000_000_000 and vol >= 2_000_000): continue
-        bs=s.upper()+'USDT'
-        if bs not in symbols: continue
-        seen.add(s); m=dict(m); m['bybitSymbol']=bs; eligible.append(m)
+        gp=s.upper()+'_USDT'
+        if gp not in pairs: continue
+        seen.add(s); m=dict(m); m['gatePair']=gp; eligible.append(m)
     eligible.sort(key=lambda x:x.get('total_volume') or 0, reverse=True)
 
     try:
-        b=bybit_1h('BTCUSDT')
-        btc={'price':b[-1]['c'],'p1':pct(b[-1]['c'],b[-2]['c']),'p4':pct(b[-1]['c'],b[-5]['c']),'timestamp':b[-1]['t']}
+        b=gate_1h('BTC_USDT')
+        btc={'venue':'Gate Spot','price':b[-1]['c'],'p1':pct(b[-1]['c'],b[-2]['c']),'p4':pct(b[-1]['c'],b[-5]['c']),'timestamp':b[-1]['t']}
     except Exception as e:
         btc=None; errors.append('BTC reference: '+repr(e))
 
     results=[]; failures=[]
     if btc:
         with ThreadPoolExecutor(max_workers=6) as ex:
-            futs={ex.submit(analyze,m['bybitSymbol'],m,btc):m for m in eligible}
+            futs={ex.submit(analyze,m['gatePair'],m,btc):m for m in eligible}
             for f in as_completed(futs):
                 m=futs[f]
                 try: results.append(f.result())
@@ -186,10 +188,10 @@ def main():
     stage=[x for x in results if x['bucketA'] or x['bucketB'] or x['bucketC'] or x['bucketE']]
     deep=stage[:30]
     total=len(eligible); scanned=len(results); ratio=scanned/total if total else 0
-    healthy=sources['coinGecko']=='PASS' and sources['bybit']=='PASS' and btc is not None
+    healthy=sources['coinGecko']=='PASS' and sources['gateSpot']=='PASS' and btc is not None
     passed=healthy and total >= 20 and ratio >= 0.90
     coverage={'bucketA':'PASS' if passed else 'FAIL','bucketB':'PASS' if passed else 'FAIL','bucketC':'PASS' if passed else 'FAIL','bucketD':'EXTERNAL_STAGE0_REQUIRED','bucketE':'PASS' if passed else 'FAIL','eligibleUniverseCount':total,'scannedCount':scanned,'scanSuccessRatio':round(ratio,4)}
-    out={'schemaVersion':'1.0','module':'cabalMachineDiscovery','ok':passed,'generatedAt':generated,'sources':sources,'coverage':coverage,'candidateCountStageA':len(stage),'deepValidatedCount':len(deep),'btcReference':btc,'candidates':deep,'failures':failures[:25],'errors':errors,'method':'CoinGecko dynamic eligibility + Bybit completed 1h OHLCV; 4h metrics derived from completed 1h; independent A/B/C/E screening; Bucket D external.'}
+    out={'schemaVersion':'1.1','module':'cabalMachineDiscovery','ok':passed,'generatedAt':generated,'sources':sources,'coverage':coverage,'candidateCountStageA':len(stage),'deepValidatedCount':len(deep),'btcReference':btc,'candidates':deep,'failures':failures[:25],'errors':errors,'method':'CoinGecko dynamic eligibility + Gate Spot completed 1h OHLCV; 4h metrics derived from completed 1h; independent A/B/C/E screening; Bucket D external.'}
     os.makedirs(os.path.dirname(OUT) or '.', exist_ok=True)
     with open(OUT+'.tmp','w',encoding='utf-8') as f: json.dump(out,f,ensure_ascii=False,indent=2)
     os.replace(OUT+'.tmp',OUT)
