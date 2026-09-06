@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 OUT=os.environ.get('CABAL_OUT','data/cabal-machine.json')
-UA='CABAL-Discovery-Guard/1.2'
+UA='CABAL-Discovery-Guard/1.3'
 STABLES={'usdt','usdc','dai','fdusd','tusd','usde','usds','pyusd','usdd','frax','crvusd','gho','usd1','usdp','gusd'}
 WRAPPED=('wbtc','weth','wsteth','steth','cbeth','reth','weeth','ezeth','solvbtc')
 
@@ -97,12 +97,41 @@ def analyze(pair,m,btc):
     elif A and p24<25: cls='EARLY-MOVE'
     elif A or B or C or E: cls='MID-MOVE'
     else: cls='NO SETUP'
+
     support=min(x['l'] for x in b[-6:])
-    score=max(p1,0)*2+max(p4,0)*.8+min(max(r1-1,0),8)*5+min(max(r4-1,0),8)*4+min(max(rs1,0),8)*1.5+(5 if C else 0)+(8 if st else 0)
+    invalidation=support*.997
+    no_chase=h24*1.01
+    headroom=pct(no_chase,z['c'])
+    effort='POOR' if poor else ('EFFICIENT' if p4>=2 and r4>=1.1 else 'NEUTRAL')
+
+    # Execution-lag protection patch (v1.3): discovery and full confirmation are no longer
+    # treated as one binary decision. A strong, still-early A+B+C candidate can open an
+    # IMMEDIATE REVIEW window for a small pilot position before the full-size confirmation.
+    # This is a machine action flag only; it never auto-executes and remains UNARMED until
+    # a real protective order exists.
+    pilot_quality=(cls in {'PRE-MOVE','EARLY STARTER'} and A and B and C and not poor and rs1>0 and rs4>0 and p24<18 and p4<8)
+    pilot_location=(z['c']<no_chase and headroom>=0.75)
+    pilot=bool(pilot_quality and pilot_location)
+    if z['c']>=no_chase:
+        execution='NO_CHASE'
+    elif pilot:
+        execution='PILOT_ENTRY_WINDOW'
+    elif cls in {'PRE-MOVE','EARLY STARTER','SECOND-LEG TRIGGER'}:
+        execution='WAIT_CONFIRMATION'
+    else:
+        execution='OBSERVE'
+    pilot_entry_max=min(no_chase*.995,z['c']*1.0075) if pilot else None
+    add_trigger=max(h6*1.002,z['c']) if pilot else None
+
+    score=max(p1,0)*2+max(p4,0)*.8+min(max(r1-1,0),8)*5+min(max(r4-1,0),8)*4+min(max(rs1,0),8)*1.5+(5 if C else 0)+(8 if st else 0)+(3 if pilot else 0)
     return {'asset':m['symbol'].upper(),'symbol':pair,'venue':'Gate Spot','name':m.get('name'),'price':z['c'],'marketCap':m.get('market_cap'),'volume24h':m.get('total_volume'),
       'priceChange1hPct':round(p1,4),'priceChange4hPct':round(p4,4),'priceChange24hPct':round(p24,4),'priceChange7dPct':round(p7,4),'rvol1h':round(r1,4),'rvol4h':round(r4,4),'volumeState':vs,
-      'relativeStrength1hVsBTC':round(rs1,4),'relativeStrength4hVsBTC':round(rs4,4),'breakout6h':breakout,'reclaim6h':reclaim,'support':support,'invalidation':support*.997,'noChase':h24*1.01,
-      'bucketA':A,'bucketB':B,'bucketC':C,'bucketE':E,'secondLegWatch':sw,'secondLegTrigger':st,'secondLegT0':t0,'classification':cls,'stageAScore':round(score,4),'effortVsResult':'POOR' if poor else ('EFFICIENT' if p4>=2 and r4>=1.1 else 'NEUTRAL')}
+      'relativeStrength1hVsBTC':round(rs1,4),'relativeStrength4hVsBTC':round(rs4,4),'breakout6h':breakout,'reclaim6h':reclaim,'support':support,'invalidation':invalidation,'noChase':no_chase,
+      'bucketA':A,'bucketB':B,'bucketC':C,'bucketE':E,'secondLegWatch':sw,'secondLegTrigger':st,'secondLegT0':t0,'classification':cls,'stageAScore':round(score,4),'effortVsResult':effort,
+      'executionSignal':execution,'decisionUrgency':'IMMEDIATE' if pilot else ('HIGH' if cls in {'EARLY STARTER','SECOND-LEG TRIGGER'} else 'NORMAL'),
+      'pilotEntryEligible':pilot,'pilotSizePctOfPlannedPosition':25 if pilot else 0,'pilotEntryMax':pilot_entry_max,'confirmationAddTrigger':add_trigger,
+      'noChaseHeadroomPct':round(headroom,4),'requiresProtectiveStop':bool(pilot),'protectiveStopReference':invalidation if pilot else None,'protectionState':'UNARMED' if pilot else None,
+      'executionPolicy':'For PILOT_ENTRY_WINDOW: immediate human review; at most 25% of the planned position before full confirmation; never auto-execute; do not enter above pilotEntryMax/noChase; add only after confirmation; protective order required.' if pilot else None}
 
 def main():
     now=datetime.now(timezone.utc).isoformat().replace('+00:00','Z'); src={'coinGecko':'FAIL','gateSpot':'FAIL'}; errors=[]; mk=[]
@@ -138,7 +167,7 @@ def main():
     res.sort(key=lambda x:x['stageAScore'],reverse=True); stage=[x for x in res if x['bucketA'] or x['bucketB'] or x['bucketC'] or x['bucketE']]; deep=stage[:30]
     total=len(eligible); scanned=len(res); ratio=scanned/total if total else 0; healthy=src['coinGecko']=='PASS' and src['gateSpot']=='PASS' and btc is not None; passed=healthy and total>=20 and ratio>=.90
     cov={'bucketA':'PASS' if passed else 'FAIL','bucketB':'PASS' if passed else 'FAIL','bucketC':'PASS' if passed else 'FAIL','bucketD':'EXTERNAL_STAGE0_REQUIRED','bucketE':'PASS' if passed else 'FAIL','eligibleUniverseCount':total,'scannedCount':scanned,'scanSuccessRatio':round(ratio,4)}
-    out={'schemaVersion':'1.2','module':'cabalMachineDiscovery','ok':passed,'generatedAt':now,'sources':src,'coverage':cov,'candidateCountStageA':len(stage),'deepValidatedCount':len(deep),'btcReference':btc,'candidates':deep,'failures':fails[:25],'errors':errors,'method':'CoinGecko dynamic eligibility + Gate Spot completed 1h OHLCV; 4h metrics derived from completed 1h; sparse-volume rejection and capped RVOL ranking; independent A/B/C/E screening; Bucket D external.'}
+    out={'schemaVersion':'1.3','module':'cabalMachineDiscovery','ok':passed,'generatedAt':now,'sources':src,'coverage':cov,'candidateCountStageA':len(stage),'deepValidatedCount':len(deep),'btcReference':btc,'candidates':deep,'failures':fails[:25],'errors':errors,'method':'CoinGecko dynamic eligibility + Gate Spot completed 1h OHLCV; 4h metrics derived from completed 1h; sparse-volume rejection and capped RVOL ranking; independent A/B/C/E screening; Bucket D external; v1.3 execution-lag protection adds a non-automatic 25% pilot-entry review window for strong early A+B+C setups with positive BTC-relative strength and sufficient no-chase headroom.'}
     os.makedirs(os.path.dirname(OUT) or '.',exist_ok=True); json.dump(out,open(OUT+'.tmp','w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(OUT+'.tmp',OUT)
-    print(json.dumps({'ok':passed,'generatedAt':now,'eligible':total,'scanned':scanned,'stageA':len(stage),'deep':len(deep),'sources':src,'failures':len(fails),'errors':errors},indent=2))
+    print(json.dumps({'ok':passed,'generatedAt':now,'eligible':total,'scanned':scanned,'stageA':len(stage),'deep':len(deep),'pilotWindows':sum(1 for x in deep if x.get('pilotEntryEligible')),'sources':src,'failures':len(fails),'errors':errors},indent=2))
 if __name__=='__main__': main()
