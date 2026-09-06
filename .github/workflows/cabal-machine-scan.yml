@@ -1,0 +1,79 @@
+name: CABAL Independent Machine Discovery
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'scripts/cabal-machine-scan.py'
+      - '.github/workflows/cabal-machine-scan.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cabal-independent-machine-discovery
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run independent market-wide CABAL scan
+        run: python scripts/cabal-machine-scan.py
+
+      - name: Validate machine payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/cabal-machine.json >/dev/null
+          python - <<'PY'
+          import json
+          p='data/cabal-machine.json'
+          d=json.load(open(p,encoding='utf-8'))
+          required=('ok','generatedAt','coverage','sources','candidateCountStageA','deepValidatedCount','btcReference')
+          missing=[k for k in required if k not in d]
+          if missing: raise SystemExit(f'missing required keys: {missing}')
+          for b in ('bucketA','bucketB','bucketC','bucketE'):
+              if b not in d['coverage']: raise SystemExit(f'missing coverage {b}')
+          if d['coverage'].get('bucketD')!='EXTERNAL_STAGE0_REQUIRED':
+              raise SystemExit('bucketD must remain EXTERNAL_STAGE0_REQUIRED')
+          print('CABAL MACHINE PAYLOAD VALID', d['generatedAt'], 'ok=', d['ok'])
+          PY
+
+      - name: Commit machine state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/cabal-machine.json
+          if git diff --cached --quiet; then
+            echo 'No CABAL machine state change.'
+            exit 0
+          fi
+          git commit -m 'cabal-machine: refresh independent discovery [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Verify persisted payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:data/cabal-machine.json | python -m json.tool >/dev/null
+          echo 'CABAL MACHINE PERSISTENCE PASS'
