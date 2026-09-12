@@ -1,0 +1,96 @@
+name: WHALES State Sync
+
+on:
+  schedule:
+    - cron: '3,18,33,48 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'docs/WHALES_SYNC_TRIGGER.md'
+      - '.github/workflows/whales-state-sync.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whales-state-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch WHALES live status and summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='https://whales-robinhood.diondublin21.workers.dev'
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 "$ROOT/" -o /tmp/health.json
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 "$ROOT/summary?limit=1000" -o /tmp/summary.json
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          health=json.load(open('/tmp/health.json',encoding='utf-8'))
+          summary=json.load(open('/tmp/summary.json',encoding='utf-8'))
+          out={
+              'schemaVersion':'1.0',
+              'module':'whalesState',
+              'generatedAt':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+              'source':'WHALES Robinhood Worker live endpoints',
+              'health':health,
+              'summary':summary,
+          }
+          with open('data/whales-state.json','w',encoding='utf-8') as f:
+              json.dump(out,f,ensure_ascii=False,indent=2)
+              f.write('\n')
+          print('WHALES STATE', 'signals=', summary.get('signalCount'), 'buys=', len(summary.get('buys') or []), 'sells=', len(summary.get('sells') or []), 'convergence=', len(summary.get('convergence') or []))
+          PY
+
+      - name: Validate WHALES payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/whales-state.json >/dev/null
+          python - <<'PY'
+          import json
+          d=json.load(open('data/whales-state.json',encoding='utf-8'))
+          if not d.get('health',{}).get('ok'):
+              raise SystemExit('WHALES health not OK')
+          s=d.get('summary',{})
+          if not s.get('ok'):
+              raise SystemExit('WHALES summary not OK')
+          for k in ('signalCount','buys','sells','convergence'):
+              if k not in s: raise SystemExit(f'missing summary key: {k}')
+          print('WHALES PAYLOAD VALID')
+          PY
+
+      - name: Commit fresh WHALES state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/whales-state.json
+          if git diff --cached --quiet; then
+            echo 'No WHALES state change.'
+            exit 0
+          fi
+          git commit -m 'whales: refresh live summary [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Verify persisted WHALES state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:data/whales-state.json | python -m json.tool >/dev/null
+          echo 'WHALES PERSISTENCE PASS'
