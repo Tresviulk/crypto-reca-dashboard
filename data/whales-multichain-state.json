@@ -2,8 +2,8 @@
   "schemaVersion": "1.0",
   "module": "whalesMultichain",
   "version": "WHALES_MULTICHAIN_V2_2026-09-12",
-  "generatedAt": "2026-09-12T16:53:28.212Z",
-  "overallStatus": "PARTIAL_SOLANA_WALLETS_REQUIRED",
+  "generatedAt": "2026-09-12T17:00:42.494Z",
+  "overallStatus": "PARTIAL_SOLANA_RPC",
   "architecture": {
     "trackedEvmWallets": 11,
     "trackedSolanaWallets": 6,
@@ -14,7 +14,7 @@
       "hyperliquid": "PASS",
       "solana": "PARTIAL"
     },
-    "importantLimitation": "The same 11 EVM wallet addresses are monitored on Ethereum, Base, Arbitrum and Hyperliquid. Solana uses a different address format and requires an independently identified Solana whale cohort."
+    "importantLimitation": "Solana has a configured independent whale cohort. A PARTIAL Solana status means public-RPC/provider degradation, not missing wallets. Raw TOKEN_FLOW remains contextual until trade-level confirmation."
   },
   "chains": {
     "ethereum": {
@@ -64,8 +64,8 @@
     "base": {
       "status": "PASS",
       "rpcUrl": "https://mainnet.base.org",
-      "latestBlock": 51221326,
-      "fromBlock": 51216326,
+      "latestBlock": 51221543,
+      "fromBlock": 51216543,
       "candidateTransactions": 0,
       "reconstructed": 0,
       "failed": 0,
@@ -74,8 +74,8 @@
     "arbitrum": {
       "status": "PASS",
       "rpcUrl": "https://arb1.arbitrum.io/rpc",
-      "latestBlock": 504457362,
-      "fromBlock": 504452362,
+      "latestBlock": 504459069,
+      "fromBlock": 504454069,
       "candidateTransactions": 0,
       "reconstructed": 0,
       "failed": 0,
@@ -91,7 +91,7 @@
       "status": "PARTIAL",
       "rpcUrl": "https://api.mainnet-beta.solana.com",
       "walletCount": 6,
-      "failed": 2,
+      "failed": 3,
       "signals": [
         {
           "chain": "solana",
@@ -158,5 +158,16 @@
       ]
     }
   ],
-  "actionableConvergence": []
+  "actionableConvergence": [],
+  "statusSemantics": {
+    "normalized": true,
+    "solanaWalletCount": 6,
+    "meaning": {
+      "PASS": "All enabled chain monitors passed.",
+      "PARTIAL_SOLANA_WALLETS_REQUIRED": "No Solana cohort is configured.",
+      "PARTIAL_SOLANA_RPC": "Solana cohort exists but some public RPC calls failed; other core chains passed.",
+      "PARTIAL_SOLANA_RPC_ERROR": "Solana cohort exists but the Solana RPC monitor failed; other core chains passed.",
+      "PARTIAL": "One or more non-Solana core chain monitors are not PASS."
+    }
+  }
 }
