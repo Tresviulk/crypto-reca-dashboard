@@ -147,6 +147,95 @@ async function resolveContractViaCoinGecko(env, base) {
     };
   }
 
+  // For assets listed on KuCoin, use KuCoin's own public currency registry as
+  // the identity source before any symbol-only fallback. This prevents a same-
+  // ticker token on Ethereum from being mistaken for a KuCoin asset whose real
+  // network is Solana/Base/etc.
+  try {
+    const kr = await fetch(
+      "https://api.kucoin.com/api/ua/v2/market/currency?currency=" + encodeURIComponent(base),
+      {
+        headers: {
+          accept: "application/json",
+          "user-agent": "WHALES-DEEP/kucoin-chain-resolver"
+        },
+        cf: { cacheEverything: true, cacheTtl: 300 }
+      }
+    );
+
+    if (kr.ok) {
+      const kj = await kr.json();
+      const kd = kj?.code === "200000" ? kj?.data : null;
+      if (kd && upper(kd.currency) === upper(base)) {
+        const chainRows = Array.isArray(kd.list)
+          ? kd.list
+          : Array.isArray(kd.chains)
+            ? kd.chains
+            : Array.isArray(kd.items)
+              ? kd.items
+              : [];
+
+        if (chainRows.length) {
+          const aliases = {
+            ethereum: ["eth", "erc20", "ethereum"],
+            base: ["base"],
+            arbitrum: ["arb", "arbitrum", "arbitrum-one", "arbitrum one"],
+            optimism: ["op", "optimism", "optimistic-ethereum"],
+            polygon: ["matic", "polygon", "polygon-pos"],
+            bsc: ["bsc", "bep20", "bnb smart chain", "binance-smart-chain"],
+            avalanche: ["avax", "avalanche", "avalanche c-chain", "avax c-chain"]
+          };
+          const wanted = aliases[chain] || [chain];
+          const normalizedRows = chainRows.map((row) => ({
+            row,
+            ids: [row?.chain, row?.chainId, row?.chainName]
+              .filter(Boolean)
+              .map((x) => String(x).toLowerCase())
+          }));
+          const observedChains = [...new Set(normalizedRows.flatMap((x) => x.ids))];
+          const matching = normalizedRows.filter((x) =>
+            x.ids.some((id) => wanted.some((alias) => id === alias || id.includes(alias)))
+          );
+
+          for (const match of matching) {
+            const address = match?.row?.contractAddress;
+            if (isHexAddress(address)) {
+              return {
+                ok: true,
+                contract: normalize(address),
+                chain,
+                source: "KuCoinCurrencyRegistry",
+                observedChains,
+                kucoinChain: match?.row?.chain || match?.row?.chainId || match?.row?.chainName || null
+              };
+            }
+          }
+
+          if (!matching.length) {
+            return {
+              ok: false,
+              reason: "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
+              chain,
+              source: "KuCoinCurrencyRegistry",
+              observedChains
+            };
+          }
+
+          return {
+            ok: false,
+            reason: "CONFIGURED_CHAIN_CONTRACT_ADDRESS_UNAVAILABLE",
+            chain,
+            source: "KuCoinCurrencyRegistry",
+            observedChains
+          };
+        }
+      }
+    }
+  } catch {
+    // Continue to chain token-list/API fallbacks if the venue registry is not
+    // reachable. No provider failure is promoted to a false positive contract.
+  }
+
   // Prefer CoinGecko's chain-specific static token list. A unique exact-symbol
   // match on the configured chain is accepted as the canonical contract even
   // when eth_call(symbol()) is unavailable. This avoids turning a transient
