@@ -8,11 +8,13 @@ on:
     branches: ["main"]
     paths:
       - 'scripts/whales-report.mjs'
+      - 'scripts/whales-report-enhance.mjs'
       - 'data/whales-multichain-state.json'
       - 'data/whales-state.json'
       - 'data/solana-fixed-kol-feed-state.json'
       - 'data/whales-discovery-state.json'
       - 'data/whales-promoted-wallets.json'
+      - 'data/whales-promoted-live-state.json'
       - 'data/cabal-machine.json'
       - 'data/positions-state.json'
       - '.github/workflows/whales-report.yml'
@@ -43,6 +45,9 @@ jobs:
       - name: Build full WHALES report
         run: node scripts/whales-report.mjs
 
+      - name: Integrate promoted Discovery live surveillance
+        run: node scripts/whales-report-enhance.mjs
+
       - name: Validate report contract
         shell: bash
         run: |
@@ -54,7 +59,8 @@ jobs:
           mandatory=d.get('reportContract',{}).get('mandatorySections',[])
           missing=[k for k in mandatory if k not in d]
           if missing: raise SystemExit(f'missing WHALES report sections: {missing}')
-          if len(mandatory) < 12: raise SystemExit('report contract too small')
+          if len(mandatory) < 15: raise SystemExit('WHALES report contract too small')
+          if 'promotedDiscoveryLive' not in mandatory: raise SystemExit('promoted Discovery live section is not mandatory')
           print('WHALES REPORT VALID', d['generatedAt'], d['executive'])
           PY
 
