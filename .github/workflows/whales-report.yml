@@ -45,7 +45,7 @@ jobs:
       - name: Build full WHALES report
         run: node scripts/whales-report.mjs
 
-      - name: Integrate promoted Discovery live surveillance
+      - name: Integrate all mandatory WHALES layers
         run: node scripts/whales-report-enhance.mjs
 
       - name: Validate report contract
@@ -59,9 +59,16 @@ jobs:
           mandatory=d.get('reportContract',{}).get('mandatorySections',[])
           missing=[k for k in mandatory if k not in d]
           if missing: raise SystemExit(f'missing WHALES report sections: {missing}')
-          if len(mandatory) < 15: raise SystemExit('WHALES report contract too small')
-          if 'promotedDiscoveryLive' not in mandatory: raise SystemExit('promoted Discovery live section is not mandatory')
-          print('WHALES REPORT VALID', d['generatedAt'], d['executive'])
+          required={
+            'executive','health','coverage','fixedCohort','discovery','newWalletDiscovery',
+            'promotedDiscoveryLive','confirmedBuys','confirmedSells','deepValidation',
+            'largeTransfers','netAccumulation','cexFlows','smartMoneyExternal','solana',
+            'hyperliquid','convergence','cabalCross','portfolioCross','decisionTable','dataGaps'
+          }
+          absent=sorted(required-set(mandatory))
+          if absent: raise SystemExit(f'WHALES mandatory contract missing: {absent}')
+          if len(mandatory) < 21: raise SystemExit('WHALES report contract too small')
+          print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), d['executive'])
           PY
 
       - name: Commit canonical report
