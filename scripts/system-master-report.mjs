@@ -27,12 +27,35 @@ function realized(p) {
 }
 
 function radarView(r) {
-  return (r?.radar || []).map((x) => ({ asset: upper(x.asset), pair: x.pair, price: x.price ?? x.currentPrice ?? null, ers: x.ers ?? x.ERS ?? null, state: x.state ?? x.phase ?? null, decision: x.decision ?? x.action ?? x.entryDecision ?? null, dataQuality: x.dataQuality ?? null, rsi: x.rsi ?? x.RSI ?? null, rvol1h: x.rvol1h ?? null, trend1h: x.trend1h ?? x.trends?.h1 ?? null, trend4h: x.trend4h ?? x.trends?.h4 ?? null, trend1d: x.trend1d ?? x.trends?.d1 ?? null }));
+  const rows = Array.isArray(r?.radar)
+    ? r.radar
+    : Array.isArray(r?.radar?.assets)
+      ? r.radar.assets
+      : Array.isArray(r?.assets)
+        ? r.assets
+        : [];
+  return rows.map((x) => ({
+    asset: upper(x.asset), pair: x.pair, price: x.price ?? x.currentPrice ?? null,
+    ers: x.ers ?? x.ERS ?? null, state: x.state ?? x.phase ?? null,
+    decision: x.decision ?? x.action ?? x.entryDecision ?? null, dataQuality: x.dataQuality ?? null,
+    rsi: x.rsi ?? x.RSI ?? null, rvol1h: x.rvol1h ?? null,
+    trend1h: x.trend1h ?? x.trends?.h1 ?? null, trend4h: x.trend4h ?? x.trends?.h4 ?? null,
+    trend1d: x.trend1d ?? x.trends?.d1 ?? null
+  }));
 }
 
 function riskView(risk) {
-  const obj = risk?.positionRisk?.positions || risk?.positions || {};
-  return Object.entries(obj).map(([id, x]) => ({ id, asset: upper(x.asset), prs: x.prs ?? null, structuralState: x.structuralState ?? null, managementState: x.managementState ?? null, riskLevel: x.riskLevel ?? x.risk ?? null, action: x.action ?? x.advisory ?? null, protection: x.protection ?? null, fastDrop: x.fastDrop ?? x['FAST-DROP'] ?? null, modeledLoss: x.modeledLoss ?? null }));
+  const raw = risk?.positionRisk?.positions || risk?.positions || {};
+  const entries = Array.isArray(raw)
+    ? raw.map((x, i) => [x?.id || String(i), x])
+    : Object.entries(raw);
+  return entries.filter(([, x]) => x && typeof x === 'object').map(([id, x]) => ({
+    id, asset: upper(x.asset), prs: x.prs ?? null,
+    structuralState: x.structuralState ?? null, managementState: x.managementState ?? null,
+    riskLevel: x.riskLevel ?? x.risk ?? null, action: x.action ?? x.advisory ?? null,
+    protection: x.protection ?? null, fastDrop: x.fastDrop ?? x['FAST-DROP'] ?? null,
+    modeledLoss: x.modeledLoss ?? null
+  }));
 }
 
 function cabalView(c) {
