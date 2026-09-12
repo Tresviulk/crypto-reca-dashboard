@@ -53,7 +53,7 @@ function isMeaningfulKnownSignal(status) {
 async function fetchCabal() {
   const r = await fetch(CABAL_URL, {
     method: 'GET',
-    headers: { 'accept': 'application/json', 'user-agent': 'WHALES-DEEP-PERSIST/1.1' },
+    headers: { 'accept': 'application/json', 'user-agent': 'WHALES-DEEP-PERSIST/1.2' },
     signal: AbortSignal.timeout(180_000)
   });
   if (!r.ok) throw new Error(`CABAL_HTTP_${r.status}`);
@@ -77,11 +77,12 @@ async function main() {
     const knownSignals = okResults.filter((x) => isMeaningfulKnownSignal(x.overallWhaleStatus));
     const contextual = okResults.filter((x) => upper(x.overallWhaleStatus) === 'UNVERIFIED_TOKEN_FLOW_ACTIVITY');
     const noKnownSignal = okResults.filter((x) => upper(x.overallWhaleStatus) === 'NO_KNOWN_WALLET_SIGNAL');
+    const processedCoveragePct = triggered.length ? Number((okResults.length / triggered.length * 100).toFixed(2)) : 100;
 
     const out = {
-      schemaVersion: '1.1',
+      schemaVersion: '1.2',
       module: 'whalesDeepPersistence',
-      version: 'WHALES_DEEP_PERSIST_V1_1_2026-09-12',
+      version: 'WHALES_DEEP_PERSIST_V1_2_2026-09-12',
       generatedAt,
       runStatus: requestGaps.length ? 'PARTIAL' : 'PASS',
       source: {
@@ -97,9 +98,11 @@ async function main() {
       scan: {
         candidateCount: candidates.length,
         triggerCount: triggered.length,
+        requestedCount: triggered.length,
         processedCount: okResults.length,
         okCount: okResults.length,
         capacityQueuedCount: capacityQueued.length,
+        processedCoveragePct,
         requestGapCount: requestGaps.length,
         meaningfulKnownSignalCount: knownSignals.length,
         contextualFlowCount: contextual.length,
@@ -124,9 +127,9 @@ async function main() {
   } catch (err) {
     const carried = Array.isArray(previous?.results) ? previous.results : [];
     const out = {
-      schemaVersion: '1.1',
+      schemaVersion: '1.2',
       module: 'whalesDeepPersistence',
-      version: 'WHALES_DEEP_PERSIST_V1_1_2026-09-12',
+      version: 'WHALES_DEEP_PERSIST_V1_2_2026-09-12',
       generatedAt,
       runStatus: 'ERROR',
       source: {
@@ -138,9 +141,11 @@ async function main() {
       scan: {
         candidateCount: null,
         triggerCount: null,
+        requestedCount: null,
         processedCount: null,
         okCount: null,
         capacityQueuedCount: null,
+        processedCoveragePct: null,
         requestGapCount: null,
         meaningfulKnownSignalCount: null,
         contextualFlowCount: null,
