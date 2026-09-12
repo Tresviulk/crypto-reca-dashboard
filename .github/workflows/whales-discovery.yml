@@ -1,0 +1,79 @@
+name: WHALES Discovery
+
+on:
+  schedule:
+    - cron: '5,35 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'scripts/whales-discovery.mjs'
+      - 'config/whales-discovery.json'
+      - '.github/workflows/whales-discovery.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whales-discovery
+  cancel-in-progress: false
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run WHALES Discovery
+        run: node scripts/whales-discovery.mjs
+
+      - name: Validate discovery payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/whales-discovery-state.json >/dev/null
+          python -m json.tool data/whales-promoted-wallets.json >/dev/null
+          python - <<'PY'
+          import json
+          d=json.load(open('data/whales-discovery-state.json',encoding='utf-8'))
+          p=json.load(open('data/whales-promoted-wallets.json',encoding='utf-8'))
+          if not d.get('generatedAt'): raise SystemExit('missing discovery generatedAt')
+          if d.get('runStatus') not in ('PASS','PARTIAL','STALE_SOURCE_ERROR'): raise SystemExit('invalid discovery status')
+          for w in p.get('wallets',[]):
+              if not w.get('address') or w.get('alphaScore') is None: raise SystemExit('invalid promoted wallet')
+          print('WHALES DISCOVERY VALID', d['generatedAt'], d['runStatus'], d.get('universe'))
+          PY
+
+      - name: Commit discovery state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/whales-discovery-state.json data/whales-promoted-wallets.json
+          if git diff --cached --quiet; then
+            echo 'No WHALES Discovery change.'
+            exit 0
+          fi
+          git commit -m 'whales: refresh discovery alpha wallets [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Verify persisted state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:data/whales-discovery-state.json | python -m json.tool >/dev/null
+          git show origin/main:data/whales-promoted-wallets.json | python -m json.tool >/dev/null
+          echo 'WHALES DISCOVERY PERSISTENCE PASS'
