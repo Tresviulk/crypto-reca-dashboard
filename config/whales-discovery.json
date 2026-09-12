@@ -1,0 +1,47 @@
+{
+  "version": "WHALES_DISCOVERY_V1_2026-09-12",
+  "enabled": true,
+  "chain": "solana",
+  "source": {
+    "provider": "MadeOnSol",
+    "endpoint": "https://madeonsol.com/api/v1/alpha/leaderboard",
+    "credentialMode": "public-demo-documented",
+    "period": "30d",
+    "minTokens": 8,
+    "limit": 100,
+    "excludeBots": true,
+    "sorts": ["win_rate", "pnl", "roi"]
+  },
+  "scheduleMinutes": 30,
+  "scoring": {
+    "alphaDatasetBase": 15,
+    "winRateWeight": 25,
+    "roiWeight": 20,
+    "pnlWeight": 15,
+    "sampleWeight": 15,
+    "recencyWeight": 10,
+    "fullWinRate": 0.80,
+    "fullRoi": 1.00,
+    "fullPnlSol": 100,
+    "fullSampleTokens": 30,
+    "freshDays": 7,
+    "staleDays": 30
+  },
+  "tiers": {
+    "tierA": {"minScore": 85, "minTokens": 15, "minWinRate": 0.60, "requirePositivePnl": true, "requirePositiveRoi": true},
+    "tierB": {"minScore": 75, "minTokens": 10, "minWinRate": 0.55, "requirePositivePnl": true},
+    "watch": {"minScore": 65, "minTokens": 8}
+  },
+  "promotion": {
+    "autoPromoteTierA": true,
+    "maxPromotedWallets": 10,
+    "doNotAutoTrade": true,
+    "purpose": "Promote statistically profitable early-buyer wallets into persistent surveillance. Promotion is surveillance only, never automatic execution."
+  },
+  "importantLimitations": [
+    "The MadeOnSol alpha leaderboard is Solana/Pump.fun early-buyer intelligence, not a universal multichain ranking.",
+    "Leaderboard performance is historical and does not guarantee future edge.",
+    "The public demo source is delayed and rate-limited; production-grade sub-minute discovery requires a dedicated API key/provider.",
+    "Unknown alpha wallets are not assumed to be independent humans merely because exclude_bots=true; insider/sybil risk remains a separate validation layer."
+  ]
+}
