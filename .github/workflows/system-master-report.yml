@@ -54,8 +54,15 @@ jobs:
           mandatory=d.get('reportContract',{}).get('mandatorySections',[])
           missing=[k for k in mandatory if k not in d]
           if missing: raise SystemExit(f'missing TODO sections: {missing}')
-          if len(mandatory) < 14: raise SystemExit('TODO report contract too small')
-          print('TODO MASTER REPORT VALID', d['generatedAt'], d['systemHealth'])
+          required={
+            'systemHealth','marketRadar','cabalDiscovery','secondLegs','volumeTurnoverAnomalies','deepValidation',
+            'whales','whalesDiscovery','whalesDeep','convergence','openPositions','portfolioPnl','positionRisk','fastDrop',
+            'externalSignals','macroIntelligence','catalystsListings','processMisses','dataGaps','finalDecisionMatrix'
+          }
+          absent=sorted(required-set(mandatory))
+          if absent: raise SystemExit(f'TODO mandatory contract missing: {absent}')
+          if len(mandatory) < 20: raise SystemExit('TODO report contract too small')
+          print('TODO MASTER REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), d['systemHealth'])
           PY
 
       - name: Commit TODO master report
