@@ -147,6 +147,46 @@ async function resolveContractViaCoinGecko(env, base) {
     };
   }
 
+  // Prefer CoinGecko's chain-specific static token list. A unique exact-symbol
+  // match on the configured chain is accepted as the canonical contract even
+  // when eth_call(symbol()) is unavailable. This avoids turning a transient
+  // RPC metadata failure into a false contract-resolution DATA_GAP.
+  try {
+    const lr = await fetch(
+      "https://tokens.coingecko.com/" + encodeURIComponent(platform) + "/all.json",
+      {
+        headers: {
+          accept: "application/json",
+          "user-agent": "WHALES-DEEP/static-contract-resolver"
+        },
+        cf: { cacheEverything: true, cacheTtl: 300 }
+      }
+    );
+
+    if (lr.ok) {
+      const lj = await lr.json();
+      const tokens = Array.isArray(lj?.tokens) ? lj.tokens : [];
+      const exact = tokens.filter(
+        (t) => upper(t?.symbol) === upper(base) && isHexAddress(t?.address)
+      );
+
+      if (exact.length === 1) {
+        return {
+          ok: true,
+          contract: normalize(exact[0].address),
+          chain,
+          source: "CoinGeckoStaticTokenListUniqueExact",
+          tokenListTimestamp: lj?.timestamp || null,
+          tokenListExactMatches: 1,
+          onChainValidation: "OPTIONAL_NOT_REQUIRED_FOR_UNIQUE_CHAIN_MATCH"
+        };
+      }
+    }
+  } catch {
+    // Continue to the API fallback below. The caller preserves diagnostics from
+    // the higher-level resolver when all providers fail.
+  }
+
   const headers = {};
   if (env.COINGECKO_API_KEY) {
     headers["x-cg-demo-api-key"] = env.COINGECKO_API_KEY;
