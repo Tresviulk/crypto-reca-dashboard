@@ -8,6 +8,7 @@ on:
     branches: ["main"]
     paths:
       - 'scripts/whales-multichain-scan.mjs'
+      - 'scripts/whales-multichain-status-normalize.mjs'
       - 'config/whales-multichain.json'
       - '.github/workflows/whales-multichain-scan.yml'
 
@@ -37,6 +38,9 @@ jobs:
       - name: Run WHALES multichain scan
         run: node scripts/whales-multichain-scan.mjs
 
+      - name: Normalize multichain status semantics
+        run: node scripts/whales-multichain-status-normalize.mjs
+
       - name: Validate multichain payload
         shell: bash
         run: |
@@ -51,6 +55,9 @@ jobs:
           got=set(d.get('chains',{}))
           missing=required-got
           if missing: raise SystemExit(f'missing chains: {sorted(missing)}')
+          sol_count=d.get('architecture',{}).get('trackedSolanaWallets',0)
+          if sol_count > 0 and d.get('overallStatus') == 'PARTIAL_SOLANA_WALLETS_REQUIRED':
+              raise SystemExit('invalid Solana status: wallets exist but status says wallets required')
           print('WHALES MULTICHAIN VALID', d['generatedAt'], d.get('overallStatus'))
           print('CHAIN STATUS', d.get('architecture',{}).get('chains'))
           PY
