@@ -176,30 +176,85 @@
   }
 
   async function resolveContractRobust(baseSymbol, referenceMarketCap) {
+    const chain = String(env.ALCHEMY_CHAIN || "ethereum").toLowerCase();
+    const platform = CG_PLATFORM_BY_CHAIN[chain];
+    const tokenListDiagnostics = { attempted: false, status: null, exactMatches: 0 };
+
+    if (platform) {
+      tokenListDiagnostics.attempted = true;
+      try {
+        const listResponse = await fetch(
+          "https://tokens.coingecko.com/" + encodeURIComponent(platform) + "/all.json",
+          {
+            headers: {
+              accept: "application/json",
+              "user-agent": "WHALES-DEEP/token-list-resolver"
+            },
+            cf: { cacheEverything: true, cacheTtl: 300 }
+          }
+        );
+        tokenListDiagnostics.status = listResponse.status;
+
+        if (listResponse.ok) {
+          const listJson = await listResponse.json();
+          const tokens = Array.isArray(listJson?.tokens) ? listJson.tokens : [];
+          const exact = tokens.filter(
+            (t) => upper(t?.symbol) === upper(baseSymbol) && isHexAddress(t?.address)
+          );
+          tokenListDiagnostics.exactMatches = exact.length;
+
+          if (exact.length === 1) {
+            const address = normalize(exact[0].address);
+            const meta = await getTokenMetadata(env, address);
+            if (upper(meta?.symbol) === upper(baseSymbol)) {
+              return {
+                ok: true,
+                contract: address,
+                chain,
+                source: "CoinGeckoStaticTokenList+OnChainSymbolValidation",
+                tokenListTimestamp: listJson?.timestamp || null,
+                tokenListExactMatches: 1
+              };
+            }
+            tokenListDiagnostics.onChainSymbol = meta?.symbol || null;
+          }
+        }
+      } catch (error) {
+        tokenListDiagnostics.error = String(error);
+      }
+    }
+
     const dex = await resolveContractViaDexScreener(baseSymbol, referenceMarketCap);
-    if (dex.ok) return dex;
+    if (dex.ok) {
+      return { ...dex, tokenListDiagnostics };
+    }
 
     const cg = await resolveContractViaCoinGecko(env, baseSymbol);
     if (cg.ok) {
       return {
         ...cg,
-        source: "CoinGeckoFallback",
+        source: "CoinGeckoApiFallback",
+        tokenListDiagnostics,
         primaryResolverFailure: dex.reason || null
       };
     }
 
-    const preferDexReason = [
-      "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-      "DEXSCREENER_ONCHAIN_SYMBOL_VALIDATION_FAILED",
-      "DEXSCREENER_SYMBOL_NOT_RESOLVED"
-    ].includes(dex.reason);
+    const deterministicReason =
+      dex.reason === "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
+        ? "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
+        : tokenListDiagnostics.status === 200 && tokenListDiagnostics.exactMatches === 0
+          ? "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST"
+          : tokenListDiagnostics.status === 200 && tokenListDiagnostics.exactMatches > 1
+            ? "AMBIGUOUS_SYMBOL_ON_CONFIGURED_CHAIN"
+            : "CONTRACT_RESOLUTION_PROVIDERS_UNAVAILABLE";
 
     return {
       ok: false,
-      reason: preferDexReason ? dex.reason : (cg.reason || dex.reason || "TOKEN_CONTRACT_UNRESOLVED"),
-      chain: dex.chain || cg.chain || String(env.ALCHEMY_CHAIN || "ethereum").toLowerCase(),
-      source: "DexScreenerThenCoinGecko",
+      reason: deterministicReason,
+      chain: dex.chain || cg.chain || chain,
+      source: "StaticTokenListThenDexScreenerThenCoinGeckoApi",
       observedChains: dex.observedChains || [],
+      tokenListDiagnostics,
       dexScreenerReason: dex.reason || null,
       coinGeckoReason: cg.reason || null
     };
@@ -278,7 +333,7 @@
         ? (knownSignal === "NO_KNOWN_WALLET_SIGNAL" ? "PARTIAL" : "PARTIAL_KNOWN_WALLETS_ONLY")
         : tokenCentric.status,
     interpretation:
-      "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+      "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
   });
 }
 
