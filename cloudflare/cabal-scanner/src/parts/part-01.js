@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_2026-09-12";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_1_2026-09-12";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
