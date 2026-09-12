@@ -1,10 +1,10 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-12T16:50:22.775Z",
+  "generatedAt": "2026-09-12T16:58:18.896Z",
   "reportContract": {
     "command": "WHALES",
-    "rule": "Always expose every section below. Empty sections must be shown as NONE or DATA_GAP; never silently omit them.",
+    "rule": "Always expose every section below. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must also expose their live-surveillance state.",
     "mandatorySections": [
       "executive",
       "health",
@@ -19,7 +19,8 @@
       "cabalCross",
       "portfolioCross",
       "decisionTable",
-      "dataGaps"
+      "dataGaps",
+      "promotedDiscoveryLive"
     ]
   },
   "executive": {
@@ -40,45 +41,45 @@
     "freshness": [
       {
         "module": "multichain",
-        "generatedAt": "2026-09-12T16:45:01.195Z",
-        "ageMinutes": 5.4,
+        "generatedAt": "2026-09-12T16:53:28.212Z",
+        "ageMinutes": 4.8,
         "maxMinutes": 25,
         "freshness": "FRESH"
       },
       {
         "module": "ethereumWorker",
-        "generatedAt": "2026-09-12T16:39:12.956449Z",
-        "ageMinutes": 11.2,
+        "generatedAt": "2026-09-12T16:50:53.608633Z",
+        "ageMinutes": 7.4,
         "maxMinutes": 25,
         "freshness": "FRESH"
       },
       {
         "module": "solanaFixedFeed",
         "generatedAt": "2026-09-12T16:49:33.516Z",
-        "ageMinutes": 0.8,
+        "ageMinutes": 8.8,
         "maxMinutes": 35,
         "freshness": "FRESH"
       },
       {
         "module": "discovery",
         "generatedAt": "2026-09-12T16:49:25.527Z",
-        "ageMinutes": 1,
+        "ageMinutes": 8.9,
         "maxMinutes": 75,
         "freshness": "FRESH"
       },
       {
         "module": "cabal",
-        "generatedAt": "2026-09-12T16:40:57.493714Z",
-        "ageMinutes": 9.4,
+        "generatedAt": "2026-09-12T16:53:18.213782Z",
+        "ageMinutes": 5,
         "maxMinutes": 30,
         "freshness": "FRESH"
       },
       {
         "module": "positions",
-        "generatedAt": null,
-        "ageMinutes": null,
+        "generatedAt": "2026-09-12T16:50:00+02:00",
+        "ageMinutes": 128.3,
         "maxMinutes": 1440,
-        "freshness": "MISSING"
+        "freshness": "FRESH"
       }
     ],
     "multichainOverall": "PARTIAL_SOLANA_WALLETS_REQUIRED",
@@ -98,7 +99,14 @@
       "status": "PASS",
       "errors": []
     },
-    "discoveryStatus": "PASS"
+    "discoveryStatus": "PASS",
+    "promotedDiscoveryLive": {
+      "status": "PASS",
+      "generatedAt": "2026-09-12T16:57:18.467Z",
+      "ageMinutes": 1,
+      "promotedWalletCount": 2,
+      "failedWallets": 0
+    }
   },
   "coverage": {
     "ethereum": "FIXED_COHORT_WORKER",
@@ -3332,20 +3340,6 @@
             "delta": 1
           }
         ]
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-GAKE",
-        "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
-        "classification": "TOKEN_FLOW",
-        "signature": "2jAs1kdR2HPGXwJ2yyqzrz9r8eVjXfsCav7zbD4S2UDcCHo1nGhhgpP8SqiwuAGVWTJoRM7eSTJbt6QPUptn5fzw",
-        "blockTime": 1789223527,
-        "tokenFlows": [
-          {
-            "mint": "ASKY6syQaep79b8zxkAbdMjGvdqtrEWHDLii6cvSpump",
-            "delta": 10
-          }
-        ]
       }
     ],
     "rpcStatus": "PARTIAL",
@@ -3393,7 +3387,7 @@
   "actionableConvergence": [],
   "cabalCross": {
     "cabal": {
-      "generatedAt": "2026-09-12T16:40:57.493714Z",
+      "generatedAt": "2026-09-12T16:53:18.213782Z",
       "ok": true,
       "coverage": {
         "bucketA": "PASS",
@@ -3401,11 +3395,11 @@
         "bucketC": "PASS",
         "bucketD": "EXTERNAL_STAGE0_REQUIRED",
         "bucketE": "PASS",
-        "eligibleUniverseCount": 342,
-        "scannedCount": 331,
-        "scanSuccessRatio": 0.9678
+        "eligibleUniverseCount": 341,
+        "scannedCount": 329,
+        "scanSuccessRatio": 0.9648
       },
-      "stageACount": 172,
+      "stageACount": 171,
       "deepValidatedCount": 30,
       "btcReference": {
         "venue": "Gate Spot",
@@ -3774,11 +3768,50 @@
     "INSIDER_DEPLOYER_LINK_GRAPH_NOT_IMPLEMENTED"
   ],
   "sourceTimestamps": {
-    "multichain": "2026-09-12T16:45:01.195Z",
-    "ethereum": "2026-09-12T16:39:12.956449Z",
+    "multichain": "2026-09-12T16:53:28.212Z",
+    "ethereum": "2026-09-12T16:50:53.608633Z",
     "solanaFixed": "2026-09-12T16:49:33.516Z",
     "discovery": "2026-09-12T16:49:25.527Z",
-    "cabal": "2026-09-12T16:40:57.493714Z",
+    "cabal": "2026-09-12T16:53:18.213782Z",
     "positions": "2026-09-12T16:50:00+02:00"
+  },
+  "promotedDiscoveryLive": {
+    "schemaVersion": "1.0",
+    "module": "whalesPromotedSolanaMonitor",
+    "generatedAt": "2026-09-12T16:57:18.467Z",
+    "status": "PASS",
+    "rpcUrl": "https://api.mainnet-beta.solana.com",
+    "lookbackMinutes": 180,
+    "promotedWalletCount": 2,
+    "failedWallets": 0,
+    "walletSummary": [
+      {
+        "label": "SOL-DISC-01",
+        "address": "54FksNZgqEWpZXn3okR5sJ7ELZYnwh8xHMAL1N7KqazQ",
+        "alphaScore": 91.96,
+        "discoveryTier": "TIER_A",
+        "signaturesSeen": 0,
+        "tokenFlowTransactions": 0,
+        "latestFlowAt": null,
+        "status": "PASS"
+      },
+      {
+        "label": "SOL-DISC-02",
+        "address": "G7oChCkirqyoMPxjer7kMVXSBGuo1HFyk3ZkTM97GSAN",
+        "alphaScore": 89.55,
+        "discoveryTier": "TIER_A",
+        "signaturesSeen": 0,
+        "tokenFlowTransactions": 0,
+        "latestFlowAt": null,
+        "status": "PASS"
+      }
+    ],
+    "flows": [],
+    "interpretation": "Live RPC surveillance of auto-promoted Discovery wallets. TOKEN_FLOW_CONTEXT_ONLY is not a confirmed BUY/SELL and must never be relabeled without trade-level evidence."
+  },
+  "enhancements": {
+    "promotedDiscoveryLiveIntegrated": true,
+    "promotedFlowsAreContextOnly": true,
+    "rule": "TOKEN_FLOW_CONTEXT_ONLY is never promoted to BUY/SELL without trade-level evidence."
   }
 }
