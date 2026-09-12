@@ -57,11 +57,54 @@
         return y;
       });
 
-      // CABAL -> WHALES: only the highest priority qualifying assets are sent to the external whale engine.
-      const whaleCandidates = final
+      // CABAL -> WHALES DEEP rotating queue.
+      // Keep the two highest-priority names in every batch, then rotate the remaining
+      // six slots every 15 minutes through the rest of the qualifying universe.
+      // This preserves urgent coverage while preventing the same top 8 from starving
+      // every lower-ranked candidate indefinitely.
+      const whaleEligible = final
         .filter(isWhaleTrigger)
-        .sort((a,b)=>fullDeepPriority(b)-fullDeepPriority(a))
+        .sort((a,b)=>fullDeepPriority(b)-fullDeepPriority(a));
+
+      const whaleRotationSlotMinutes = 15;
+      const whalePriorityReserve = Math.min(2,MAX_WHALE_REQUESTS,whaleEligible.length);
+      const whaleRotationSlots = Math.max(0,MAX_WHALE_REQUESTS-whalePriorityReserve);
+      const whalePriorityCandidates = whaleEligible.slice(0,whalePriorityReserve);
+      const whaleRotationPool = whaleEligible.slice(whalePriorityReserve);
+      const whaleRotationBatchCount = whaleRotationSlots > 0 && whaleRotationPool.length
+        ? Math.ceil(whaleRotationPool.length/whaleRotationSlots)
+        : 1;
+      const whaleRotationEpoch = Math.floor(Date.now()/(whaleRotationSlotMinutes*60*1000));
+      const whaleRotationBatchIndex = whaleRotationPool.length
+        ? whaleRotationEpoch % whaleRotationBatchCount
+        : 0;
+      const whaleRotationStart = whaleRotationBatchIndex * whaleRotationSlots;
+
+      let whaleRotatingCandidates = whaleRotationSlots > 0
+        ? whaleRotationPool.slice(whaleRotationStart,whaleRotationStart+whaleRotationSlots)
+        : [];
+
+      // The final batch can be short. Wrap from the start of the rotating pool so we
+      // still use the available DEEP capacity without changing priority-reserve slots.
+      if(whaleRotationSlots > 0 && whaleRotatingCandidates.length < whaleRotationSlots && whaleRotationPool.length > whaleRotatingCandidates.length){
+        const need = whaleRotationSlots-whaleRotatingCandidates.length;
+        whaleRotatingCandidates = [
+          ...whaleRotatingCandidates,
+          ...whaleRotationPool.slice(0,need)
+        ];
+      }
+
+      const seenWhaleBases = new Set();
+      const whaleCandidates = [...whalePriorityCandidates,...whaleRotatingCandidates]
+        .filter(c=>{
+          if(seenWhaleBases.has(c.base)) return false;
+          seenWhaleBases.add(c.base);
+          return true;
+        })
         .slice(0,MAX_WHALE_REQUESTS);
+
+      const whaleSelectedBases = new Set(whaleCandidates.map(c=>c.base));
+      const whaleQueueRank = new Map(whaleEligible.map((c,i)=>[c.base,i+1]));
 
       const whaleResults = await mapLimit(whaleCandidates,2,async c=>({
         base:c.base,
@@ -71,7 +114,16 @@
 
       final = final.map(c=>Object.assign({},c,{
         whales:whaleMap.get(c.base) || (isWhaleTrigger(c)
-          ? {requested:true,status:env.WHALES_DEEP_URL ? "QUEUED_LIMIT" : "WHALE DATA GAP",reason:env.WHALES_DEEP_URL ? "MAX_WHALE_REQUESTS_REACHED" : "WHALES_DEEP_URL_NOT_CONFIGURED"}
+          ? {
+              requested:true,
+              status:env.WHALES_DEEP_URL ? "QUEUED_LIMIT" : "WHALE DATA GAP",
+              reason:env.WHALES_DEEP_URL ? "ROTATING_QUEUE_WAIT" : "WHALES_DEEP_URL_NOT_CONFIGURED",
+              queueRank:whaleQueueRank.get(c.base) || null,
+              selectedThisBatch:whaleSelectedBases.has(c.base),
+              rotationBatchIndex:whaleRotationBatchIndex,
+              rotationBatchCount:whaleRotationBatchCount,
+              rotationSlotMinutes:whaleRotationSlotMinutes
+            }
           : {requested:false,status:"NOT_TRIGGERED"})
       }));
 
@@ -134,7 +186,15 @@
           fullDeepCap:MAX_FULL_DEEP,
           fullDeepTruncated:liteResults.filter(x=>x.lite).length > fullTargets.length,
           whaleRequests:whaleCandidates.length,
-          whaleRequestCap:MAX_WHALE_REQUESTS
+          whaleRequestCap:MAX_WHALE_REQUESTS,
+          whaleEligibleTotal:whaleEligible.length,
+          whalePriorityReserve,
+          whaleRotationSlots,
+          whaleRotationPoolSize:whaleRotationPool.length,
+          whaleRotationBatchIndex,
+          whaleRotationBatchCount,
+          whaleRotationSlotMinutes,
+          whaleRotationCoverageMinutes:whaleRotationBatchCount*whaleRotationSlotMinutes
         },
         counts:{
           scannedStageAUniverse:scanUniverse.length,
