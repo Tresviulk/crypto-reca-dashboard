@@ -33,6 +33,13 @@ function normalizeDeepResult(c) {
     requested: Boolean(w?.requested),
     requestStatus: w?.status || 'UNKNOWN',
     requestReason: w?.reason || null,
+    queue: {
+      queueRank: w?.queueRank ?? null,
+      selectedThisBatch: w?.selectedThisBatch ?? (w?.status === 'OK' ? true : null),
+      rotationBatchIndex: w?.rotationBatchIndex ?? null,
+      rotationBatchCount: w?.rotationBatchCount ?? null,
+      rotationSlotMinutes: w?.rotationSlotMinutes ?? null
+    },
     resultGeneratedAt: d?.generatedAt || null,
     windowsHours: Array.isArray(d?.windowsHours) && d.windowsHours.length ? d.windowsHours : EXPECTED_WINDOWS,
     overallWhaleStatus: d?.overallWhaleStatus || null,
@@ -53,7 +60,7 @@ function isMeaningfulKnownSignal(status) {
 async function fetchCabal() {
   const r = await fetch(CABAL_URL, {
     method: 'GET',
-    headers: { 'accept': 'application/json', 'user-agent': 'WHALES-DEEP-PERSIST/1.2' },
+    headers: { 'accept': 'application/json', 'user-agent': 'WHALES-DEEP-PERSIST/1.3' },
     signal: AbortSignal.timeout(180_000)
   });
   if (!r.ok) throw new Error(`CABAL_HTTP_${r.status}`);
@@ -72,17 +79,18 @@ async function main() {
     const triggered = candidates.filter((c) => c?.whales?.requested === true);
     const results = triggered.map(normalizeDeepResult);
     const okResults = results.filter((x) => x.requestStatus === 'OK' && x.resultGeneratedAt);
-    const capacityQueued = results.filter((x) => x.requestStatus === 'QUEUED_LIMIT' || x.requestReason === 'MAX_WHALE_REQUESTS_REACHED');
-    const requestGaps = results.filter((x) => x.requestStatus !== 'OK' && x.requestStatus !== 'QUEUED_LIMIT' && x.requestReason !== 'MAX_WHALE_REQUESTS_REACHED');
+    const capacityQueued = results.filter((x) => x.requestStatus === 'QUEUED_LIMIT' || x.requestReason === 'MAX_WHALE_REQUESTS_REACHED' || x.requestReason === 'ROTATING_QUEUE_WAIT');
+    const requestGaps = results.filter((x) => x.requestStatus !== 'OK' && x.requestStatus !== 'QUEUED_LIMIT' && x.requestReason !== 'MAX_WHALE_REQUESTS_REACHED' && x.requestReason !== 'ROTATING_QUEUE_WAIT');
     const knownSignals = okResults.filter((x) => isMeaningfulKnownSignal(x.overallWhaleStatus));
     const contextual = okResults.filter((x) => upper(x.overallWhaleStatus) === 'UNVERIFIED_TOKEN_FLOW_ACTIVITY');
     const noKnownSignal = okResults.filter((x) => upper(x.overallWhaleStatus) === 'NO_KNOWN_WALLET_SIGNAL');
     const processedCoveragePct = triggered.length ? Number((okResults.length / triggered.length * 100).toFixed(2)) : 100;
+    const tr = cabal?.truncation || {};
 
     const out = {
-      schemaVersion: '1.2',
+      schemaVersion: '1.3',
       module: 'whalesDeepPersistence',
-      version: 'WHALES_DEEP_PERSIST_V1_2_2026-09-12',
+      version: 'WHALES_DEEP_PERSIST_V1_3_ROTATING_QUEUE_2026-09-12',
       generatedAt,
       runStatus: requestGaps.length ? 'PARTIAL' : 'PASS',
       source: {
@@ -91,10 +99,23 @@ async function main() {
         cabalGeneratedAt: cabal?.generatedAt || null,
         cabalPatchVersion: cabal?.patchVersion || null,
         cabalCoverage: cabal?.coverage || null,
-        whaleRequestCap: cabal?.truncation?.whaleRequestCap ?? null,
-        reason: 'CABAL already holds the protected WHALES_DEEP token in Cloudflare and calls the authenticated /deep endpoint internally. This persistence layer stores those returned 6h/24h/72h results without exposing the shared token. Candidates beyond the intentional per-scan CABAL request cap are recorded as capacity queue, not as provider failures.'
+        whaleRequestCap: tr?.whaleRequestCap ?? null,
+        queueMode: tr?.whaleRotationBatchCount != null ? 'PRIORITY_RESERVE_PLUS_ROTATING_QUEUE' : 'LEGACY_TOP_N',
+        reason: 'CABAL keeps the highest-priority DEEP names continuously covered and rotates the remaining capacity through the rest of the qualifying queue. QUEUED_LIMIT means waiting for a scheduled rotating batch, not a provider failure.'
       },
       windowsExpectedHours: EXPECTED_WINDOWS,
+      rotation: {
+        enabled: tr?.whaleRotationBatchCount != null,
+        eligibleTotal: tr?.whaleEligibleTotal ?? triggered.length,
+        priorityReserve: tr?.whalePriorityReserve ?? null,
+        rotatingSlots: tr?.whaleRotationSlots ?? null,
+        rotationPoolSize: tr?.whaleRotationPoolSize ?? null,
+        batchIndex: tr?.whaleRotationBatchIndex ?? null,
+        batchCount: tr?.whaleRotationBatchCount ?? null,
+        slotMinutes: tr?.whaleRotationSlotMinutes ?? null,
+        estimatedFullRotationMinutes: tr?.whaleRotationCoverageMinutes ?? null,
+        queuedThisRun: capacityQueued.length
+      },
       scan: {
         candidateCount: candidates.length,
         triggerCount: triggered.length,
@@ -116,20 +137,21 @@ async function main() {
       persistence: {
         persistedResultsAvailable: okResults.length > 0,
         sourceFreshness: 'CURRENT_RUN',
-        previousGeneratedAt: previous?.generatedAt || null
+        previousGeneratedAt: previous?.generatedAt || null,
+        previousRotationBatchIndex: previous?.rotation?.batchIndex ?? null
       },
-      interpretation: 'WHALES DEEP is token-centric Ethereum validation over 6h/24h/72h. Known-wallet signals are stronger evidence; token transfer flows remain contextual and are never automatically relabeled as buys or accumulation. QUEUED_LIMIT is an intentional CABAL capacity limit, not a WHALES DEEP failure.'
+      interpretation: 'WHALES DEEP runs 6h/24h/72h validation. Two highest-priority qualifying names are continuously reserved; remaining DEEP slots rotate every scheduled interval through the queue. Token transfer flows remain contextual and are never automatically relabeled as buys or accumulation.'
     };
 
     await fs.mkdir('data', { recursive: true });
     await fs.writeFile(OUT, JSON.stringify(out, null, 2) + '\n');
-    console.log('WHALES DEEP PERSIST PASS', JSON.stringify(out.scan));
+    console.log('WHALES DEEP PERSIST PASS', JSON.stringify({scan: out.scan, rotation: out.rotation}));
   } catch (err) {
     const carried = Array.isArray(previous?.results) ? previous.results : [];
     const out = {
-      schemaVersion: '1.2',
+      schemaVersion: '1.3',
       module: 'whalesDeepPersistence',
-      version: 'WHALES_DEEP_PERSIST_V1_2_2026-09-12',
+      version: 'WHALES_DEEP_PERSIST_V1_3_ROTATING_QUEUE_2026-09-12',
       generatedAt,
       runStatus: 'ERROR',
       source: {
@@ -138,6 +160,7 @@ async function main() {
         error: String(err)
       },
       windowsExpectedHours: EXPECTED_WINDOWS,
+      rotation: previous?.rotation || { enabled: null },
       scan: {
         candidateCount: null,
         triggerCount: null,
