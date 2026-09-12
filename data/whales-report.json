@@ -1,10 +1,10 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-12T17:01:50.589Z",
+  "generatedAt": "2026-09-12T17:02:50.966Z",
   "reportContract": {
     "command": "WHALES",
-    "rule": "Always expose every section below. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must also expose their live-surveillance state.",
+    "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. Unsupported claims must remain DATA_GAP.",
     "mandatorySections": [
       "executive",
       "health",
@@ -20,7 +20,13 @@
       "portfolioCross",
       "decisionTable",
       "dataGaps",
-      "promotedDiscoveryLive"
+      "promotedDiscoveryLive",
+      "newWalletDiscovery",
+      "deepValidation",
+      "largeTransfers",
+      "netAccumulation",
+      "cexFlows",
+      "smartMoneyExternal"
     ]
   },
   "executive": {
@@ -42,42 +48,42 @@
       {
         "module": "multichain",
         "generatedAt": "2026-09-12T17:00:42.494Z",
-        "ageMinutes": 1.1,
+        "ageMinutes": 2.1,
         "maxMinutes": 25,
         "freshness": "FRESH"
       },
       {
         "module": "ethereumWorker",
         "generatedAt": "2026-09-12T16:50:53.608633Z",
-        "ageMinutes": 10.9,
+        "ageMinutes": 12,
         "maxMinutes": 25,
         "freshness": "FRESH"
       },
       {
         "module": "solanaFixedFeed",
         "generatedAt": "2026-09-12T16:49:33.516Z",
-        "ageMinutes": 12.3,
+        "ageMinutes": 13.3,
         "maxMinutes": 35,
         "freshness": "FRESH"
       },
       {
         "module": "discovery",
         "generatedAt": "2026-09-12T16:49:25.527Z",
-        "ageMinutes": 12.4,
+        "ageMinutes": 13.4,
         "maxMinutes": 75,
         "freshness": "FRESH"
       },
       {
         "module": "cabal",
         "generatedAt": "2026-09-12T16:53:18.213782Z",
-        "ageMinutes": 8.5,
+        "ageMinutes": 9.5,
         "maxMinutes": 30,
         "freshness": "FRESH"
       },
       {
         "module": "positions",
         "generatedAt": "2026-09-12T16:50:00+02:00",
-        "ageMinutes": 131.8,
+        "ageMinutes": 132.8,
         "maxMinutes": 1440,
         "freshness": "FRESH"
       }
@@ -104,7 +110,7 @@
     "promotedDiscoveryLive": {
       "status": "PASS",
       "generatedAt": "2026-09-12T16:57:18.467Z",
-      "ageMinutes": 4.5,
+      "ageMinutes": 5.5,
       "promotedWalletCount": 2,
       "failedWallets": 0
     }
@@ -3766,7 +3772,11 @@
     "BITCOIN_ONCHAIN_WHALE_TRACKING_NOT_IMPLEMENTED",
     "EVM_AUTOMATIC_NEW_WALLET_DISCOVERY_NOT_IMPLEMENTED_V1",
     "CEX_DEPOSIT_WITHDRAWAL_LABELING_NOT_IMPLEMENTED",
-    "INSIDER_DEPLOYER_LINK_GRAPH_NOT_IMPLEMENTED"
+    "INSIDER_DEPLOYER_LINK_GRAPH_NOT_IMPLEMENTED",
+    "WHALES_DEEP_RESULTS_NOT_PERSISTED",
+    "NET_ACCUMULATION_LEDGER_NOT_IMPLEMENTED",
+    "CEX_LABELING_NOT_IMPLEMENTED",
+    "EXTERNAL_SMART_MONEY_LABELING_NOT_IMPLEMENTED"
   ],
   "sourceTimestamps": {
     "multichain": "2026-09-12T17:00:42.494Z",
@@ -3810,10 +3820,134 @@
     "flows": [],
     "interpretation": "Live RPC surveillance of auto-promoted Discovery wallets. TOKEN_FLOW_CONTEXT_ONLY is not a confirmed BUY/SELL and must never be relabeled without trade-level evidence."
   },
+  "newWalletDiscovery": {
+    "status": "PASS",
+    "scope": "Wallets come from a first-20-buyer alpha dataset; this is an early-entry universe, not a generic rich-wallet leaderboard.",
+    "uniqueWallets": 242,
+    "tierA": 2,
+    "tierB": 17,
+    "watch": 141,
+    "discovered": 82,
+    "promotedForSurveillance": 2,
+    "promotedWallets": [
+      {
+        "label": "SOL-DISC-01",
+        "name": "DISCOVERY-54FksN",
+        "address": "54FksNZgqEWpZXn3okR5sJ7ELZYnwh8xHMAL1N7KqazQ",
+        "tier": "A",
+        "discoveryTier": "TIER_A",
+        "alphaScore": 91.96,
+        "winRate": 0.7027,
+        "roi": 3.5509,
+        "netPnlSol": 141.4025,
+        "tokensTraded": 37,
+        "lastSeen": "2026-08-21T03:08:59+00:00",
+        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
+        "fixed": false,
+        "autoPromoted": true,
+        "doNotAutoTrade": true
+      },
+      {
+        "label": "SOL-DISC-02",
+        "name": "DISCOVERY-G7oChC",
+        "address": "G7oChCkirqyoMPxjer7kMVXSBGuo1HFyk3ZkTM97GSAN",
+        "tier": "A",
+        "discoveryTier": "TIER_A",
+        "alphaScore": 89.55,
+        "winRate": 0.8293,
+        "roi": 0.8579,
+        "netPnlSol": 8.7294,
+        "tokensTraded": 41,
+        "lastSeen": "2026-09-12T00:46:34+00:00",
+        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
+        "fixed": false,
+        "autoPromoted": true,
+        "doNotAutoTrade": true
+      }
+    ]
+  },
+  "deepValidation": {
+    "status": "DATA_GAP",
+    "ethereumEndpointAvailable": true,
+    "endpoint": "/deep",
+    "windowsExpectedHours": [
+      6,
+      24,
+      72
+    ],
+    "persistedResultsAvailable": false,
+    "reason": "The Ethereum Worker exposes WHALES DEEP, but 6h/24h/72h token-centric results are not yet persisted into the canonical multichain state."
+  },
+  "largeTransfers": {
+    "status": "CONTEXT_ONLY",
+    "confirmedLargeTransfers": [],
+    "contextualTokenFlows": [
+      {
+        "chain": "solana",
+        "walletLabel": "SOL-GAKE",
+        "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+        "classification": "TOKEN_FLOW",
+        "signature": "4iz6v6xbJFZgP4nMWLMUZTeNqZiebF37zuiNDtzJeJKKGqScVcZbpJGfyfBTWz3krSq4q1fr5QAw5RXpMTTP6XuT",
+        "blockTime": 1789226627,
+        "tokenFlows": [
+          {
+            "mint": "7Lrp3f9HpChGV6g6AytWAvHrJctVMdxD4qq2scoDpump",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "chain": "solana",
+        "walletLabel": "SOL-GAKE",
+        "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+        "classification": "TOKEN_FLOW",
+        "signature": "4EYQEAiU8LEXFFTb8jbC6Nay8dyM6Mj95S4xunYFHwxyH8S25CmrgTV1h5J3p2T6UKXz9SY9AwANfJKzFSKYeAn",
+        "blockTime": 1789225259,
+        "tokenFlows": [
+          {
+            "mint": "8Lg22PrCCwp6exYL4bGi5z7b9MhBY541impoFmERpump",
+            "delta": 10
+          }
+        ]
+      },
+      {
+        "chain": "solana",
+        "walletLabel": "SOL-GAKE",
+        "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+        "classification": "TOKEN_FLOW",
+        "signature": "2jKB4sBD1WMCaimraHor2BDm2aTreMVVN8AMMDmn3u8EuKtqsiu59BHgitKZRihaZZ5iJcrpecVqZs9E3AdE9g8h",
+        "blockTime": 1789225252,
+        "tokenFlows": [
+          {
+            "mint": "6GjAeqM35cySVNgnJ5bkipZpKW56uYbeQqqKJ7Qcpump",
+            "delta": 1
+          }
+        ]
+      }
+    ],
+    "reason": "Raw token flows can include swaps, transfers, airdrops or dust. They are not promoted to large BUY/SELL transfer signals without transaction-level classification and sizing thresholds."
+  },
+  "netAccumulation": {
+    "status": "DATA_GAP",
+    "assets": [],
+    "reason": "Canonical rolling net accumulation by wallet/token is not yet persisted across scan windows. Current scans expose individual events but do not maintain a durable cost-flow ledger."
+  },
+  "cexFlows": {
+    "status": "DATA_GAP",
+    "deposits": [],
+    "withdrawals": [],
+    "reason": "Exchange-address labeling and deposit/withdrawal attribution are not implemented in the current WHALES pipeline."
+  },
+  "smartMoneyExternal": {
+    "status": "DATA_GAP",
+    "signals": [],
+    "reason": "WHALES Discovery scores on-chain early buyers, but no independent external smart-money labeling/consensus provider is persisted in the WHALES report yet."
+  },
   "enhancements": {
     "promotedDiscoveryLiveIntegrated": true,
     "promotedFlowsAreContextOnly": true,
     "multichainStatusNormalized": true,
+    "fullReportContractEnforced": true,
     "rule": "TOKEN_FLOW_CONTEXT_ONLY is never promoted to BUY/SELL without trade-level evidence."
   }
 }
