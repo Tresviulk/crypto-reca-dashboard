@@ -53,7 +53,7 @@ function isMeaningfulKnownSignal(status) {
 async function fetchCabal() {
   const r = await fetch(CABAL_URL, {
     method: 'GET',
-    headers: { 'accept': 'application/json', 'user-agent': 'WHALES-DEEP-PERSIST/1.0' },
+    headers: { 'accept': 'application/json', 'user-agent': 'WHALES-DEEP-PERSIST/1.1' },
     signal: AbortSignal.timeout(180_000)
   });
   if (!r.ok) throw new Error(`CABAL_HTTP_${r.status}`);
@@ -72,15 +72,16 @@ async function main() {
     const triggered = candidates.filter((c) => c?.whales?.requested === true);
     const results = triggered.map(normalizeDeepResult);
     const okResults = results.filter((x) => x.requestStatus === 'OK' && x.resultGeneratedAt);
-    const requestGaps = results.filter((x) => x.requestStatus !== 'OK');
+    const capacityQueued = results.filter((x) => x.requestStatus === 'QUEUED_LIMIT' || x.requestReason === 'MAX_WHALE_REQUESTS_REACHED');
+    const requestGaps = results.filter((x) => x.requestStatus !== 'OK' && x.requestStatus !== 'QUEUED_LIMIT' && x.requestReason !== 'MAX_WHALE_REQUESTS_REACHED');
     const knownSignals = okResults.filter((x) => isMeaningfulKnownSignal(x.overallWhaleStatus));
     const contextual = okResults.filter((x) => upper(x.overallWhaleStatus) === 'UNVERIFIED_TOKEN_FLOW_ACTIVITY');
     const noKnownSignal = okResults.filter((x) => upper(x.overallWhaleStatus) === 'NO_KNOWN_WALLET_SIGNAL');
 
     const out = {
-      schemaVersion: '1.0',
+      schemaVersion: '1.1',
       module: 'whalesDeepPersistence',
-      version: 'WHALES_DEEP_PERSIST_V1_2026-09-12',
+      version: 'WHALES_DEEP_PERSIST_V1_1_2026-09-12',
       generatedAt,
       runStatus: requestGaps.length ? 'PARTIAL' : 'PASS',
       source: {
@@ -89,28 +90,32 @@ async function main() {
         cabalGeneratedAt: cabal?.generatedAt || null,
         cabalPatchVersion: cabal?.patchVersion || null,
         cabalCoverage: cabal?.coverage || null,
-        reason: 'CABAL already holds the protected WHALES_DEEP token in Cloudflare and calls the authenticated /deep endpoint internally. This persistence layer stores those returned 6h/24h/72h results without exposing the shared token.'
+        whaleRequestCap: cabal?.truncation?.whaleRequestCap ?? null,
+        reason: 'CABAL already holds the protected WHALES_DEEP token in Cloudflare and calls the authenticated /deep endpoint internally. This persistence layer stores those returned 6h/24h/72h results without exposing the shared token. Candidates beyond the intentional per-scan CABAL request cap are recorded as capacity queue, not as provider failures.'
       },
       windowsExpectedHours: EXPECTED_WINDOWS,
       scan: {
         candidateCount: candidates.length,
-        requestedCount: triggered.length,
+        triggerCount: triggered.length,
+        processedCount: okResults.length,
         okCount: okResults.length,
+        capacityQueuedCount: capacityQueued.length,
         requestGapCount: requestGaps.length,
         meaningfulKnownSignalCount: knownSignals.length,
         contextualFlowCount: contextual.length,
         noKnownSignalCount: noKnownSignal.length
       },
-      results,
+      results: okResults,
+      capacityQueue: capacityQueued,
       meaningfulKnownSignals: knownSignals,
       contextualFlowActivity: contextual,
       requestGaps,
       persistence: {
-        persistedResultsAvailable: true,
+        persistedResultsAvailable: okResults.length > 0,
         sourceFreshness: 'CURRENT_RUN',
         previousGeneratedAt: previous?.generatedAt || null
       },
-      interpretation: 'WHALES DEEP is token-centric Ethereum validation over 6h/24h/72h. Known-wallet signals are stronger evidence; token transfer flows remain contextual and are never automatically relabeled as buys or accumulation.'
+      interpretation: 'WHALES DEEP is token-centric Ethereum validation over 6h/24h/72h. Known-wallet signals are stronger evidence; token transfer flows remain contextual and are never automatically relabeled as buys or accumulation. QUEUED_LIMIT is an intentional CABAL capacity limit, not a WHALES DEEP failure.'
     };
 
     await fs.mkdir('data', { recursive: true });
@@ -119,9 +124,9 @@ async function main() {
   } catch (err) {
     const carried = Array.isArray(previous?.results) ? previous.results : [];
     const out = {
-      schemaVersion: '1.0',
+      schemaVersion: '1.1',
       module: 'whalesDeepPersistence',
-      version: 'WHALES_DEEP_PERSIST_V1_2026-09-12',
+      version: 'WHALES_DEEP_PERSIST_V1_1_2026-09-12',
       generatedAt,
       runStatus: 'ERROR',
       source: {
@@ -132,14 +137,17 @@ async function main() {
       windowsExpectedHours: EXPECTED_WINDOWS,
       scan: {
         candidateCount: null,
-        requestedCount: null,
+        triggerCount: null,
+        processedCount: null,
         okCount: null,
+        capacityQueuedCount: null,
         requestGapCount: null,
         meaningfulKnownSignalCount: null,
         contextualFlowCount: null,
         noKnownSignalCount: null
       },
       results: carried,
+      capacityQueue: [],
       meaningfulKnownSignals: [],
       contextualFlowActivity: [],
       requestGaps: [],
