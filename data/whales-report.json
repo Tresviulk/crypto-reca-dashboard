@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-12T17:44:50.695Z",
+  "generatedAt": "2026-09-12T17:45:40.658Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -55,42 +55,42 @@
       {
         "module": "multichain",
         "generatedAt": "2026-09-12T17:39:26.170Z",
-        "ageMinutes": 5.4,
+        "ageMinutes": 6.2,
         "maxMinutes": 25,
         "freshness": "FRESH"
       },
       {
         "module": "ethereumWorker",
         "generatedAt": "2026-09-12T17:37:37.968078Z",
-        "ageMinutes": 7.2,
+        "ageMinutes": 8,
         "maxMinutes": 25,
         "freshness": "FRESH"
       },
       {
         "module": "solanaFixedFeed",
         "generatedAt": "2026-09-12T17:42:28.000Z",
-        "ageMinutes": 2.4,
+        "ageMinutes": 3.2,
         "maxMinutes": 35,
         "freshness": "FRESH"
       },
       {
         "module": "discovery",
         "generatedAt": "2026-09-12T17:42:30.443Z",
-        "ageMinutes": 2.3,
+        "ageMinutes": 3.2,
         "maxMinutes": 75,
         "freshness": "FRESH"
       },
       {
         "module": "cabal",
         "generatedAt": "2026-09-12T17:40:03.864521Z",
-        "ageMinutes": 4.8,
+        "ageMinutes": 5.6,
         "maxMinutes": 30,
         "freshness": "FRESH"
       },
       {
         "module": "positions",
         "generatedAt": "2026-09-12T16:50:00+02:00",
-        "ageMinutes": 174.8,
+        "ageMinutes": 175.7,
         "maxMinutes": 1440,
         "freshness": "FRESH"
       }
@@ -117,13 +117,13 @@
     "promotedDiscoveryLive": {
       "status": "PASS",
       "generatedAt": "2026-09-12T17:41:32.106Z",
-      "ageMinutes": 3.3,
+      "ageMinutes": 4.1,
       "promotedWalletCount": 2,
       "failedWallets": 0
     },
     "whalesDeep": {
       "status": "PASS",
-      "generatedAt": "2026-09-12T17:44:45.966Z",
+      "generatedAt": "2026-09-12T17:45:35.938Z",
       "ageMinutes": 0.1,
       "freshness": "FRESH",
       "persistedResultsAvailable": true
@@ -3833,11 +3833,11 @@
   },
   "deepValidation": {
     "status": "PASS",
-    "generatedAt": "2026-09-12T17:44:45.966Z",
+    "generatedAt": "2026-09-12T17:45:35.938Z",
     "ageMinutes": 0.1,
     "freshness": "FRESH",
     "source": "CABAL_WORKER_EMBEDDED_WHALES_DEEP",
-    "sourceGeneratedAt": "2026-09-12T17:44:50.569Z",
+    "sourceGeneratedAt": "2026-09-12T17:45:40.538Z",
     "ethereumEndpointAvailable": true,
     "endpoint": "/deep",
     "windowsExpectedHours": [
@@ -3867,7 +3867,7 @@
           "venue": "KUCOIN",
           "symbol": "CP-USDT",
           "classification": "EARLY-MOVE",
-          "stageAScore": 107,
+          "stageAScore": 110.9,
           "marketCap": 20889497,
           "turnover24h": 28861807,
           "bucketHits": [
@@ -3883,7 +3883,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:50.135Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.202Z",
         "windowsHours": [
           6,
           24,
@@ -3909,7 +3909,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -3962,9 +3966,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       },
       {
         "candidate": {
@@ -3988,7 +3994,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:49.914Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.019Z",
         "windowsHours": [
           6,
           24,
@@ -4014,7 +4020,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -4067,9 +4077,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       },
       {
         "candidate": {
@@ -4077,7 +4089,7 @@
           "venue": "KUCOIN",
           "symbol": "TMX-USDT",
           "classification": "MICROCAP ANOMALY WATCH",
-          "stageAScore": 78.8,
+          "stageAScore": 80,
           "marketCap": 5206599,
           "turnover24h": 8375359,
           "bucketHits": [
@@ -4094,7 +4106,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:50.574Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.545Z",
         "windowsHours": [
           6,
           24,
@@ -4121,7 +4133,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -4174,9 +4190,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       },
       {
         "candidate": {
@@ -4198,7 +4216,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:49.929Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.020Z",
         "windowsHours": [
           6,
           24,
@@ -4222,7 +4240,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -4275,9 +4297,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       },
       {
         "candidate": {
@@ -4299,7 +4323,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:50.112Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.195Z",
         "windowsHours": [
           6,
           24,
@@ -4323,7 +4347,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -4376,9 +4404,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       },
       {
         "candidate": {
@@ -4386,7 +4416,7 @@
           "venue": "KUCOIN",
           "symbol": "ANTFUN-USDT",
           "classification": "SECOND-LEG WATCH",
-          "stageAScore": 65.7,
+          "stageAScore": 65.1,
           "marketCap": 160068777,
           "turnover24h": 11044957,
           "bucketHits": [
@@ -4401,7 +4431,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:50.577Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.543Z",
         "windowsHours": [
           6,
           24,
@@ -4426,7 +4456,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -4479,9 +4513,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       },
       {
         "candidate": {
@@ -4489,7 +4525,7 @@
           "venue": "KUCOIN",
           "symbol": "RAY-USDT",
           "classification": "SECOND-LEG WATCH",
-          "stageAScore": 61.5,
+          "stageAScore": 61.6,
           "marketCap": 410391473,
           "turnover24h": 130277958,
           "bucketHits": [
@@ -4503,7 +4539,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:50.331Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.378Z",
         "windowsHours": [
           6,
           24,
@@ -4527,7 +4563,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -4580,9 +4620,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       },
       {
         "candidate": {
@@ -4590,7 +4632,7 @@
           "venue": "KUCOIN",
           "symbol": "KII-USDT",
           "classification": "SECOND-LEG WATCH",
-          "stageAScore": 52.1,
+          "stageAScore": 56.9,
           "marketCap": 25350968,
           "turnover24h": 137322385,
           "bucketHits": [
@@ -4604,7 +4646,7 @@
         "requested": true,
         "requestStatus": "OK",
         "requestReason": null,
-        "resultGeneratedAt": "2026-09-12T17:44:50.363Z",
+        "resultGeneratedAt": "2026-09-12T17:45:40.376Z",
         "windowsHours": [
           6,
           24,
@@ -4628,7 +4670,11 @@
           "contractResolution": {
             "ok": false,
             "reason": "COINGECKO_SEARCH_HTTP_403",
-            "chain": "ethereum"
+            "chain": "ethereum",
+            "source": "DexScreenerThenCoinGecko",
+            "observedChains": [],
+            "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+            "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
           }
         },
         "knownWallets": {
@@ -4681,9 +4727,11 @@
         "tokenCentric": {
           "status": "DATA_GAP",
           "reason": "COINGECKO_SEARCH_HTTP_403",
-          "chain": "ethereum"
+          "chain": "ethereum",
+          "observedChains": [],
+          "resolver": "DexScreenerThenCoinGecko"
         },
-        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+        "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
       }
     ],
     "meaningfulKnownSignals": [],
