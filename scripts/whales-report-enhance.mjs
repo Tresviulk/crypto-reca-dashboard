@@ -21,15 +21,72 @@ async function main() {
   const multichain = await read(MULTICHAIN, null);
 
   const mandatory = new Set(report?.reportContract?.mandatorySections || []);
-  mandatory.add('promotedDiscoveryLive');
+  for (const section of [
+    'promotedDiscoveryLive',
+    'newWalletDiscovery',
+    'deepValidation',
+    'largeTransfers',
+    'netAccumulation',
+    'cexFlows',
+    'smartMoneyExternal'
+  ]) mandatory.add(section);
   report.reportContract.mandatorySections = [...mandatory];
-  report.reportContract.rule = 'Always expose every section below. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must also expose their live-surveillance state.';
+  report.reportContract.rule = 'Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. Unsupported claims must remain DATA_GAP.';
 
   report.promotedDiscoveryLive = live || {
     status: 'DATA_GAP',
     reason: 'Promoted-wallet live monitor has not persisted its first state yet.',
     promotedWalletCount: report?.promotedDiscoveryWallets?.length || 0,
     flows: []
+  };
+
+  report.newWalletDiscovery = {
+    status: report?.discovery?.runStatus || 'DATA_GAP',
+    scope: report?.discovery?.source?.interpretation || 'No persisted Discovery state.',
+    uniqueWallets: report?.discovery?.universe?.uniqueWallets ?? null,
+    tierA: report?.discovery?.universe?.tierA ?? null,
+    tierB: report?.discovery?.universe?.tierB ?? null,
+    watch: report?.discovery?.universe?.watch ?? null,
+    discovered: report?.discovery?.universe?.discovered ?? null,
+    promotedForSurveillance: report?.discovery?.universe?.promotedForSurveillance ?? null,
+    promotedWallets: report?.promotedDiscoveryWallets || []
+  };
+
+  report.deepValidation = {
+    status: 'DATA_GAP',
+    ethereumEndpointAvailable: Boolean(multichain?.chains?.ethereum?.health?.deepEndpoint),
+    endpoint: multichain?.chains?.ethereum?.health?.deepEndpoint || null,
+    windowsExpectedHours: [6, 24, 72],
+    persistedResultsAvailable: false,
+    reason: 'The Ethereum Worker exposes WHALES DEEP, but 6h/24h/72h token-centric results are not yet persisted into the canonical multichain state.'
+  };
+
+  const rawSolanaFlows = multichain?.chains?.solana?.signals || [];
+  const promotedFlows = live?.flows || [];
+  report.largeTransfers = {
+    status: rawSolanaFlows.length || promotedFlows.length ? 'CONTEXT_ONLY' : 'NONE_CONFIRMED',
+    confirmedLargeTransfers: [],
+    contextualTokenFlows: [...rawSolanaFlows, ...promotedFlows],
+    reason: 'Raw token flows can include swaps, transfers, airdrops or dust. They are not promoted to large BUY/SELL transfer signals without transaction-level classification and sizing thresholds.'
+  };
+
+  report.netAccumulation = {
+    status: 'DATA_GAP',
+    assets: [],
+    reason: 'Canonical rolling net accumulation by wallet/token is not yet persisted across scan windows. Current scans expose individual events but do not maintain a durable cost-flow ledger.'
+  };
+
+  report.cexFlows = {
+    status: 'DATA_GAP',
+    deposits: [],
+    withdrawals: [],
+    reason: 'Exchange-address labeling and deposit/withdrawal attribution are not implemented in the current WHALES pipeline.'
+  };
+
+  report.smartMoneyExternal = {
+    status: 'DATA_GAP',
+    signals: [],
+    reason: 'WHALES Discovery scores on-chain early buyers, but no independent external smart-money labeling/consensus provider is persisted in the WHALES report yet.'
   };
 
   if (report?.executive?.monitoredWallets) {
@@ -88,6 +145,10 @@ async function main() {
     gaps.delete('SOLANA_WALLETS_REQUIRED');
     gaps.add('SOLANA_RPC_PARTIAL');
   }
+  gaps.add('WHALES_DEEP_RESULTS_NOT_PERSISTED');
+  gaps.add('NET_ACCUMULATION_LEDGER_NOT_IMPLEMENTED');
+  gaps.add('CEX_LABELING_NOT_IMPLEMENTED');
+  gaps.add('EXTERNAL_SMART_MONEY_LABELING_NOT_IMPLEMENTED');
   report.dataGaps = [...gaps];
 
   report.generatedAt = new Date().toISOString();
@@ -95,11 +156,12 @@ async function main() {
     promotedDiscoveryLiveIntegrated: true,
     promotedFlowsAreContextOnly: true,
     multichainStatusNormalized: true,
+    fullReportContractEnforced: true,
     rule: 'TOKEN_FLOW_CONTEXT_ONLY is never promoted to BUY/SELL without trade-level evidence.'
   };
 
   await fs.writeFile(REPORT, JSON.stringify(report, null, 2) + '\n');
-  console.log('WHALES REPORT ENHANCED', report.generatedAt, 'multichain=', report.health.multichainOverall, 'promotedLive=', report.promotedDiscoveryLive.status);
+  console.log('WHALES REPORT ENHANCED', report.generatedAt, 'sections=', report.reportContract.mandatorySections.length, 'multichain=', report.health.multichainOverall, 'promotedLive=', report.promotedDiscoveryLive.status);
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });
