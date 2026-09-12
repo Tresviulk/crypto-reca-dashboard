@@ -9,6 +9,8 @@ on:
     paths:
       - 'scripts/whales-report.mjs'
       - 'scripts/whales-report-enhance.mjs'
+      - 'scripts/whales-deep-sync.mjs'
+      - 'data/whales-deep-state.json'
       - 'data/whales-multichain-state.json'
       - 'data/whales-state.json'
       - 'data/solana-fixed-kol-feed-state.json'
@@ -54,7 +56,7 @@ jobs:
           set -euo pipefail
           python -m json.tool data/whales-report.json >/dev/null
           python - <<'PY'
-          import json
+          import json, os
           d=json.load(open('data/whales-report.json',encoding='utf-8'))
           mandatory=d.get('reportContract',{}).get('mandatorySections',[])
           missing=[k for k in mandatory if k not in d]
@@ -68,7 +70,13 @@ jobs:
           absent=sorted(required-set(mandatory))
           if absent: raise SystemExit(f'WHALES mandatory contract missing: {absent}')
           if len(mandatory) < 21: raise SystemExit('WHALES report contract too small')
-          print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), d['executive'])
+          deep=d.get('deepValidation',{})
+          if os.path.exists('data/whales-deep-state.json'):
+            s=json.load(open('data/whales-deep-state.json',encoding='utf-8'))
+            if deep.get('windowsExpectedHours') != [6,24,72]: raise SystemExit('WHALES DEEP windows missing from report')
+            if s.get('runStatus') in {'PASS','PARTIAL'} and not deep.get('persistedResultsAvailable'):
+              raise SystemExit('persisted WHALES DEEP state was not integrated into report')
+          print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), 'deep=',deep.get('status'), d['executive'])
           PY
 
       - name: Commit canonical report
