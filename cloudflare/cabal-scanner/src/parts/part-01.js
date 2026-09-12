@@ -29,7 +29,7 @@ const MAX_STAGE_A = 60;
 // Cloudflare-safe staged validation: 1h deep-lite on more names, then full 15m/4h on the best.
 const MAX_DEEP_LITE = 16;
 const MAX_FULL_DEEP = 5;
-const MAX_WHALE_REQUESTS = 4;
+const MAX_WHALE_REQUESTS = 8;
 
 const TV_CHUNK_SIZE = 180;
 const CG_PAGES = 6;
@@ -41,7 +41,7 @@ const TV_COLUMNS = [
 
 const STABLES = new Set([
   "USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS",
-  "FRAX","USDD","LUSD","GHO","EURC","USD1"
+  "FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"
 ]);
 
 const WRAPPED = new Set([
