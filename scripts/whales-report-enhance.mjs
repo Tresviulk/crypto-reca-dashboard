@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 const REPORT = 'data/whales-report.json';
 const LIVE = 'data/whales-promoted-live-state.json';
 const POSITIONS = 'data/positions-state.json';
+const MULTICHAIN = 'data/whales-multichain-state.json';
 
 async function read(path, fallback = null) {
   try { return JSON.parse(await fs.readFile(path, 'utf8')); } catch { return fallback; }
@@ -17,6 +18,7 @@ async function main() {
   if (!report) throw new Error('Base WHALES report missing');
   const live = await read(LIVE, null);
   const positions = await read(POSITIONS, null);
+  const multichain = await read(MULTICHAIN, null);
 
   const mandatory = new Set(report?.reportContract?.mandatorySections || []);
   mandatory.add('promotedDiscoveryLive');
@@ -40,6 +42,25 @@ async function main() {
   }
 
   report.health = report.health || {};
+  if (multichain) {
+    report.health.multichainOverall = multichain.overallStatus || report.health.multichainOverall;
+    report.health.chainStatus = multichain?.architecture?.chains || report.health.chainStatus || {};
+    report.health.solanaOperationalMeaning =
+      multichain.overallStatus === 'PARTIAL_SOLANA_RPC'
+        ? 'Solana wallets are configured and being monitored; some public-RPC calls failed. This is provider degradation, not a missing-wallet condition.'
+        : multichain.overallStatus === 'PARTIAL_SOLANA_WALLETS_REQUIRED'
+          ? 'No Solana cohort is configured.'
+          : multichain.overallStatus === 'PASS'
+            ? 'All enabled multichain monitors passed.'
+            : 'See chainStatus and declared data gaps.';
+    const row = (report.health.freshness || []).find((x) => x.module === 'multichain');
+    if (row) {
+      row.generatedAt = multichain.generatedAt || row.generatedAt;
+      row.ageMinutes = ageMinutes(row.generatedAt) == null ? null : Number(ageMinutes(row.generatedAt).toFixed(1));
+      row.freshness = row.ageMinutes == null ? 'MISSING' : row.ageMinutes <= Number(row.maxMinutes || 25) ? 'FRESH' : 'STALE';
+    }
+  }
+
   report.health.promotedDiscoveryLive = live ? {
     status: live.status,
     generatedAt: live.generatedAt,
@@ -63,17 +84,22 @@ async function main() {
   else gaps.delete('PROMOTED_DISCOVERY_LIVE_STATE_NOT_YET_PERSISTED');
   if (live?.status === 'PARTIAL') gaps.add('PROMOTED_DISCOVERY_SOLANA_RPC_PARTIAL');
   if (live?.status === 'ERROR') gaps.add('PROMOTED_DISCOVERY_SOLANA_RPC_ERROR');
+  if (multichain?.overallStatus === 'PARTIAL_SOLANA_RPC') {
+    gaps.delete('SOLANA_WALLETS_REQUIRED');
+    gaps.add('SOLANA_RPC_PARTIAL');
+  }
   report.dataGaps = [...gaps];
 
   report.generatedAt = new Date().toISOString();
   report.enhancements = {
     promotedDiscoveryLiveIntegrated: true,
     promotedFlowsAreContextOnly: true,
+    multichainStatusNormalized: true,
     rule: 'TOKEN_FLOW_CONTEXT_ONLY is never promoted to BUY/SELL without trade-level evidence.'
   };
 
   await fs.writeFile(REPORT, JSON.stringify(report, null, 2) + '\n');
-  console.log('WHALES REPORT ENHANCED', report.generatedAt, 'promotedLive=', report.promotedDiscoveryLive.status);
+  console.log('WHALES REPORT ENHANCED', report.generatedAt, 'multichain=', report.health.multichainOverall, 'promotedLive=', report.promotedDiscoveryLive.status);
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });
