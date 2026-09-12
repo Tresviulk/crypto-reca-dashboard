@@ -32,11 +32,184 @@
     ? normalize(body.token.contract)
     : null;
 
+  async function resolveContractViaDexScreener(baseSymbol, referenceMarketCap) {
+    const chain = String(env.ALCHEMY_CHAIN || "ethereum").toLowerCase();
+    const dexChainByAlchemy = {
+      ethereum: "ethereum",
+      base: "base",
+      arbitrum: "arbitrum",
+      optimism: "optimism",
+      polygon: "polygon",
+      bsc: "bsc",
+      avalanche: "avalanche"
+    };
+    const dexChain = dexChainByAlchemy[chain];
+
+    if (!dexChain) {
+      return { ok: false, reason: "UNSUPPORTED_ALCHEMY_CHAIN_FOR_DEXSCREENER_RESOLUTION", chain };
+    }
+
+    try {
+      const r = await fetch(
+        "https://api.dexscreener.com/latest/dex/search?q=" + encodeURIComponent(baseSymbol),
+        {
+          headers: {
+            accept: "application/json",
+            "user-agent": "WHALES-DEEP/contract-resolver"
+          }
+        }
+      );
+
+      if (!r.ok) {
+        return { ok: false, reason: "DEXSCREENER_SEARCH_HTTP_" + r.status, chain, source: "DexScreener" };
+      }
+
+      const j = await r.json();
+      const pairs = Array.isArray(j?.pairs) ? j.pairs : [];
+      const wanted = upper(baseSymbol);
+      const exact = [];
+
+      for (const pair of pairs) {
+        const pairChain = String(pair?.chainId || "").toLowerCase();
+        const candidates = [
+          { side: "base", token: pair?.baseToken },
+          { side: "quote", token: pair?.quoteToken }
+        ];
+
+        for (const c of candidates) {
+          if (upper(c?.token?.symbol) !== wanted) continue;
+          exact.push({ pair, pairChain, side: c.side, token: c.token });
+        }
+      }
+
+      const observedChains = [...new Set(exact.map((x) => x.pairChain).filter(Boolean))];
+      const sameChain = exact.filter(
+        (x) => x.pairChain === dexChain && isHexAddress(x?.token?.address)
+      );
+
+      if (!sameChain.length) {
+        return {
+          ok: false,
+          reason: observedChains.length ? "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN" : "DEXSCREENER_SYMBOL_NOT_RESOLVED",
+          chain,
+          dexChain,
+          observedChains,
+          source: "DexScreener"
+        };
+      }
+
+      const refMcap = Number(referenceMarketCap);
+      const hasRefMcap = Number.isFinite(refMcap) && refMcap > 0;
+      const grouped = new Map();
+
+      for (const row of sameChain) {
+        const address = normalize(row.token.address);
+        const liquidityUsd = Number(row?.pair?.liquidity?.usd) || 0;
+        const marketCap = row.side === "base"
+          ? (Number(row?.pair?.marketCap) || Number(row?.pair?.fdv) || null)
+          : null;
+        const marketCapDistance = hasRefMcap && marketCap && marketCap > 0
+          ? Math.abs(Math.log(marketCap / refMcap))
+          : null;
+
+        const prev = grouped.get(address) || {
+          address,
+          liquidityUsd: 0,
+          bestMarketCapDistance: null,
+          marketCap: null,
+          pairCount: 0
+        };
+
+        prev.liquidityUsd += liquidityUsd;
+        prev.pairCount += 1;
+        if (
+          marketCapDistance !== null &&
+          (prev.bestMarketCapDistance === null || marketCapDistance < prev.bestMarketCapDistance)
+        ) {
+          prev.bestMarketCapDistance = marketCapDistance;
+          prev.marketCap = marketCap;
+        }
+        grouped.set(address, prev);
+      }
+
+      const ranked = [...grouped.values()].sort((a, b) => {
+        if (hasRefMcap) {
+          const ad = a.bestMarketCapDistance === null ? 1e9 : a.bestMarketCapDistance;
+          const bd = b.bestMarketCapDistance === null ? 1e9 : b.bestMarketCapDistance;
+          if (ad !== bd) return ad - bd;
+        }
+        if (a.liquidityUsd !== b.liquidityUsd) return b.liquidityUsd - a.liquidityUsd;
+        return b.pairCount - a.pairCount;
+      });
+
+      const validationErrors = [];
+      for (const candidate of ranked.slice(0, 8)) {
+        const meta = await getTokenMetadata(env, candidate.address);
+        if (upper(meta?.symbol) === wanted) {
+          return {
+            ok: true,
+            contract: candidate.address,
+            chain,
+            dexChain,
+            source: "DexScreener+OnChainSymbolValidation",
+            liquidityUsd: candidate.liquidityUsd,
+            pairCount: candidate.pairCount,
+            marketCap: candidate.marketCap,
+            referenceMarketCap: hasRefMcap ? refMcap : null
+          };
+        }
+        validationErrors.push({ address: candidate.address, observedSymbol: meta?.symbol || null });
+      }
+
+      return {
+        ok: false,
+        reason: "DEXSCREENER_ONCHAIN_SYMBOL_VALIDATION_FAILED",
+        chain,
+        dexChain,
+        observedChains,
+        validationErrors,
+        source: "DexScreener"
+      };
+    } catch (error) {
+      return { ok: false, reason: "DEXSCREENER_ERROR:" + String(error), chain, source: "DexScreener" };
+    }
+  }
+
+  async function resolveContractRobust(baseSymbol, referenceMarketCap) {
+    const dex = await resolveContractViaDexScreener(baseSymbol, referenceMarketCap);
+    if (dex.ok) return dex;
+
+    const cg = await resolveContractViaCoinGecko(env, baseSymbol);
+    if (cg.ok) {
+      return {
+        ...cg,
+        source: "CoinGeckoFallback",
+        primaryResolverFailure: dex.reason || null
+      };
+    }
+
+    const preferDexReason = [
+      "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
+      "DEXSCREENER_ONCHAIN_SYMBOL_VALIDATION_FAILED",
+      "DEXSCREENER_SYMBOL_NOT_RESOLVED"
+    ].includes(dex.reason);
+
+    return {
+      ok: false,
+      reason: preferDexReason ? dex.reason : (cg.reason || dex.reason || "TOKEN_CONTRACT_UNRESOLVED"),
+      chain: dex.chain || cg.chain || String(env.ALCHEMY_CHAIN || "ethereum").toLowerCase(),
+      source: "DexScreenerThenCoinGecko",
+      observedChains: dex.observedChains || [],
+      dexScreenerReason: dex.reason || null,
+      coinGeckoReason: cg.reason || null
+    };
+  }
+
   let rows = await readTokenSignals(env, base, requestedContract, maxHours);
   let contract = requestedContract || contractFromKnownRows(rows, base);
   let contractResolution = contract
     ? { ok: true, contract, source: requestedContract ? "CABAL_REQUEST" : "KNOWN_WALLET_HISTORY" }
-    : await resolveContractViaCoinGecko(env, base);
+    : await resolveContractRobust(base, body?.token?.marketCap);
 
   if (!contract && contractResolution.ok) {
     contract = contractResolution.contract;
@@ -51,7 +224,9 @@
     tokenCentric = {
       status: "DATA_GAP",
       reason: contractResolution.reason || "TOKEN_CONTRACT_UNRESOLVED",
-      chain: contractResolution.chain || String(env.ALCHEMY_CHAIN || "ethereum").toLowerCase()
+      chain: contractResolution.chain || String(env.ALCHEMY_CHAIN || "ethereum").toLowerCase(),
+      observedChains: contractResolution.observedChains || [],
+      resolver: contractResolution.source || null
     };
   } else {
     const transfers = await recentTokenTransfers(env, contract, maxHours);
@@ -103,7 +278,7 @@
         ? (knownSignal === "NO_KNOWN_WALLET_SIGNAL" ? "PARTIAL" : "PARTIAL_KNOWN_WALLETS_ONLY")
         : tokenCentric.status,
     interpretation:
-      "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+      "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses DexScreener first with on-chain symbol validation and only falls back to CoinGecko. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
   });
 }
 
