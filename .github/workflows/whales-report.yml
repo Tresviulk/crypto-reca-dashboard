@@ -1,0 +1,82 @@
+name: WHALES Canonical Report
+
+on:
+  schedule:
+    - cron: '8,23,38,53 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'scripts/whales-report.mjs'
+      - 'data/whales-multichain-state.json'
+      - 'data/whales-state.json'
+      - 'data/solana-fixed-kol-feed-state.json'
+      - 'data/whales-discovery-state.json'
+      - 'data/whales-promoted-wallets.json'
+      - 'data/cabal-machine.json'
+      - 'data/positions-state.json'
+      - '.github/workflows/whales-report.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whales-canonical-report
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build full WHALES report
+        run: node scripts/whales-report.mjs
+
+      - name: Validate report contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/whales-report.json >/dev/null
+          python - <<'PY'
+          import json
+          d=json.load(open('data/whales-report.json',encoding='utf-8'))
+          mandatory=d.get('reportContract',{}).get('mandatorySections',[])
+          missing=[k for k in mandatory if k not in d]
+          if missing: raise SystemExit(f'missing WHALES report sections: {missing}')
+          if len(mandatory) < 12: raise SystemExit('report contract too small')
+          print('WHALES REPORT VALID', d['generatedAt'], d['executive'])
+          PY
+
+      - name: Commit canonical report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/whales-report.json
+          if git diff --cached --quiet; then
+            echo 'No WHALES report change.'
+            exit 0
+          fi
+          git commit -m 'whales: refresh canonical full report [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Verify persisted report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:data/whales-report.json | python -m json.tool >/dev/null
+          echo 'WHALES REPORT PERSISTENCE PASS'
