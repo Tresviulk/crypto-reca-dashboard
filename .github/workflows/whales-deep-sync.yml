@@ -8,6 +8,9 @@ on:
     branches: ["main"]
     paths:
       - 'scripts/whales-deep-sync.mjs'
+      - 'scripts/whales-report.mjs'
+      - 'scripts/whales-report-enhance.mjs'
+      - 'scripts/system-master-report.mjs'
       - '.github/workflows/whales-deep-sync.yml'
 
 permissions:
@@ -20,7 +23,7 @@ concurrency:
 jobs:
   deep:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
       - name: Checkout main
         uses: actions/checkout@v6
@@ -36,51 +39,71 @@ jobs:
       - name: Run WHALES DEEP through CABAL protected bridge
         run: node scripts/whales-deep-sync.mjs
 
-      - name: Validate WHALES DEEP payload
+      - name: Build canonical WHALES with fresh DEEP
+        run: |
+          node scripts/whales-report.mjs
+          node scripts/whales-report-enhance.mjs
+
+      - name: Build TODO master with fresh WHALES DEEP
+        run: node scripts/system-master-report.mjs
+
+      - name: Validate DEEP WHALES and TODO chain
         shell: bash
         run: |
           set -euo pipefail
           python -m json.tool data/whales-deep-state.json >/dev/null
+          python -m json.tool data/whales-report.json >/dev/null
+          python -m json.tool data/system-master-report.json >/dev/null
           python - <<'PY'
           import json
-          d=json.load(open('data/whales-deep-state.json',encoding='utf-8'))
-          if d.get('module')!='whalesDeepPersistence': raise SystemExit('wrong module')
-          if d.get('windowsExpectedHours') != [6,24,72]: raise SystemExit('deep windows must be 6/24/72')
-          if 'results' not in d: raise SystemExit('missing results')
-          if not d.get('generatedAt'): raise SystemExit('missing generatedAt')
-          if d.get('runStatus') in {'PASS','PARTIAL'} and not d.get('persistence',{}).get('persistedResultsAvailable'):
+          deep=json.load(open('data/whales-deep-state.json',encoding='utf-8'))
+          whales=json.load(open('data/whales-report.json',encoding='utf-8'))
+          todo=json.load(open('data/system-master-report.json',encoding='utf-8'))
+          if deep.get('module')!='whalesDeepPersistence': raise SystemExit('wrong DEEP module')
+          if deep.get('windowsExpectedHours') != [6,24,72]: raise SystemExit('deep windows must be 6/24/72')
+          if deep.get('runStatus') in {'PASS','PARTIAL'} and not deep.get('persistence',{}).get('persistedResultsAvailable'):
             raise SystemExit('current deep run has no persisted results')
-          print('WHALES DEEP VALID', d['generatedAt'], d.get('runStatus'), d.get('scan'))
+          wd=whales.get('deepValidation',{})
+          if wd.get('windowsExpectedHours') != [6,24,72]: raise SystemExit('canonical WHALES missing 6/24/72 DEEP')
+          if deep.get('runStatus') in {'PASS','PARTIAL'} and not wd.get('persistedResultsAvailable'):
+            raise SystemExit('canonical WHALES did not integrate DEEP')
+          td=todo.get('whalesDeep',{})
+          if td.get('windowsExpectedHours') != [6,24,72]: raise SystemExit('TODO did not inherit WHALES DEEP')
+          print('WHALES DEEP CHAIN VALID', deep['generatedAt'], deep.get('runStatus'), deep.get('scan'))
+          print('CANONICAL DEEP', wd.get('status'), wd.get('persistedResultsAvailable'), wd.get('scan'))
+          print('TODO DEEP', td.get('status'), td.get('persistedResultsAvailable'))
           PY
 
-      - name: Commit WHALES DEEP state
+      - name: Commit DEEP canonical WHALES and TODO atomically
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/whales-deep-state.json
+          git add data/whales-deep-state.json data/whales-report.json data/system-master-report.json
           if git diff --cached --quiet; then
-            echo 'No WHALES DEEP state change.'
+            echo 'No WHALES DEEP/report state change.'
             exit 0
           fi
-          git commit -m 'whales: refresh deep 6h-24h-72h state'
+          git commit -m 'whales: refresh deep canonical and TODO state'
           for attempt in 1 2 3 4 5; do
             git pull --rebase origin main
             if git push origin HEAD:main; then
-              echo "WHALES DEEP persisted on attempt ${attempt}."
+              echo "WHALES DEEP/report chain persisted on attempt ${attempt}."
               exit 0
             fi
             echo "Push race on attempt ${attempt}; retrying after fetch/rebase."
             sleep $((attempt * 2))
           done
-          echo 'Failed to persist WHALES DEEP state after 5 attempts.' >&2
+          echo 'Failed to persist WHALES DEEP/report chain after 5 attempts.' >&2
           exit 1
 
-      - name: Verify persisted state
+      - name: Verify persisted chain
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main
           git show origin/main:data/whales-deep-state.json | python -m json.tool >/dev/null
-          echo 'WHALES DEEP PERSISTENCE PASS'
+          git show origin/main:data/whales-report.json | python -m json.tool >/dev/null
+          git show origin/main:data/system-master-report.json | python -m json.tool >/dev/null
+          echo 'WHALES DEEP -> WHALES -> TODO PERSISTENCE PASS'
