@@ -1,0 +1,82 @@
+name: System Master TODO Report
+
+on:
+  schedule:
+    - cron: '12,27,42,57 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'scripts/system-master-report.mjs'
+      - 'data/whales-report.json'
+      - 'data/cabal-machine.json'
+      - 'data/radar-state.json'
+      - 'data/position-risk.json'
+      - 'data/positions-state.json'
+      - 'data/external-signals.json'
+      - 'data/intelligence.json'
+      - '.github/workflows/system-master-report.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: system-master-todo-report
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build TODO master report
+        run: node scripts/system-master-report.mjs
+
+      - name: Validate TODO report contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/system-master-report.json >/dev/null
+          python - <<'PY'
+          import json
+          d=json.load(open('data/system-master-report.json',encoding='utf-8'))
+          mandatory=d.get('reportContract',{}).get('mandatorySections',[])
+          missing=[k for k in mandatory if k not in d]
+          if missing: raise SystemExit(f'missing TODO sections: {missing}')
+          if len(mandatory) < 14: raise SystemExit('TODO report contract too small')
+          print('TODO MASTER REPORT VALID', d['generatedAt'], d['systemHealth'])
+          PY
+
+      - name: Commit TODO master report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/system-master-report.json
+          if git diff --cached --quiet; then
+            echo 'No TODO master report change.'
+            exit 0
+          fi
+          git commit -m 'system: refresh canonical TODO report [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Verify persisted report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:data/system-master-report.json | python -m json.tool >/dev/null
+          echo 'TODO MASTER REPORT PERSISTENCE PASS'
