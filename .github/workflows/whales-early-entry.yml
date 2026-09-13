@@ -36,6 +36,26 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Harden wallet-first scanner source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          p='scripts/whales-early-entry.mjs'
+          s=open(p,encoding='utf-8').read()
+          s=s.replace(
+            "const num = (x, fallback = 0) => Number.isFinite(Number(x)) ? Number(x) : fallback;",
+            "const num = (x, fallback = 0) => (x === null || x === undefined || x === '' || !Number.isFinite(Number(x))) ? fallback : Number(x);"
+          )
+          s=s.replace(
+            "const USDT = 'Es9vMFrzaCERmJfrF4H2FYD65CqYj1YF7xG5QpZzKx7';",
+            "const USDT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';"
+          )
+          open(p,'w',encoding='utf-8').write(s)
+          PY
+          grep -F "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB" scripts/whales-early-entry.mjs >/dev/null
+          grep -F "x === null || x === undefined" scripts/whales-early-entry.mjs >/dev/null
+
       - name: Run wallet-first early entry scan
         run: node scripts/whales-early-entry.mjs
 
@@ -77,7 +97,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/whales-early-entry-state.json data/whales-net-accumulation.json
+          git add scripts/whales-early-entry.mjs data/whales-early-entry-state.json data/whales-net-accumulation.json
           test -f data/whales-report.json && git add data/whales-report.json
           test -f data/system-master-report.json && git add data/system-master-report.json
           if git diff --cached --quiet; then
