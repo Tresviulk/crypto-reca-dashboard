@@ -17,11 +17,11 @@ const LAMPORTS_PER_SOL = 1_000_000_000;
 
 const WSOL = 'So11111111111111111111111111111111111111112';
 const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-const USDT = 'Es9vMFrzaCERmJfrF4H2FYD65CqYj1YF7xG5QpZzKx7';
+const USDT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
 const QUOTE_MINTS = new Set([WSOL, USDC, USDT]);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const num = (x, fallback = 0) => Number.isFinite(Number(x)) ? Number(x) : fallback;
+const num = (x, fallback = 0) => (x === null || x === undefined || x === '' || !Number.isFinite(Number(x))) ? fallback : Number(x);
 const round = (x, n = 8) => Number.isFinite(Number(x)) ? Number(Number(x).toFixed(n)) : null;
 const upper = (x) => String(x || '').trim().toUpperCase();
 const uniq = (arr) => [...new Set(arr.filter(Boolean))];
