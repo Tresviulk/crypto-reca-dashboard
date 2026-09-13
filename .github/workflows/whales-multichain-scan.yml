@@ -8,6 +8,7 @@ on:
     branches: ["main"]
     paths:
       - 'scripts/whales-multichain-scan.mjs'
+      - 'scripts/whales-solana-resilient-scan.mjs'
       - 'scripts/whales-multichain-status-normalize.mjs'
       - 'config/whales-multichain.json'
       - '.github/workflows/whales-multichain-scan.yml'
@@ -38,6 +39,12 @@ jobs:
       - name: Run WHALES multichain scan
         run: node scripts/whales-multichain-scan.mjs
 
+      - name: Rescan Solana with provider failover
+        env:
+          SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
+          SOLANA_RPC_URL_2: ${{ secrets.SOLANA_RPC_URL_2 }}
+        run: node scripts/whales-solana-resilient-scan.mjs
+
       - name: Normalize multichain status semantics
         run: node scripts/whales-multichain-status-normalize.mjs
 
@@ -58,8 +65,14 @@ jobs:
           sol_count=d.get('architecture',{}).get('trackedSolanaWallets',0)
           if sol_count > 0 and d.get('overallStatus') == 'PARTIAL_SOLANA_WALLETS_REQUIRED':
               raise SystemExit('invalid Solana status: wallets exist but status says wallets required')
+          sol=d.get('chains',{}).get('solana',{})
+          if sol_count > 0 and sol.get('mode') != 'RESILIENT_PUBLIC_RPC_FAILOVER':
+              raise SystemExit('resilient Solana layer missing')
+          if len(sol.get('rpcProviders',[])) < 2:
+              raise SystemExit('Solana RPC provider pool has fewer than 2 providers')
           print('WHALES MULTICHAIN VALID', d['generatedAt'], d.get('overallStatus'))
           print('CHAIN STATUS', d.get('architecture',{}).get('chains'))
+          print('SOLANA RESILIENCE', d.get('resilience',{}))
           PY
 
       - name: Commit multichain state
@@ -74,8 +87,15 @@ jobs:
             exit 0
           fi
           git commit -m 'whales: refresh multichain state [skip ci]'
-          git pull --rebase origin main
-          git push origin HEAD:main
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "WHALES multichain state persisted on attempt ${attempt}."
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+          exit 1
 
       - name: Verify persisted state
         shell: bash
