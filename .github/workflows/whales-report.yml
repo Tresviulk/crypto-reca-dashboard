@@ -10,6 +10,9 @@ on:
       - 'scripts/whales-report.mjs'
       - 'scripts/whales-report-enhance.mjs'
       - 'scripts/whales-cex-flow-batched.mjs'
+      - 'scripts/whales-early-entry.mjs'
+      - 'scripts/whales-early-entry-integrate.mjs'
+      - 'data/whales-early-entry-state.json'
       - 'data/whales-deep-state.json'
       - 'data/whales-multichain-state.json'
       - 'data/whales-state.json'
@@ -68,6 +71,16 @@ jobs:
       - name: Harden CEX flows with batched chunked RPC failover
         run: node scripts/whales-cex-flow-batched.mjs
 
+      - name: Re-integrate wallet-first early-entry state
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f data/whales-early-entry-state.json ]; then
+            node scripts/whales-early-entry-integrate.mjs
+          else
+            echo 'Early-entry state not initialized yet; canonical report continues without it for this run.'
+          fi
+
       - name: Validate report contract and persistent layers
         shell: bash
         run: |
@@ -87,6 +100,8 @@ jobs:
             'largeTransfers','netAccumulation','cexFlows','smartMoneyExternal','solana',
             'hyperliquid','convergence','cabalCross','portfolioCross','decisionTable','dataGaps'
           }
+          if os.path.exists('data/whales-early-entry-state.json'):
+            required.add('earlyEntry')
           absent=sorted(required-set(mandatory))
           if absent: raise SystemExit(f'WHALES mandatory contract missing: {absent}')
           if len(mandatory) < 21: raise SystemExit('WHALES report contract too small')
@@ -105,7 +120,11 @@ jobs:
           if chain_health and all(v.get('status')=='ERROR' for v in chain_health.values()): raise SystemExit('CEX EVM scanner failed on every chain')
           if d.get('netAccumulation',{}).get('status') != 'PASS': raise SystemExit('net ledger not integrated into WHALES report')
           if d.get('cexFlows',{}).get('status') not in {'PASS','PARTIAL'}: raise SystemExit('CEX flow state not integrated into WHALES report')
-          print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), 'deep=',deep.get('status'), 'net=',d['netAccumulation']['status'], 'cex=',d['cexFlows']['status'])
+          if os.path.exists('data/whales-early-entry-state.json'):
+            e=json.load(open('data/whales-early-entry-state.json',encoding='utf-8'))
+            if d.get('earlyEntry',{}).get('generatedAt') != e.get('generatedAt'):
+              raise SystemExit('early-entry state not integrated into WHALES report')
+          print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), 'deep=',deep.get('status'), 'net=',d['netAccumulation']['status'], 'cex=',d['cexFlows']['status'], 'early=',d.get('earlyEntry',{}).get('status'))
           print('CEX CHAIN HEALTH', {k:v.get('status') for k,v in chain_health.items()})
           PY
 
