@@ -1,14 +1,14 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "module": "manualOrderEvent",
-  "source": "USER_CONFIRMED_COINBASE_ADVANCED_SCREENSHOT",
+  "source": "USER_CONFIRMED_COINBASE_ADVANCED_SCREENSHOT + USER_CONFIRMED_FULL_POSITION_CLOSURE",
   "capturedAtEuropeMadrid": "2026-09-13 10:34:54",
   "asset": "ETH",
   "pair": "ETH-USDC",
   "side": "SELL",
   "orderType": "MARKET",
   "timeInForce": "IOC",
-  "status": "EXECUTED",
+  "status": "EXECUTED_FULL_POSITION_CLOSED",
   "orderId": "a26d188f-c664-4c8b-8cdb-40a95dbc4480",
   "executedQtyDisplayed": 1.802,
   "executedQtyDisplayPrecision": 3,
@@ -21,12 +21,20 @@
   "evidence": {
     "displayedOrderAmount": "1,802 ETH",
     "displayedExecutedAmount": "1,802 ETH (100%)",
-    "displayedState": "Ejecutada"
+    "displayedState": "Ejecutada",
+    "userConfirmedEntirePositionClosed": true
   },
   "reconciliation": {
     "previousRecordedOpenQty": 1.80288924,
     "differenceVsDisplayedExecutedQty": 0.00088924,
-    "status": "QUANTITY_PRECISION_RECONCILIATION_REQUIRED",
-    "note": "The screenshot confirms 100% execution of the sell order, but Coinbase displays ETH quantity to three decimals here. Do not assume the historical 1.80288924 ETH position is fully closed until the exact post-trade residual or full-precision fill quantity is confirmed."
+    "status": "RESOLVED_BY_USER_CONFIRMATION",
+    "positionTreatment": "FULLY_CLOSED_100_PERCENT",
+    "note": "User explicitly confirmed the entire previously recorded ETH position is closed. The 1.802 ETH shown on the Coinbase screen is treated as display rounding rather than a residual open position."
+  },
+  "realizedPnl": {
+    "netPnl": -3.35,
+    "pctOnCost": -0.0744500696,
+    "currency": "USDC",
+    "calculation": "4496.31 - 4499.66"
   }
 }
