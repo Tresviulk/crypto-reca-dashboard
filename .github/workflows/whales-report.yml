@@ -51,6 +51,20 @@ jobs:
       - name: Integrate persistent WHALES intelligence layers
         run: node scripts/whales-report-enhance.mjs
 
+      - name: Apply Ethereum public-RPC log-range compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          p='scripts/whales-cex-flow-batched.mjs'
+          s=open(p,encoding='utf-8').read()
+          old="{name:'ethereum',chainId:1,chunk:450,lookback:Number(config?.chains?.ethereum?.cexLookbackBlocks||1800)}"
+          new="{name:'ethereum',chainId:1,chunk:Number(config?.chains?.ethereum?.cexChunkBlocks||50),lookback:Number(config?.chains?.ethereum?.cexLookbackBlocks||1800)}"
+          if old in s:
+              s=s.replace(old,new)
+          open(p,'w',encoding='utf-8').write(s)
+          PY
+
       - name: Harden CEX flows with batched chunked RPC failover
         run: node scripts/whales-cex-flow-batched.mjs
 
