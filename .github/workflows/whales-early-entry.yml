@@ -1,0 +1,105 @@
+name: WHALES Early Entry Engine
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'scripts/whales-early-entry.mjs'
+      - 'scripts/whales-early-entry-integrate.mjs'
+      - 'config/whales-multichain.json'
+      - 'data/whales-discovery-state.json'
+      - '.github/workflows/whales-early-entry.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whales-early-entry-engine
+  cancel-in-progress: true
+
+jobs:
+  early-entry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run wallet-first early entry scan
+        run: node scripts/whales-early-entry.mjs
+
+      - name: Integrate early-entry evidence into WHALES and TODO
+        run: node scripts/whales-early-entry-integrate.mjs
+
+      - name: Validate early-entry contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/whales-early-entry-state.json >/dev/null
+          python -m json.tool data/whales-net-accumulation.json >/dev/null
+          python - <<'PY'
+          import json, os
+          e=json.load(open('data/whales-early-entry-state.json',encoding='utf-8'))
+          if e.get('runStatus') not in {'PASS','PARTIAL'}:
+              raise SystemExit(f"early-entry engine not healthy: {e.get('runStatus')}")
+          c=e.get('cohort',{})
+          if c.get('total',0) < 6:
+              raise SystemExit('early-entry cohort unexpectedly small')
+          if e.get('executionPolicy') != 'SURVEILLANCE_ONLY_NO_AUTO_TRADE':
+              raise SystemExit('early-entry execution safety policy missing')
+          for row in e.get('newEvents',[]):
+              if row.get('action') in {'BUY','SELL'} and float(row.get('confidence',0)) < .88:
+                  raise SystemExit('low-confidence trade classification leaked into confirmed early events')
+          if os.path.exists('data/whales-report.json'):
+              w=json.load(open('data/whales-report.json',encoding='utf-8'))
+              if 'earlyEntry' not in w: raise SystemExit('earlyEntry missing from WHALES report')
+              if 'earlyEntry' not in w.get('reportContract',{}).get('mandatorySections',[]): raise SystemExit('earlyEntry missing from WHALES contract')
+          if os.path.exists('data/system-master-report.json'):
+              m=json.load(open('data/system-master-report.json',encoding='utf-8'))
+              if 'whalesEarlyEntry' not in m: raise SystemExit('whalesEarlyEntry missing from TODO master')
+          print('WHALES EARLY ENTRY VALID', e['generatedAt'], 'cohort=',c.get('total'), 'newBuys=',e.get('scan',{}).get('newOnchainSwapBuys'), 'candidates=',e.get('scan',{}).get('buyCandidateCount'))
+          PY
+
+      - name: Persist early-entry state and integrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/whales-early-entry-state.json data/whales-net-accumulation.json
+          test -f data/whales-report.json && git add data/whales-report.json
+          test -f data/system-master-report.json && git add data/system-master-report.json
+          if git diff --cached --quiet; then
+            echo 'No early-entry state change.'
+            exit 0
+          fi
+          git commit -m 'whales: refresh wallet-first early entry state [skip ci]'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "WHALES early-entry persisted on attempt ${attempt}."
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+          echo 'Failed to persist WHALES early-entry state.' >&2
+          exit 1
+
+      - name: Verify persisted early-entry state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:data/whales-early-entry-state.json | python -m json.tool >/dev/null
+          echo 'WHALES EARLY ENTRY PERSISTENCE PASS'
