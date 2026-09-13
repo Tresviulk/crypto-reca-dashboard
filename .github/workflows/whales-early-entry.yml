@@ -8,6 +8,7 @@ on:
     branches: ["main"]
     paths:
       - 'scripts/whales-early-entry.mjs'
+      - 'scripts/whales-early-entry-reconcile.mjs'
       - 'scripts/whales-early-entry-integrate.mjs'
       - 'config/whales-multichain.json'
       - 'data/whales-discovery-state.json'
@@ -59,6 +60,9 @@ jobs:
       - name: Run wallet-first early entry scan
         run: node scripts/whales-early-entry.mjs
 
+      - name: Reconcile net accumulation and CABAL entry gate
+        run: node scripts/whales-early-entry-reconcile.mjs
+
       - name: Integrate early-entry evidence into WHALES and TODO
         run: node scripts/whales-early-entry-integrate.mjs
 
@@ -78,9 +82,21 @@ jobs:
               raise SystemExit('early-entry cohort unexpectedly small')
           if e.get('executionPolicy') != 'SURVEILLANCE_ONLY_NO_AUTO_TRADE':
               raise SystemExit('early-entry execution safety policy missing')
+          if not e.get('reconciliation',{}).get('applied'):
+              raise SystemExit('net-accumulation reconciliation was not applied')
           for row in e.get('newEvents',[]):
               if row.get('action') in {'BUY','SELL'} and float(row.get('confidence',0)) < .88:
                   raise SystemExit('low-confidence trade classification leaked into confirmed early events')
+          for row in e.get('buyCandidates',[]):
+              if row.get('netTokenFlow',0) <= 0:
+                  raise SystemExit('non-accumulating token leaked into BUY candidates')
+              if not row.get('cabalValidatedForEntry'):
+                  raise SystemExit('BUY candidate lacks independent CABAL pilot validation')
+              if not row.get('marketHealthy') or row.get('noChase'):
+                  raise SystemExit('unsafe market state leaked into BUY candidates')
+          for row in e.get('signals',[]):
+              if row.get('status') in {'WHALE_DISTRIBUTION','WHALE_ROUND_TRIP_FLAT'} and row.get('action') == 'BUY_CANDIDATE_REVIEW':
+                  raise SystemExit('distribution/round-trip leaked into BUY candidate')
           if os.path.exists('data/whales-report.json'):
               w=json.load(open('data/whales-report.json',encoding='utf-8'))
               if 'earlyEntry' not in w: raise SystemExit('earlyEntry missing from WHALES report')
@@ -88,7 +104,7 @@ jobs:
           if os.path.exists('data/system-master-report.json'):
               m=json.load(open('data/system-master-report.json',encoding='utf-8'))
               if 'whalesEarlyEntry' not in m: raise SystemExit('whalesEarlyEntry missing from TODO master')
-          print('WHALES EARLY ENTRY VALID', e['generatedAt'], 'cohort=',c.get('total'), 'newBuys=',e.get('scan',{}).get('newOnchainSwapBuys'), 'candidates=',e.get('scan',{}).get('buyCandidateCount'))
+          print('WHALES EARLY ENTRY VALID', e['generatedAt'], 'cohort=',c.get('total'), 'newBuys=',e.get('scan',{}).get('newOnchainSwapBuys'), 'netAccum=',e.get('scan',{}).get('netAccumulationSignalCount'), 'candidates=',e.get('scan',{}).get('buyCandidateCount'))
           PY
 
       - name: Persist early-entry state and integrations
