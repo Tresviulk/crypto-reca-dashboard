@@ -1,5 +1,5 @@
 {
-  "version": "WHALES_MULTICHAIN_V2_2026-09-12",
+  "version": "WHALES_MULTICHAIN_V3_2026-09-13",
   "scheduleMinutes": 10,
   "lookbackMinutes": 180,
   "evmWallets": [
@@ -34,20 +34,35 @@
     "ethereum": {
       "enabled": true,
       "mode": "existing-worker-state",
-      "sourceFile": "data/whales-state.json"
+      "sourceFile": "data/whales-state.json",
+      "rpcUrls": [
+        "https://ethereum-rpc.publicnode.com",
+        "https://eth.llamarpc.com"
+      ],
+      "cexLookbackBlocks": 1800
     },
     "base": {
       "enabled": true,
       "mode": "evm-public-rpc",
       "rpcUrl": "https://mainnet.base.org",
+      "rpcUrls": [
+        "https://mainnet.base.org",
+        "https://base-rpc.publicnode.com"
+      ],
       "lookbackBlocks": 5000,
+      "cexLookbackBlocks": 5000,
       "maxTransactions": 40
     },
     "arbitrum": {
       "enabled": true,
       "mode": "evm-public-rpc",
       "rpcUrl": "https://arb1.arbitrum.io/rpc",
+      "rpcUrls": [
+        "https://arb1.arbitrum.io/rpc",
+        "https://arbitrum-one-rpc.publicnode.com"
+      ],
       "lookbackBlocks": 5000,
+      "cexLookbackBlocks": 5000,
       "maxTransactions": 40
     },
     "hyperliquid": {
@@ -57,8 +72,15 @@
     },
     "solana": {
       "enabled": true,
-      "mode": "public-rpc",
-      "rpcUrl": "https://api.mainnet-beta.solana.com",
+      "mode": "resilient-public-rpc-failover",
+      "rpcUrl": "https://solana-rpc.publicnode.com",
+      "rpcUrls": [
+        "https://solana-rpc.publicnode.com",
+        "https://api.mainnet-beta.solana.com"
+      ],
+      "signatureLimit": 25,
+      "interTransactionDelayMs": 90,
+      "interWalletDelayMs": 220,
       "statusUntilWalletsConfigured": "NEEDS_WALLET_COHORT"
     }
   }
