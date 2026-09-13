@@ -9,6 +9,7 @@ on:
     paths:
       - 'scripts/whales-report.mjs'
       - 'scripts/whales-report-enhance.mjs'
+      - 'scripts/whales-cex-flow-repair.mjs'
       - 'data/whales-deep-state.json'
       - 'data/whales-multichain-state.json'
       - 'data/whales-state.json'
@@ -31,7 +32,7 @@ concurrency:
 jobs:
   report:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 12
     steps:
       - name: Checkout main
         uses: actions/checkout@v6
@@ -49,6 +50,9 @@ jobs:
 
       - name: Integrate persistent WHALES intelligence layers
         run: node scripts/whales-report-enhance.mjs
+
+      - name: Harden CEX flows with chunked RPC failover
+        run: node scripts/whales-cex-flow-repair.mjs
 
       - name: Validate report contract and persistent layers
         shell: bash
@@ -83,9 +87,12 @@ jobs:
           if not all(k in net.get('windows',{}) for k in ['6h','24h','72h','7d','30d']): raise SystemExit('net accumulation windows incomplete')
           cex=json.load(open('data/whales-cex-flows.json',encoding='utf-8'))
           if cex.get('status') not in {'PASS','PARTIAL'}: raise SystemExit('CEX flow labeler did not initialize')
+          chain_health=cex.get('chainHealth',{})
+          if chain_health and all(v.get('status')=='ERROR' for v in chain_health.values()): raise SystemExit('CEX EVM scanner failed on every chain')
           if d.get('netAccumulation',{}).get('status') != 'PASS': raise SystemExit('net ledger not integrated into WHALES report')
           if d.get('cexFlows',{}).get('status') not in {'PASS','PARTIAL'}: raise SystemExit('CEX flow state not integrated into WHALES report')
           print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), 'deep=',deep.get('status'), 'net=',d['netAccumulation']['status'], 'cex=',d['cexFlows']['status'])
+          print('CEX CHAIN HEALTH', {k:v.get('status') for k,v in chain_health.items()})
           PY
 
       - name: Commit canonical report and persistent intelligence states
