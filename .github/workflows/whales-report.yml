@@ -18,6 +18,7 @@ on:
       - 'data/whales-promoted-live-state.json'
       - 'data/cabal-machine.json'
       - 'data/positions-state.json'
+      - 'config/whales-multichain.json'
       - '.github/workflows/whales-report.yml'
 
 permissions:
@@ -30,7 +31,7 @@ concurrency:
 jobs:
   report:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 9
     steps:
       - name: Checkout main
         uses: actions/checkout@v6
@@ -46,14 +47,16 @@ jobs:
       - name: Build full WHALES report
         run: node scripts/whales-report.mjs
 
-      - name: Integrate all mandatory WHALES layers
+      - name: Integrate persistent WHALES intelligence layers
         run: node scripts/whales-report-enhance.mjs
 
-      - name: Validate report contract
+      - name: Validate report contract and persistent layers
         shell: bash
         run: |
           set -euo pipefail
           python -m json.tool data/whales-report.json >/dev/null
+          python -m json.tool data/whales-net-accumulation.json >/dev/null
+          python -m json.tool data/whales-cex-flows.json >/dev/null
           python - <<'PY'
           import json, os
           d=json.load(open('data/whales-report.json',encoding='utf-8'))
@@ -75,21 +78,28 @@ jobs:
             if deep.get('windowsExpectedHours') != [6,24,72]: raise SystemExit('WHALES DEEP windows missing from report')
             if s.get('runStatus') in {'PASS','PARTIAL'} and not deep.get('persistedResultsAvailable'):
               raise SystemExit('persisted WHALES DEEP state was not integrated into report')
-          print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), 'deep=',deep.get('status'), d['executive'])
+          net=json.load(open('data/whales-net-accumulation.json',encoding='utf-8'))
+          if net.get('status') != 'PASS': raise SystemExit('net accumulation ledger is not PASS')
+          if not all(k in net.get('windows',{}) for k in ['6h','24h','72h','7d','30d']): raise SystemExit('net accumulation windows incomplete')
+          cex=json.load(open('data/whales-cex-flows.json',encoding='utf-8'))
+          if cex.get('status') not in {'PASS','PARTIAL'}: raise SystemExit('CEX flow labeler did not initialize')
+          if d.get('netAccumulation',{}).get('status') != 'PASS': raise SystemExit('net ledger not integrated into WHALES report')
+          if d.get('cexFlows',{}).get('status') not in {'PASS','PARTIAL'}: raise SystemExit('CEX flow state not integrated into WHALES report')
+          print('WHALES REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), 'deep=',deep.get('status'), 'net=',d['netAccumulation']['status'], 'cex=',d['cexFlows']['status'])
           PY
 
-      - name: Commit canonical report
+      - name: Commit canonical report and persistent intelligence states
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/whales-report.json
+          git add data/whales-report.json data/whales-net-accumulation.json data/whales-cex-flows.json
           if git diff --cached --quiet; then
-            echo 'No WHALES report change.'
+            echo 'No WHALES report/intelligence change.'
             exit 0
           fi
-          git commit -m 'whales: refresh canonical full report'
+          git commit -m 'whales: refresh canonical report and persistent intelligence'
           for attempt in 1 2 3 4 5; do
             git pull --rebase origin main
             if git push origin HEAD:main; then
@@ -102,10 +112,12 @@ jobs:
           echo 'Failed to persist WHALES report after 5 attempts.' >&2
           exit 1
 
-      - name: Verify persisted report
+      - name: Verify persisted report and intelligence states
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main
           git show origin/main:data/whales-report.json | python -m json.tool >/dev/null
-          echo 'WHALES REPORT PERSISTENCE PASS'
+          git show origin/main:data/whales-net-accumulation.json | python -m json.tool >/dev/null
+          git show origin/main:data/whales-cex-flows.json | python -m json.tool >/dev/null
+          echo 'WHALES REPORT + INTELLIGENCE PERSISTENCE PASS'
