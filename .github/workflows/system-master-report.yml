@@ -8,6 +8,8 @@ on:
     branches: ["main"]
     paths:
       - 'scripts/system-master-report.mjs'
+      - 'scripts/whales-early-entry-integrate.mjs'
+      - 'data/whales-early-entry-state.json'
       - 'data/whales-report.json'
       - 'data/cabal-machine.json'
       - 'data/radar-state.json'
@@ -43,13 +45,23 @@ jobs:
       - name: Build TODO master report
         run: node scripts/system-master-report.mjs
 
+      - name: Re-integrate WHALES wallet-first early-entry state
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f data/whales-early-entry-state.json ]; then
+            node scripts/whales-early-entry-integrate.mjs
+          else
+            echo 'Early-entry state not initialized yet; TODO continues without it for this run.'
+          fi
+
       - name: Validate TODO report contract
         shell: bash
         run: |
           set -euo pipefail
           python -m json.tool data/system-master-report.json >/dev/null
           python - <<'PY'
-          import json
+          import json, os
           d=json.load(open('data/system-master-report.json',encoding='utf-8'))
           mandatory=d.get('reportContract',{}).get('mandatorySections',[])
           missing=[k for k in mandatory if k not in d]
@@ -59,10 +71,16 @@ jobs:
             'whales','whalesDiscovery','whalesDeep','convergence','openPositions','portfolioPnl','positionRisk','fastDrop',
             'externalSignals','macroIntelligence','catalystsListings','processMisses','dataGaps','finalDecisionMatrix'
           }
+          if os.path.exists('data/whales-early-entry-state.json'):
+            required.add('whalesEarlyEntry')
           absent=sorted(required-set(mandatory))
           if absent: raise SystemExit(f'TODO mandatory contract missing: {absent}')
           if len(mandatory) < 20: raise SystemExit('TODO report contract too small')
-          print('TODO MASTER REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), d['systemHealth'])
+          if os.path.exists('data/whales-early-entry-state.json'):
+            e=json.load(open('data/whales-early-entry-state.json',encoding='utf-8'))
+            if d.get('whalesEarlyEntry',{}).get('generatedAt') != e.get('generatedAt'):
+              raise SystemExit('wallet-first early-entry state not integrated into TODO master')
+          print('TODO MASTER REPORT VALID', d['generatedAt'], 'sections=',len(mandatory), d['systemHealth'], 'early=',d.get('whalesEarlyEntry',{}).get('status'))
           PY
 
       - name: Commit TODO master report
@@ -71,7 +89,8 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/system-master-report.json
+          git add data/system-master-report.json data/whales-net-accumulation.json
+          test -f data/whales-report.json && git add data/whales-report.json
           if git diff --cached --quiet; then
             echo 'No TODO master report change.'
             exit 0
