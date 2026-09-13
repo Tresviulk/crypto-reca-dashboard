@@ -9,7 +9,7 @@ on:
     paths:
       - 'scripts/whales-report.mjs'
       - 'scripts/whales-report-enhance.mjs'
-      - 'scripts/whales-cex-flow-repair.mjs'
+      - 'scripts/whales-cex-flow-batched.mjs'
       - 'data/whales-deep-state.json'
       - 'data/whales-multichain-state.json'
       - 'data/whales-state.json'
@@ -51,8 +51,8 @@ jobs:
       - name: Integrate persistent WHALES intelligence layers
         run: node scripts/whales-report-enhance.mjs
 
-      - name: Harden CEX flows with chunked RPC failover
-        run: node scripts/whales-cex-flow-repair.mjs
+      - name: Harden CEX flows with batched chunked RPC failover
+        run: node scripts/whales-cex-flow-batched.mjs
 
       - name: Validate report contract and persistent layers
         shell: bash
