@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-13T09:09:54.873Z",
+  "generatedAt": "2026-09-13T09:20:12.568Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -70,7 +70,12 @@
     "cexFlows": {
       "status": "PARTIAL",
       "deposits": 0,
-      "withdrawals": 0
+      "withdrawals": 0,
+      "chains": {
+        "ethereum": "PARTIAL",
+        "base": "PASS",
+        "arbitrum": "PASS"
+      }
     }
   },
   "health": {
@@ -78,42 +83,42 @@
       {
         "module": "multichain",
         "generatedAt": "2026-09-13T09:05:45.001Z",
-        "ageMinutes": 4.2,
+        "ageMinutes": 14.1,
         "maxMinutes": 25,
         "freshness": "FRESH"
       },
       {
         "module": "ethereumWorker",
-        "generatedAt": "2026-09-13T08:41:02.415990Z",
-        "ageMinutes": 27.8,
+        "generatedAt": "2026-09-13T09:11:47.879357Z",
+        "ageMinutes": 7.2,
         "maxMinutes": 25,
-        "freshness": "STALE"
+        "freshness": "FRESH"
       },
       {
         "module": "solanaFixedFeed",
         "generatedAt": "2026-09-13T09:05:31.782Z",
-        "ageMinutes": 3.3,
+        "ageMinutes": 13.4,
         "maxMinutes": 35,
         "freshness": "FRESH"
       },
       {
         "module": "discovery",
         "generatedAt": "2026-09-13T08:49:10.189Z",
-        "ageMinutes": 19.7,
+        "ageMinutes": 29.8,
         "maxMinutes": 75,
         "freshness": "FRESH"
       },
       {
         "module": "cabal",
-        "generatedAt": "2026-09-13T08:28:55.253605Z",
-        "ageMinutes": 39.9,
+        "generatedAt": "2026-09-13T09:13:45.703767Z",
+        "ageMinutes": 5.2,
         "maxMinutes": 30,
-        "freshness": "STALE"
+        "freshness": "FRESH"
       },
       {
         "module": "positions",
         "generatedAt": "2026-09-13T10:34:54+02:00",
-        "ageMinutes": 35,
+        "ageMinutes": 44.9,
         "maxMinutes": 1440,
         "freshness": "FRESH"
       }
@@ -141,24 +146,83 @@
     "promotedDiscoveryLive": {
       "status": "PASS",
       "generatedAt": "2026-09-13T08:32:55.618Z",
-      "ageMinutes": 37,
+      "ageMinutes": 46.9,
       "promotedWalletCount": 3,
       "failedWallets": 0
     },
     "whalesDeep": {
       "status": "PASS",
       "generatedAt": "2026-09-13T09:06:33.222Z",
-      "ageMinutes": 3.4,
+      "ageMinutes": 13.3,
       "freshness": "FRESH",
       "persistedResultsAvailable": true
     },
     "netAccumulation": {
       "status": "PASS",
-      "generatedAt": "2026-09-13T09:08:52.196Z"
+      "generatedAt": "2026-09-13T09:18:57.046Z"
     },
     "cexFlowLabeler": {
       "status": "PARTIAL",
-      "generatedAt": "2026-09-13T09:09:54.872Z"
+      "generatedAt": "2026-09-13T09:20:12.567Z",
+      "chainHealth": {
+        "ethereum": {
+          "status": "PARTIAL",
+          "rpcProviders": 4,
+          "chunkSize": 450,
+          "lookbackBlocks": 1800,
+          "batchedWalletCount": 11,
+          "chunkQueries": 10,
+          "successfulChunks": 2,
+          "failedChunks": 8,
+          "transferLogs": 0,
+          "cexMatches": 0,
+          "providersUsed": {
+            "https://ethereum-rpc.publicnode.com": 2
+          },
+          "lastErrors": [
+            "25965772-25966221:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "25966222-25966671:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "25966672-25967121:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "25967122-25967571:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "25965772-25966221:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "25966222-25966671:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "25966672-25967121:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "25967122-25967571:-32602:eth_getLogs is limited to 0 - 50 blocks range"
+          ]
+        },
+        "base": {
+          "status": "PASS",
+          "rpcProviders": 4,
+          "chunkSize": 1000,
+          "lookbackBlocks": 5000,
+          "batchedWalletCount": 11,
+          "chunkQueries": 12,
+          "successfulChunks": 12,
+          "failedChunks": 0,
+          "transferLogs": 5,
+          "cexMatches": 0,
+          "providersUsed": {
+            "https://mainnet.base.org": 12
+          },
+          "lastErrors": []
+        },
+        "arbitrum": {
+          "status": "PASS",
+          "rpcProviders": 4,
+          "chunkSize": 1500,
+          "lookbackBlocks": 5000,
+          "batchedWalletCount": 11,
+          "chunkQueries": 8,
+          "successfulChunks": 8,
+          "failedChunks": 0,
+          "transferLogs": 0,
+          "cexMatches": 0,
+          "providersUsed": {
+            "https://arb1.arbitrum.io/rpc": 8
+          },
+          "lastErrors": []
+        }
+      }
     }
   },
   "coverage": {
@@ -171,7 +235,7 @@
     "discoveryScopeV1": "SOLANA_FIRST20_BUYER_ALPHA_DATASET",
     "whalesDeep": "PERSISTED_6H_24H_72H_VIA_CABAL_PROTECTED_BRIDGE",
     "netAccumulation": "PERSISTENT_CONFIRMED_TRADE_LEDGER_6H_24H_72H_7D_30D",
-    "cexFlows": "PERSISTENT_EVM_ERC20_CEX_LABELING_ETHEREUM_BASE_ARBITRUM"
+    "cexFlows": "PERSISTENT_EVM_ERC20_CEX_LABELING_BATCHED_CHUNKED_FAILOVER"
   },
   "fixedCohort": {
     "evmCount": 11,
@@ -3868,7 +3932,7 @@
   "actionableConvergence": [],
   "cabalCross": {
     "cabal": {
-      "generatedAt": "2026-09-13T08:28:55.253605Z",
+      "generatedAt": "2026-09-13T09:13:45.703767Z",
       "ok": true,
       "coverage": {
         "bucketA": "PASS",
@@ -3876,262 +3940,254 @@
         "bucketC": "PASS",
         "bucketD": "EXTERNAL_STAGE0_REQUIRED",
         "bucketE": "PASS",
-        "eligibleUniverseCount": 358,
-        "scannedCount": 345,
-        "scanSuccessRatio": 0.9637
+        "eligibleUniverseCount": 356,
+        "scannedCount": 342,
+        "scanSuccessRatio": 0.9607
       },
-      "stageACount": 208,
+      "stageACount": 234,
       "deepValidatedCount": 30,
       "btcReference": {
         "venue": "Gate Spot",
-        "price": 77125,
-        "p1": 0.00090762574180836,
-        "p4": -0.08925575725542423,
-        "timestamp": 1789282800000
+        "price": 76811.5,
+        "p1": -0.40648298217179635,
+        "p4": -0.5123881093837324,
+        "timestamp": 1789286400000
       },
       "leaders": [
         {
-          "asset": "ARK",
-          "price": 0.16961,
-          "stageAScore": 108.276,
-          "classification": "LATE-POST-PUMP",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 38.541,
-          "rvol4h": 50,
-          "priceChange1hPct": 7.9562,
-          "priceChange4hPct": 10.5383,
-          "priceChange24hPct": 44.8668,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "B3",
-          "price": 0.000643,
-          "stageAScore": 102.041,
-          "classification": "MID-MOVE",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 48.6416,
-          "rvol4h": 19.2513,
-          "priceChange1hPct": 3.5593,
-          "priceChange4hPct": 15.7307,
-          "priceChange24hPct": 25.635,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "CTR",
-          "price": 0.011008,
-          "stageAScore": 82.171,
-          "classification": "EARLY-MOVE",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 31.9802,
-          "rvol4h": 49.3709,
-          "priceChange1hPct": 1.2137,
-          "priceChange4hPct": 7.4056,
-          "priceChange24hPct": 10.2564,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "ZORA",
-          "price": 0.008856,
-          "stageAScore": 81.4059,
-          "classification": "EARLY STARTER",
-          "executionSignal": "PILOT_ENTRY_WINDOW",
-          "urgency": "IMMEDIATE",
-          "rvol1h": 23.7803,
-          "rvol4h": 6.7139,
-          "priceChange1hPct": 2.0041,
-          "priceChange4hPct": 4.4216,
-          "priceChange24hPct": 7.9079,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "VTHO",
-          "price": 0.0009015,
-          "stageAScore": 79.9694,
-          "classification": "EARLY-MOVE",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 14.7404,
-          "rvol4h": 7.1463,
-          "priceChange1hPct": -1.4969,
-          "priceChange4hPct": 19.2303,
-          "priceChange24hPct": 24.2249,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
           "asset": "STEEM",
-          "price": 0.07229,
-          "stageAScore": 76.205,
+          "price": 0.0731,
+          "stageAScore": 87.0437,
           "classification": "LATE-POST-PUMP",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
           "rvol1h": 50,
           "rvol4h": 50,
-          "priceChange1hPct": -4.2643,
-          "priceChange4hPct": 5.2563,
-          "priceChange24hPct": 55.1621,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "CVC",
-          "price": 0.026226,
-          "stageAScore": 73.7933,
-          "classification": "MID-MOVE",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 18.8501,
-          "rvol4h": 19.402,
-          "priceChange1hPct": -0.3231,
-          "priceChange4hPct": 2.2416,
-          "priceChange24hPct": 17.981,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "POLYX",
-          "price": 0.04095,
-          "stageAScore": 73.1993,
-          "classification": "CHURN-DISTRIBUTION RISK",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 13.6249,
-          "rvol4h": 10.767,
-          "priceChange1hPct": 0.3431,
-          "priceChange4hPct": -2.6391,
-          "priceChange24hPct": 14.0669,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "LSK",
-          "price": 0.79605,
-          "stageAScore": 72,
-          "classification": "CHURN-DISTRIBUTION RISK",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 29.5508,
-          "rvol4h": 50,
-          "priceChange1hPct": -11.9219,
-          "priceChange4hPct": -34.3908,
-          "priceChange24hPct": 301.4372,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "POWR",
-          "price": 0.07371,
-          "stageAScore": 72,
-          "classification": "CHURN-DISTRIBUTION RISK",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 13.2504,
-          "rvol4h": 44.3411,
-          "priceChange1hPct": -0.0136,
-          "priceChange4hPct": -8.1037,
-          "priceChange24hPct": 31.6956,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "GAS",
-          "price": 1.3167,
-          "stageAScore": 72,
-          "classification": "CHURN-DISTRIBUTION RISK",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 50,
-          "rvol4h": 41.0345,
-          "priceChange1hPct": -3.5385,
-          "priceChange4hPct": -0.4536,
-          "priceChange24hPct": 3.7343,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "KMNO",
-          "price": 0.0251,
-          "stageAScore": 72,
-          "classification": "CHURN-DISTRIBUTION RISK",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 50,
-          "rvol4h": 31.5471,
-          "priceChange1hPct": -0.2385,
-          "priceChange4hPct": -0.7513,
-          "priceChange24hPct": -2.3726,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "BLAST",
-          "price": 0.0004089,
-          "stageAScore": 71.707,
-          "classification": "EARLY-MOVE",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 10.9897,
-          "rvol4h": 5.4475,
-          "priceChange1hPct": 1.9701,
-          "priceChange4hPct": 8.7789,
-          "priceChange24hPct": 17.3651,
+          "priceChange1hPct": 1.1205,
+          "priceChange4hPct": 13.1404,
+          "priceChange24hPct": 56.3302,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
           "asset": "API3",
-          "price": 0.2534,
-          "stageAScore": 71.487,
+          "price": 0.2562,
+          "stageAScore": 86.8266,
           "classification": "EARLY STARTER",
           "executionSignal": "PILOT_ENTRY_WINDOW",
           "urgency": "IMMEDIATE",
-          "rvol1h": 15.4718,
-          "rvol4h": 3.9858,
-          "priceChange1hPct": 2.7158,
-          "priceChange4hPct": 2.5496,
-          "priceChange24hPct": 10.2698,
+          "rvol1h": 35.8746,
+          "rvol4h": 8.6217,
+          "priceChange1hPct": 1.105,
+          "priceChange4hPct": 4.8282,
+          "priceChange24hPct": 11.1015,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
-          "asset": "HIVE",
-          "price": 0.05181,
-          "stageAScore": 65.9876,
+          "asset": "ARK",
+          "price": 0.17101,
+          "stageAScore": 79.6831,
+          "classification": "LATE-POST-PUMP",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 30.8271,
+          "rvol4h": 50,
+          "priceChange1hPct": 0.8254,
+          "priceChange4hPct": 5.2304,
+          "priceChange24hPct": 45.4043,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "B3",
+          "price": 0.0006209,
+          "stageAScore": 75.8629,
+          "classification": "EARLY-MOVE",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 9.6324,
+          "rvol4h": 12.365,
+          "priceChange1hPct": -3.437,
+          "priceChange4hPct": 4.8286,
+          "priceChange24hPct": 22.5864,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "LSK",
+          "price": 0.84985,
+          "stageAScore": 74.1067,
           "classification": "CHURN-DISTRIBUTION RISK",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
-          "rvol1h": 7.4038,
-          "rvol4h": 10.8455,
-          "priceChange1hPct": 0.5629,
-          "priceChange4hPct": -2.8866,
-          "priceChange24hPct": 11.6595,
+          "rvol1h": 4.5685,
+          "rvol4h": 50,
+          "priceChange1hPct": 6.7584,
+          "priceChange4hPct": -22.9028,
+          "priceChange24hPct": 326.8672,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "CTR",
+          "price": 0.010914,
+          "stageAScore": 72,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 15.8671,
+          "rvol4h": 50,
+          "priceChange1hPct": -0.8539,
+          "priceChange4hPct": -0.192,
+          "priceChange24hPct": 8.716,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "QTUM",
+          "price": 0.9758,
+          "stageAScore": 72,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 43.6266,
+          "rvol4h": 32.3022,
+          "priceChange1hPct": -1.4841,
+          "priceChange4hPct": -0.3472,
+          "priceChange24hPct": 8.9671,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "AUCTION",
+          "price": 3.466,
+          "stageAScore": 72,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 50,
+          "rvol4h": 39.2786,
+          "priceChange1hPct": -0.9431,
+          "priceChange4hPct": -1.366,
+          "priceChange24hPct": 3.8035,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "KMNO",
+          "price": 0.02497,
+          "stageAScore": 72,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 50,
+          "rvol4h": 21.0652,
+          "priceChange1hPct": -0.5179,
+          "priceChange4hPct": -1.3433,
+          "priceChange24hPct": -2.5371,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "TAIKO",
+          "price": 0.08261,
+          "stageAScore": 71.2112,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 20.5643,
+          "rvol4h": 8.8028,
+          "priceChange1hPct": -1.0777,
+          "priceChange4hPct": -3.5944,
+          "priceChange24hPct": 0.7562,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "ARKM",
+          "price": 0.10109,
+          "stageAScore": 70.3168,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 37.3815,
+          "rvol4h": 8.5792,
+          "priceChange1hPct": -2.6577,
+          "priceChange4hPct": -1.366,
+          "priceChange24hPct": 0.4871,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "VTHO",
+          "price": 0.0009215,
+          "stageAScore": 69.0981,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 6.8239,
+          "rvol4h": 8.901,
+          "priceChange1hPct": 2.2185,
+          "priceChange4hPct": -7.0881,
+          "priceChange24hPct": 32.8576,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "CVC",
+          "price": 0.026002,
+          "stageAScore": 65.8822,
+          "classification": "MID-MOVE",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 7.4959,
+          "rvol4h": 17.0614,
+          "priceChange1hPct": -0.8541,
+          "priceChange4hPct": 1.7532,
+          "priceChange24hPct": 18.85,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "ENJ",
+          "price": 0.02678,
+          "stageAScore": 62.3094,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 23.5105,
+          "rvol4h": 6.5773,
+          "priceChange1hPct": -0.8148,
+          "priceChange4hPct": -2.0841,
+          "priceChange24hPct": 0.7146,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "POLYX",
+          "price": 0.04043,
+          "stageAScore": 61.7209,
+          "classification": "CHURN-DISTRIBUTION RISK",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 10.7557,
+          "rvol4h": 6.4302,
+          "priceChange1hPct": -1.2698,
+          "priceChange4hPct": -0.2713,
+          "priceChange24hPct": 12.6498,
           "secondLegWatch": false,
           "secondLegTrigger": false
         }
       ],
       "pilotEntries": [
         {
-          "asset": "ZORA",
-          "price": 0.008856,
-          "score": 81.4059,
-          "pilotEntryMax": 0.00892242,
-          "confirmationAddTrigger": 0.008856,
-          "protectiveStopReference": 0.008323953
-        },
-        {
           "asset": "API3",
-          "price": 0.2534,
-          "score": 71.487,
-          "pilotEntryMax": 0.25530050000000004,
-          "confirmationAddTrigger": 0.2534,
-          "protectiveStopReference": 0.238283
+          "price": 0.2562,
+          "score": 86.8266,
+          "pilotEntryMax": 0.2581215,
+          "confirmationAddTrigger": 0.2562114,
+          "protectiveStopReference": 0.2421713
         }
       ],
       "secondLegTriggers": []
@@ -4216,10 +4272,10 @@
   ],
   "sourceTimestamps": {
     "multichain": "2026-09-13T09:05:45.001Z",
-    "ethereum": "2026-09-13T08:41:02.415990Z",
+    "ethereum": "2026-09-13T09:11:47.879357Z",
     "solanaFixed": "2026-09-13T09:05:31.782Z",
     "discovery": "2026-09-13T08:49:10.189Z",
-    "cabal": "2026-09-13T08:28:55.253605Z",
+    "cabal": "2026-09-13T09:13:45.703767Z",
     "positions": "2026-09-13T10:34:54+02:00"
   },
   "promotedDiscoveryLive": {
@@ -4332,7 +4388,7 @@
   "deepValidation": {
     "status": "PASS",
     "generatedAt": "2026-09-13T09:06:33.222Z",
-    "ageMinutes": 3.4,
+    "ageMinutes": 13.3,
     "freshness": "FRESH",
     "source": "CABAL_WORKER_EMBEDDED_WHALES_DEEP",
     "sourceGeneratedAt": "2026-09-13T09:06:38.243Z",
@@ -5860,7 +5916,7 @@
   },
   "netAccumulation": {
     "status": "PASS",
-    "generatedAt": "2026-09-13T09:08:52.196Z",
+    "generatedAt": "2026-09-13T09:18:57.046Z",
     "eventCount": 0,
     "retentionDays": 30,
     "windows": {
@@ -5877,7 +5933,7 @@
   },
   "cexFlows": {
     "status": "PARTIAL",
-    "generatedAt": "2026-09-13T09:09:54.872Z",
+    "generatedAt": "2026-09-13T09:20:12.567Z",
     "provider": {
       "name": "eth-labels.com",
       "provenance": "Public Etherscan-derived EVM label dataset",
@@ -5889,9 +5945,9 @@
       ]
     },
     "coverage": {
-      "ethereum": "ERC20_TRANSFER_FLOWS",
-      "base": "ERC20_TRANSFER_FLOWS",
-      "arbitrum": "ERC20_TRANSFER_FLOWS",
+      "ethereum": "ERC20_TRANSFER_FLOWS_BATCHED_CHUNKED_FAILOVER",
+      "base": "ERC20_TRANSFER_FLOWS_BATCHED_CHUNKED_FAILOVER",
+      "arbitrum": "ERC20_TRANSFER_FLOWS_BATCHED_CHUNKED_FAILOVER",
       "solana": "DATA_GAP",
       "nativeEthTransfers": "DATA_GAP"
     },
@@ -5900,36 +5956,69 @@
     "chainHealth": {
       "ethereum": {
         "status": "PARTIAL",
-        "rpcProviders": 2,
-        "logQueries": 22,
-        "queryFailures": 22,
+        "rpcProviders": 4,
+        "chunkSize": 450,
+        "lookbackBlocks": 1800,
+        "batchedWalletCount": 11,
+        "chunkQueries": 10,
+        "successfulChunks": 2,
+        "failedChunks": 8,
         "transferLogs": 0,
-        "cexMatches": 0
+        "cexMatches": 0,
+        "providersUsed": {
+          "https://ethereum-rpc.publicnode.com": 2
+        },
+        "lastErrors": [
+          "25965772-25966221:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "25966222-25966671:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "25966672-25967121:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "25967122-25967571:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "25965772-25966221:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "25966222-25966671:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "25966672-25967121:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "25967122-25967571:-32602:eth_getLogs is limited to 0 - 50 blocks range"
+        ]
       },
       "base": {
-        "status": "PARTIAL",
-        "rpcProviders": 2,
-        "logQueries": 22,
-        "queryFailures": 22,
-        "transferLogs": 0,
-        "cexMatches": 0
+        "status": "PASS",
+        "rpcProviders": 4,
+        "chunkSize": 1000,
+        "lookbackBlocks": 5000,
+        "batchedWalletCount": 11,
+        "chunkQueries": 12,
+        "successfulChunks": 12,
+        "failedChunks": 0,
+        "transferLogs": 5,
+        "cexMatches": 0,
+        "providersUsed": {
+          "https://mainnet.base.org": 12
+        },
+        "lastErrors": []
       },
       "arbitrum": {
         "status": "PASS",
-        "rpcProviders": 2,
-        "logQueries": 22,
-        "queryFailures": 0,
+        "rpcProviders": 4,
+        "chunkSize": 1500,
+        "lookbackBlocks": 5000,
+        "batchedWalletCount": 11,
+        "chunkQueries": 8,
+        "successfulChunks": 8,
+        "failedChunks": 0,
         "transferLogs": 0,
-        "cexMatches": 0
+        "cexMatches": 0,
+        "providersUsed": {
+          "https://arb1.arbitrum.io/rpc": 8
+        },
+        "lastErrors": []
       }
     },
     "lookupStats": {
-      "apiCalls": 0,
-      "apiErrors": 0,
-      "cacheHits": 0,
+      "calls": 4,
+      "errors": 0,
+      "cacheHits": 1,
       "capped": 0
     },
-    "interpretation": "Exchange labels are attribution evidence, not proof that the asset was sold or bought. Deposits/withdrawals are pressure/context signals only."
+    "interpretation": "All watched wallets are OR-batched per topic position, block ranges are chunked, and RPC providers fail over. Exchange labels remain context evidence, not proof of sale/purchase."
   },
   "smartMoneyExternal": {
     "status": "DATA_GAP",

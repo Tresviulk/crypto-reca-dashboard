@@ -1,7 +1,7 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.2",
   "module": "whalesCexFlowLabeler",
-  "generatedAt": "2026-09-13T09:09:54.872Z",
+  "generatedAt": "2026-09-13T09:20:12.567Z",
   "status": "PARTIAL",
   "provider": {
     "name": "eth-labels.com",
@@ -14,48 +14,152 @@
     ]
   },
   "coverage": {
-    "ethereum": "ERC20_TRANSFER_FLOWS",
-    "base": "ERC20_TRANSFER_FLOWS",
-    "arbitrum": "ERC20_TRANSFER_FLOWS",
+    "ethereum": "ERC20_TRANSFER_FLOWS_BATCHED_CHUNKED_FAILOVER",
+    "base": "ERC20_TRANSFER_FLOWS_BATCHED_CHUNKED_FAILOVER",
+    "arbitrum": "ERC20_TRANSFER_FLOWS_BATCHED_CHUNKED_FAILOVER",
     "solana": "DATA_GAP",
     "nativeEthTransfers": "DATA_GAP"
   },
   "chainHealth": {
     "ethereum": {
       "status": "PARTIAL",
-      "rpcProviders": 2,
-      "logQueries": 22,
-      "queryFailures": 22,
+      "rpcProviders": 4,
+      "chunkSize": 450,
+      "lookbackBlocks": 1800,
+      "batchedWalletCount": 11,
+      "chunkQueries": 10,
+      "successfulChunks": 2,
+      "failedChunks": 8,
       "transferLogs": 0,
-      "cexMatches": 0
+      "cexMatches": 0,
+      "providersUsed": {
+        "https://ethereum-rpc.publicnode.com": 2
+      },
+      "lastErrors": [
+        "25965772-25966221:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+        "25966222-25966671:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+        "25966672-25967121:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+        "25967122-25967571:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+        "25965772-25966221:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+        "25966222-25966671:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+        "25966672-25967121:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+        "25967122-25967571:-32602:eth_getLogs is limited to 0 - 50 blocks range"
+      ]
     },
     "base": {
-      "status": "PARTIAL",
-      "rpcProviders": 2,
-      "logQueries": 22,
-      "queryFailures": 22,
-      "transferLogs": 0,
-      "cexMatches": 0
+      "status": "PASS",
+      "rpcProviders": 4,
+      "chunkSize": 1000,
+      "lookbackBlocks": 5000,
+      "batchedWalletCount": 11,
+      "chunkQueries": 12,
+      "successfulChunks": 12,
+      "failedChunks": 0,
+      "transferLogs": 5,
+      "cexMatches": 0,
+      "providersUsed": {
+        "https://mainnet.base.org": 12
+      },
+      "lastErrors": []
     },
     "arbitrum": {
       "status": "PASS",
-      "rpcProviders": 2,
-      "logQueries": 22,
-      "queryFailures": 0,
+      "rpcProviders": 4,
+      "chunkSize": 1500,
+      "lookbackBlocks": 5000,
+      "batchedWalletCount": 11,
+      "chunkQueries": 8,
+      "successfulChunks": 8,
+      "failedChunks": 0,
       "transferLogs": 0,
-      "cexMatches": 0
+      "cexMatches": 0,
+      "providersUsed": {
+        "https://arb1.arbitrum.io/rpc": 8
+      },
+      "lastErrors": []
+    }
+  },
+  "rpcStats": {
+    "https://ethereum-rpc.publicnode.com": {
+      "calls": 19,
+      "successes": 3,
+      "failures": 16,
+      "lastError": "-32701:Please specify an address in your request or, to remove restrictions, order a dedicated full node here: https://www.allnodes.com/eth/host"
+    },
+    "https://eth.llamarpc.com": {
+      "calls": 16,
+      "successes": 0,
+      "failures": 16,
+      "lastError": "HTTP_525"
+    },
+    "https://cloudflare-eth.com": {
+      "calls": 16,
+      "successes": 0,
+      "failures": 16,
+      "lastError": "-32603:Internal error"
+    },
+    "https://1rpc.io/eth": {
+      "calls": 16,
+      "successes": 0,
+      "failures": 16,
+      "lastError": "-32602:eth_getLogs is limited to 0 - 50 blocks range"
+    },
+    "https://mainnet.base.org": {
+      "calls": 13,
+      "successes": 13,
+      "failures": 0,
+      "lastError": null
+    },
+    "https://arb1.arbitrum.io/rpc": {
+      "calls": 9,
+      "successes": 9,
+      "failures": 0,
+      "lastError": null
     }
   },
   "lookupStats": {
-    "apiCalls": 0,
-    "apiErrors": 0,
-    "cacheHits": 0,
+    "calls": 4,
+    "errors": 0,
+    "cacheHits": 1,
     "capped": 0
   },
   "retentionDays": 30,
-  "labelCache": {},
+  "labelCache": {
+    "8453:0x7f03e814eb1b5dd0c587dc637eea591bce0cd2ce": {
+      "address": "0x7f03e814eb1b5dd0c587dc637eea591bce0cd2ce",
+      "exchange": null,
+      "label": null,
+      "nameTag": null,
+      "checkedAt": "2026-09-13T09:20:11.707Z",
+      "status": "PASS"
+    },
+    "8453:0xbd3d2347d599a766b3511ccd14d0a6352e4dff8f": {
+      "address": "0xbd3d2347d599a766b3511ccd14d0a6352e4dff8f",
+      "exchange": null,
+      "label": null,
+      "nameTag": null,
+      "checkedAt": "2026-09-13T09:20:11.884Z",
+      "status": "PASS"
+    },
+    "8453:0x4bceb32dc9479db0e087de2c9b9ebaaea1727688": {
+      "address": "0x4bceb32dc9479db0e087de2c9b9ebaaea1727688",
+      "exchange": null,
+      "label": null,
+      "nameTag": null,
+      "checkedAt": "2026-09-13T09:20:11.991Z",
+      "status": "PASS"
+    },
+    "8453:0xe5cf73f96f57d56d6e44bd82d8af95727a2fab04": {
+      "address": "0xe5cf73f96f57d56d6e44bd82d8af95727a2fab04",
+      "exchange": null,
+      "label": null,
+      "nameTag": null,
+      "checkedAt": "2026-09-13T09:20:12.113Z",
+      "status": "PASS"
+    }
+  },
   "events": [],
   "deposits": [],
   "withdrawals": [],
-  "interpretation": "Exchange labels are attribution evidence, not proof that the asset was sold or bought. Deposits/withdrawals are pressure/context signals only."
+  "interpretation": "All watched wallets are OR-batched per topic position, block ranges are chunked, and RPC providers fail over. Exchange labels remain context evidence, not proof of sale/purchase."
 }
