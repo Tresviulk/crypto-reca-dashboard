@@ -8,6 +8,7 @@ on:
     branches: ["main"]
     paths:
       - 'scripts/cabal-machine-scan.py'
+      - 'scripts/cabal-machine-scan-v14.py'
       - '.github/workflows/cabal-machine-scan.yml'
 
 permissions:
@@ -33,8 +34,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run independent market-wide CABAL scan
-        run: python scripts/cabal-machine-scan.py
+      - name: Run independent market-wide CABAL scan v1.4
+        run: python scripts/cabal-machine-scan-v14.py
 
       - name: Validate machine payload
         shell: bash
@@ -45,14 +46,17 @@ jobs:
           import json
           p='data/cabal-machine.json'
           d=json.load(open(p,encoding='utf-8'))
-          required=('ok','generatedAt','coverage','sources','candidateCountStageA','deepValidatedCount','btcReference')
+          required=('ok','generatedAt','coverage','sources','candidateCountStageA','deepValidatedCount','btcReference','retention')
           missing=[k for k in required if k not in d]
           if missing: raise SystemExit(f'missing required keys: {missing}')
-          for b in ('bucketA','bucketB','bucketC','bucketE'):
+          for b in ('bucketA','bucketB','bucketC','bucketE','preAccum'):
               if b not in d['coverage']: raise SystemExit(f'missing coverage {b}')
           if d['coverage'].get('bucketD')!='EXTERNAL_STAGE0_REQUIRED':
               raise SystemExit('bucketD must remain EXTERNAL_STAGE0_REQUIRED')
-          print('CABAL MACHINE PAYLOAD VALID', d['generatedAt'], 'ok=', d['ok'])
+          r=d['retention']
+          for k in ('limit','preAccumReserve','earlyReserve','secondLegReserve','preAccumEligible','preAccumRetained','earlyMoveEligible','earlyMoveRetained'):
+              if k not in r: raise SystemExit(f'missing retention {k}')
+          print('CABAL MACHINE v1.4 PAYLOAD VALID', d['generatedAt'], 'ok=', d['ok'], 'preAccum=', d['coverage'].get('preAccum'))
           PY
 
       - name: Commit machine state
@@ -66,7 +70,7 @@ jobs:
             echo 'No CABAL machine state change.'
             exit 0
           fi
-          git commit -m 'cabal-machine: refresh independent discovery [skip ci]'
+          git commit -m 'cabal-machine: refresh independent discovery v1.4 [skip ci]'
           git pull --rebase origin main
           git push origin HEAD:main
 
@@ -76,6 +80,6 @@ jobs:
           set -euo pipefail
           git fetch origin main
           git show origin/main:data/cabal-machine.json | python -m json.tool >/dev/null
-          echo 'CABAL MACHINE PERSISTENCE PASS'
+          echo 'CABAL MACHINE v1.4 PERSISTENCE PASS'
 
-# validation-trigger: gate-v1.3-2026-09-06
+# validation-trigger: gate-v1.4-preaccum-2026-09-14
