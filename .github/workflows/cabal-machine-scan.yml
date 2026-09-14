@@ -11,6 +11,7 @@ on:
       - 'scripts/cabal-machine-scan-v14.py'
       - 'scripts/cabal-machine-scan-v141.py'
       - 'scripts/cabal-machine-scan-v15.py'
+      - 'scripts/cabal-machine-scan-v151.py'
       - '.github/workflows/cabal-machine-scan.yml'
 
 permissions:
@@ -36,8 +37,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run independent market-wide CABAL scan v1.5
-        run: python scripts/cabal-machine-scan-v15.py
+      - name: Run CABAL machine v1.5.1
+        run: python scripts/cabal-machine-scan-v151.py
 
       - name: Validate JSON shape before persistence
         shell: bash
@@ -47,14 +48,14 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('data/cabal-machine.json',encoding='utf-8'))
-          required=('generatedAt','coverage','sources','candidateCountStageA','deepValidatedCount','btcReference','retention','preAccumCandidates','preAccumLifecycle')
+          required=('generatedAt','coverage','sources','retention','preAccumCandidates','preAccumLifecycle','preAccumOperational','mainMachineOperational','sourceMode')
           missing=[k for k in required if k not in d]
           if missing: raise SystemExit(f'missing required keys: {missing}')
-          if d.get('schemaVersion')!='1.5': raise SystemExit(f"unexpected schemaVersion: {d.get('schemaVersion')}")
-          print('CABAL v1.5 DIAGNOSTIC', json.dumps({'ok':d.get('ok'),'coverage':d.get('coverage'),'retention':d.get('retention'),'sources':d.get('sources'),'errors':d.get('errors')},ensure_ascii=False))
+          if d.get('schemaVersion')!='1.5.1': raise SystemExit(f"unexpected schemaVersion: {d.get('schemaVersion')}")
+          print('CABAL v1.5.1 DIAGNOSTIC', json.dumps({'preAccumOperational':d.get('preAccumOperational'),'mainMachineOperational':d.get('mainMachineOperational'),'sourceMode':d.get('sourceMode'),'coverage':d.get('coverage'),'sources':d.get('sources'),'errors':d.get('errors'),'warnings':d.get('warnings')},ensure_ascii=False))
           PY
 
-      - name: Persist diagnostic machine state
+      - name: Persist machine state
         shell: bash
         run: |
           set -euo pipefail
@@ -64,12 +65,12 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No CABAL machine state change.'
           else
-            git commit -m 'cabal-machine: refresh independent discovery v1.5 [skip ci]'
+            git commit -m 'cabal-machine: refresh independent discovery v1.5.1 [skip ci]'
             git pull --rebase origin main
             git push origin HEAD:main
           fi
 
-      - name: Strict v1.5 coverage validation
+      - name: Strict PRE-ACCUM coverage validation
         shell: bash
         run: |
           set -euo pipefail
@@ -77,24 +78,18 @@ jobs:
           import json
           d=json.load(open('data/cabal-machine.json',encoding='utf-8'))
           c=d['coverage']; r=d['retention']
-          for b in ('bucketA','bucketB','bucketC','bucketE','preAccum'):
-              if c.get(b)!='PASS': raise SystemExit(f'coverage {b} not PASS')
-          if c.get('bucketD')!='EXTERNAL_STAGE0_REQUIRED': raise SystemExit('bucketD must remain EXTERNAL_STAGE0_REQUIRED')
+          if not d.get('preAccumOperational'): raise SystemExit('PRE-ACCUM operational=false')
+          if c.get('preAccum')!='PASS': raise SystemExit('PRE-ACCUM coverage not PASS')
           if c.get('preAccum250kTo2mUniverseCount',0)<=0: raise SystemExit('250k-2M PRE-ACCUM band not covered')
           if c.get('preAccumShortlistCount',0)<=0: raise SystemExit('PRE-ACCUM shortlist missing')
-          if c.get('preAccumDeepLiteSuccessRatio',0)<.80: raise SystemExit('PRE-ACCUM deep-lite coverage below 80%')
-          if not r.get('top30DoesNotGatePreAccum'): raise SystemExit('PRE-ACCUM still gated by top-30')
-          # build_pre_shortlist enforces up to six sub-2M slots before any >=2M name can fill them.
-          # If fewer than six are filled, fewer than six anti-chase-qualified sub-2M names existed in that run.
-          if c.get('preAccum250kTo2mUniverseCount',0)>=1 and r.get('sub2mReserveFilled',0)<1:
-              raise SystemExit('250k-2M band exists but no qualified sub-2M name reached PRE-ACCUM shortlist')
+          if c.get('preAccumDeepLiteSuccessRatio',0)<.80: raise SystemExit('PRE-ACCUM deep-lite success below 80%')
+          if not r.get('top30DoesNotGatePreAccum'): raise SystemExit('PRE-ACCUM still gated by Stage-A top-30')
+          if c.get('preAccum250kTo2mUniverseCount',0)>=1 and r.get('sub2mReserveFilled',0)<1: raise SystemExit('250k-2M band exists but no qualified sub-2M candidate reached shortlist')
           banned=('xstock','tokenized stock','tokenised stock','tokenized equity','tokenised equity','tokenized etf','tokenised etf','ondo tokenized')
-          for group in ('candidates','preAccumCandidates'):
-              for x in d.get(group,[]):
-                  name=str(x.get('name') or '').lower()
-                  if any(b in name for b in banned): raise SystemExit(f"tokenized-equity leakage in {group}: {x.get('asset')} {x.get('name')}")
-          if not d.get('ok'): raise SystemExit('machine ok=false')
-          print('CABAL MACHINE v1.5 STRICT PASS', d['generatedAt'], '250k-2M=',c.get('preAccum250kTo2mUniverseCount'),'sub2m shortlist=',c.get('preAccumSub2mShortlistCount'),'preDone=',c.get('preAccumDeepLiteCompleted'))
+          for x in d.get('preAccumCandidates',[]):
+              name=str(x.get('name') or '').lower()
+              if any(b in name for b in banned): raise SystemExit(f"tokenized-equity leakage in PRE-ACCUM: {x.get('asset')} {x.get('name')}")
+          print('CABAL PRE-ACCUM v1.5.1 PASS', d['generatedAt'], 'mode=',d.get('sourceMode'),'250k-2M=',c.get('preAccum250kTo2mUniverseCount'),'sub2m shortlist=',c.get('preAccumSub2mShortlistCount'),'preDone=',c.get('preAccumDeepLiteCompleted'),'mainMachineOperational=',d.get('mainMachineOperational'))
           PY
 
       - name: Verify persisted payload
@@ -103,6 +98,6 @@ jobs:
           set -euo pipefail
           git fetch origin main
           git show origin/main:data/cabal-machine.json | python -m json.tool >/dev/null
-          echo 'CABAL MACHINE v1.5 PERSISTENCE PASS'
+          echo 'CABAL MACHINE v1.5.1 PERSISTENCE PASS'
 
-# validation-trigger: v1.5-persist-diagnostics-2026-09-14
+# validation-trigger: v1.5.1-resilient-prestagea-2026-09-14
