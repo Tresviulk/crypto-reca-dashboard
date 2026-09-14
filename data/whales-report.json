@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-14T05:40:07.259Z",
+  "generatedAt": "2026-09-14T05:51:32.873Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -80,12 +80,12 @@
     },
     "earlyEntry": {
       "status": "PASS",
-      "generatedAt": "2026-09-14T05:37:55.047Z",
+      "generatedAt": "2026-09-14T05:51:32.687Z",
       "cohortSize": 19,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
       "newOnchainSwapBuys": 1,
-      "newOnchainSwapSells": 0
+      "newOnchainSwapSells": 1
     }
   },
   "health": {
@@ -236,8 +236,8 @@
     },
     "earlyEntry": {
       "status": "PASS",
-      "generatedAt": "2026-09-14T05:37:55.047Z",
-      "ageMinutes": 2.2,
+      "generatedAt": "2026-09-14T05:51:32.687Z",
+      "ageMinutes": 0,
       "cohortSize": 19,
       "failedWallets": 0,
       "txFailures": 0
@@ -5937,7 +5937,7 @@
   "netAccumulation": {
     "schemaVersion": "1.1",
     "module": "whalesNetAccumulationLedger",
-    "generatedAt": "2026-09-14T05:40:07.254Z",
+    "generatedAt": "2026-09-14T05:51:32.869Z",
     "status": "PASS",
     "retentionDays": 30,
     "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -5948,8 +5948,52 @@
       "solanaTradeFeed": "PASS",
       "earlyEntryEngine": "PASS"
     },
-    "eventCount": 41,
+    "eventCount": 43,
     "events": [
+      {
+        "id": "solana:ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT:2VrtNqz8Y8ddftG2fZ5eSFhPhQK9oSnh2RQovRZB33Sumr4GpX8bhvdr2UfEmUQtiu4sqjCKwjsHgprYGanyFpXK:BUY:ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+        "chain": "solana",
+        "source": "WHALES_EARLY_ONCHAIN_SWAP_CLASSIFIED",
+        "action": "BUY",
+        "walletLabel": "SOL-TRUNOEST",
+        "wallet": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
+        "assetSymbol": "ARFM3JNI",
+        "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+        "tokenAmount": 160907.250194,
+        "quoteAsset": "SOL",
+        "quoteAmount": 0.025009,
+        "txRef": "2VrtNqz8Y8ddftG2fZ5eSFhPhQK9oSnh2RQovRZB33Sumr4GpX8bhvdr2UfEmUQtiu4sqjCKwjsHgprYGanyFpXK",
+        "eventTime": "2026-09-14T05:51:08.000Z",
+        "marketCapUsdAtTrade": null,
+        "priceUsdAtTrade": null,
+        "confidence": 0.9,
+        "firstTouch": true,
+        "confirmation": "HIGH_CONFIDENCE_ONCHAIN_SWAP_BALANCE_DELTA",
+        "tokenDelta": 160907.250194,
+        "quoteDelta": -0.025009
+      },
+      {
+        "id": "solana:G4MQZpoLvfRZDTdSbtbMDXf4J8GQ9VGMyzKysLhyfotL:5rrhsocEzn3mn78aHjH262xMrp6nCcxxtkkSEtT94uStbnG2GqqaHNHrrmpa7mnrYgerkWzm3KH9gsdDRaAEd4FZ:SELL:CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+        "chain": "solana",
+        "source": "WHALES_EARLY_ONCHAIN_SWAP_CLASSIFIED",
+        "action": "SELL",
+        "walletLabel": "EARLY-B-G4MQZp",
+        "wallet": "G4MQZpoLvfRZDTdSbtbMDXf4J8GQ9VGMyzKysLhyfotL",
+        "assetSymbol": "HUMANITY",
+        "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+        "tokenAmount": 5368672.910713,
+        "quoteAsset": "SOL",
+        "quoteAmount": 5.72516256,
+        "txRef": "5rrhsocEzn3mn78aHjH262xMrp6nCcxxtkkSEtT94uStbnG2GqqaHNHrrmpa7mnrYgerkWzm3KH9gsdDRaAEd4FZ",
+        "eventTime": "2026-09-14T05:40:39.000Z",
+        "marketCapUsdAtTrade": 87954,
+        "priceUsdAtTrade": 0.00009605,
+        "confidence": 0.9,
+        "firstTouch": false,
+        "confirmation": "HIGH_CONFIDENCE_ONCHAIN_SWAP_BALANCE_DELTA",
+        "tokenDelta": -5368672.910713,
+        "quoteDelta": 5.72516256
+      },
       {
         "id": "solana:G4MQZpoLvfRZDTdSbtbMDXf4J8GQ9VGMyzKysLhyfotL:35HubyVFKgqxPeY6Y1rHmq6yTnMsSXgVFUxrC5Hv157sXMvrhBpcH2VXshGF5mF62eh5r8AwL9BWhPQvAihrsTfa:BUY:CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
         "chain": "solana",
@@ -6857,19 +6901,19 @@
       "6h": [
         {
           "chain": "solana",
-          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-          "assetSymbol": "HUMANITY",
-          "buyCount": 9,
+          "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+          "assetSymbol": "ARFM3JNI",
+          "buyCount": 1,
           "sellCount": 0,
-          "tokenBought": 5368672.910713,
+          "tokenBought": 160907.250194,
           "tokenSold": 0,
-          "netTokenFlow": 5368672.910713,
-          "quoteSpent": 4.06280504,
+          "netTokenFlow": 160907.250194,
+          "quoteSpent": 0.025009,
           "quoteReceived": 0,
           "wallets": [
-            "EARLY-B-G4MQZp"
+            "SOL-TRUNOEST"
           ],
-          "latestEventAt": "2026-09-14T05:35:16.000Z",
+          "latestEventAt": "2026-09-14T05:51:08.000Z",
           "walletCount": 1,
           "direction": "NET_ACCUMULATION"
         },
@@ -6888,6 +6932,24 @@
             "EARLY-B-FJp5gB"
           ],
           "latestEventAt": "2026-09-14T02:28:38.000Z",
+          "walletCount": 1,
+          "direction": "NET_DISTRIBUTION"
+        },
+        {
+          "chain": "solana",
+          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+          "assetSymbol": "HUMANITY",
+          "buyCount": 9,
+          "sellCount": 1,
+          "tokenBought": 5368672.910713,
+          "tokenSold": 5368672.910713,
+          "netTokenFlow": 0,
+          "quoteSpent": 4.06280504,
+          "quoteReceived": 5.72516256,
+          "wallets": [
+            "EARLY-B-G4MQZp"
+          ],
+          "latestEventAt": "2026-09-14T05:40:39.000Z",
           "walletCount": 1,
           "direction": "NET_DISTRIBUTION"
         }
@@ -6967,24 +7029,6 @@
         },
         {
           "chain": "solana",
-          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-          "assetSymbol": "HUMANITY",
-          "buyCount": 9,
-          "sellCount": 0,
-          "tokenBought": 5368672.910713,
-          "tokenSold": 0,
-          "netTokenFlow": 5368672.910713,
-          "quoteSpent": 4.06280504,
-          "quoteReceived": 0,
-          "wallets": [
-            "EARLY-B-G4MQZp"
-          ],
-          "latestEventAt": "2026-09-14T05:35:16.000Z",
-          "walletCount": 1,
-          "direction": "NET_ACCUMULATION"
-        },
-        {
-          "chain": "solana",
           "assetKey": "ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs",
           "assetSymbol": "BURNED",
           "buyCount": 3,
@@ -7057,6 +7101,24 @@
         },
         {
           "chain": "solana",
+          "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+          "assetSymbol": "ARFM3JNI",
+          "buyCount": 1,
+          "sellCount": 0,
+          "tokenBought": 160907.250194,
+          "tokenSold": 0,
+          "netTokenFlow": 160907.250194,
+          "quoteSpent": 0.025009,
+          "quoteReceived": 0,
+          "wallets": [
+            "SOL-TRUNOEST"
+          ],
+          "latestEventAt": "2026-09-14T05:51:08.000Z",
+          "walletCount": 1,
+          "direction": "NET_ACCUMULATION"
+        },
+        {
+          "chain": "solana",
           "assetKey": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
           "assetSymbol": "PUMP",
           "buyCount": 1,
@@ -7124,6 +7186,24 @@
             "EARLY-B-BUR4f8"
           ],
           "latestEventAt": "2026-09-13T22:22:50.000Z",
+          "walletCount": 1,
+          "direction": "NET_DISTRIBUTION"
+        },
+        {
+          "chain": "solana",
+          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+          "assetSymbol": "HUMANITY",
+          "buyCount": 9,
+          "sellCount": 1,
+          "tokenBought": 5368672.910713,
+          "tokenSold": 5368672.910713,
+          "netTokenFlow": 0,
+          "quoteSpent": 4.06280504,
+          "quoteReceived": 5.72516256,
+          "wallets": [
+            "EARLY-B-G4MQZp"
+          ],
+          "latestEventAt": "2026-09-14T05:40:39.000Z",
           "walletCount": 1,
           "direction": "NET_DISTRIBUTION"
         },
@@ -7293,24 +7373,6 @@
         },
         {
           "chain": "solana",
-          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-          "assetSymbol": "HUMANITY",
-          "buyCount": 9,
-          "sellCount": 0,
-          "tokenBought": 5368672.910713,
-          "tokenSold": 0,
-          "netTokenFlow": 5368672.910713,
-          "quoteSpent": 4.06280504,
-          "quoteReceived": 0,
-          "wallets": [
-            "EARLY-B-G4MQZp"
-          ],
-          "latestEventAt": "2026-09-14T05:35:16.000Z",
-          "walletCount": 1,
-          "direction": "NET_ACCUMULATION"
-        },
-        {
-          "chain": "solana",
           "assetKey": "ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs",
           "assetSymbol": "BURNED",
           "buyCount": 3,
@@ -7383,6 +7445,24 @@
         },
         {
           "chain": "solana",
+          "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+          "assetSymbol": "ARFM3JNI",
+          "buyCount": 1,
+          "sellCount": 0,
+          "tokenBought": 160907.250194,
+          "tokenSold": 0,
+          "netTokenFlow": 160907.250194,
+          "quoteSpent": 0.025009,
+          "quoteReceived": 0,
+          "wallets": [
+            "SOL-TRUNOEST"
+          ],
+          "latestEventAt": "2026-09-14T05:51:08.000Z",
+          "walletCount": 1,
+          "direction": "NET_ACCUMULATION"
+        },
+        {
+          "chain": "solana",
           "assetKey": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
           "assetSymbol": "PUMP",
           "buyCount": 1,
@@ -7450,6 +7530,24 @@
             "EARLY-B-BUR4f8"
           ],
           "latestEventAt": "2026-09-13T22:22:50.000Z",
+          "walletCount": 1,
+          "direction": "NET_DISTRIBUTION"
+        },
+        {
+          "chain": "solana",
+          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+          "assetSymbol": "HUMANITY",
+          "buyCount": 9,
+          "sellCount": 1,
+          "tokenBought": 5368672.910713,
+          "tokenSold": 5368672.910713,
+          "netTokenFlow": 0,
+          "quoteSpent": 4.06280504,
+          "quoteReceived": 5.72516256,
+          "wallets": [
+            "EARLY-B-G4MQZp"
+          ],
+          "latestEventAt": "2026-09-14T05:40:39.000Z",
           "walletCount": 1,
           "direction": "NET_DISTRIBUTION"
         },
@@ -7619,24 +7717,6 @@
         },
         {
           "chain": "solana",
-          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-          "assetSymbol": "HUMANITY",
-          "buyCount": 9,
-          "sellCount": 0,
-          "tokenBought": 5368672.910713,
-          "tokenSold": 0,
-          "netTokenFlow": 5368672.910713,
-          "quoteSpent": 4.06280504,
-          "quoteReceived": 0,
-          "wallets": [
-            "EARLY-B-G4MQZp"
-          ],
-          "latestEventAt": "2026-09-14T05:35:16.000Z",
-          "walletCount": 1,
-          "direction": "NET_ACCUMULATION"
-        },
-        {
-          "chain": "solana",
           "assetKey": "ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs",
           "assetSymbol": "BURNED",
           "buyCount": 3,
@@ -7709,6 +7789,24 @@
         },
         {
           "chain": "solana",
+          "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+          "assetSymbol": "ARFM3JNI",
+          "buyCount": 1,
+          "sellCount": 0,
+          "tokenBought": 160907.250194,
+          "tokenSold": 0,
+          "netTokenFlow": 160907.250194,
+          "quoteSpent": 0.025009,
+          "quoteReceived": 0,
+          "wallets": [
+            "SOL-TRUNOEST"
+          ],
+          "latestEventAt": "2026-09-14T05:51:08.000Z",
+          "walletCount": 1,
+          "direction": "NET_ACCUMULATION"
+        },
+        {
+          "chain": "solana",
           "assetKey": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
           "assetSymbol": "PUMP",
           "buyCount": 1,
@@ -7776,6 +7874,24 @@
             "EARLY-B-BUR4f8"
           ],
           "latestEventAt": "2026-09-13T22:22:50.000Z",
+          "walletCount": 1,
+          "direction": "NET_DISTRIBUTION"
+        },
+        {
+          "chain": "solana",
+          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+          "assetSymbol": "HUMANITY",
+          "buyCount": 9,
+          "sellCount": 1,
+          "tokenBought": 5368672.910713,
+          "tokenSold": 5368672.910713,
+          "netTokenFlow": 0,
+          "quoteSpent": 4.06280504,
+          "quoteReceived": 5.72516256,
+          "wallets": [
+            "EARLY-B-G4MQZp"
+          ],
+          "latestEventAt": "2026-09-14T05:40:39.000Z",
           "walletCount": 1,
           "direction": "NET_DISTRIBUTION"
         },
@@ -7945,24 +8061,6 @@
         },
         {
           "chain": "solana",
-          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-          "assetSymbol": "HUMANITY",
-          "buyCount": 9,
-          "sellCount": 0,
-          "tokenBought": 5368672.910713,
-          "tokenSold": 0,
-          "netTokenFlow": 5368672.910713,
-          "quoteSpent": 4.06280504,
-          "quoteReceived": 0,
-          "wallets": [
-            "EARLY-B-G4MQZp"
-          ],
-          "latestEventAt": "2026-09-14T05:35:16.000Z",
-          "walletCount": 1,
-          "direction": "NET_ACCUMULATION"
-        },
-        {
-          "chain": "solana",
           "assetKey": "ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs",
           "assetSymbol": "BURNED",
           "buyCount": 3,
@@ -8035,6 +8133,24 @@
         },
         {
           "chain": "solana",
+          "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+          "assetSymbol": "ARFM3JNI",
+          "buyCount": 1,
+          "sellCount": 0,
+          "tokenBought": 160907.250194,
+          "tokenSold": 0,
+          "netTokenFlow": 160907.250194,
+          "quoteSpent": 0.025009,
+          "quoteReceived": 0,
+          "wallets": [
+            "SOL-TRUNOEST"
+          ],
+          "latestEventAt": "2026-09-14T05:51:08.000Z",
+          "walletCount": 1,
+          "direction": "NET_ACCUMULATION"
+        },
+        {
+          "chain": "solana",
           "assetKey": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
           "assetSymbol": "PUMP",
           "buyCount": 1,
@@ -8102,6 +8218,24 @@
             "EARLY-B-BUR4f8"
           ],
           "latestEventAt": "2026-09-13T22:22:50.000Z",
+          "walletCount": 1,
+          "direction": "NET_DISTRIBUTION"
+        },
+        {
+          "chain": "solana",
+          "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+          "assetSymbol": "HUMANITY",
+          "buyCount": 9,
+          "sellCount": 1,
+          "tokenBought": 5368672.910713,
+          "tokenSold": 5368672.910713,
+          "netTokenFlow": 0,
+          "quoteSpent": 4.06280504,
+          "quoteReceived": 5.72516256,
+          "wallets": [
+            "EARLY-B-G4MQZp"
+          ],
+          "latestEventAt": "2026-09-14T05:40:39.000Z",
           "walletCount": 1,
           "direction": "NET_DISTRIBUTION"
         },
@@ -8272,24 +8406,6 @@
       },
       {
         "chain": "solana",
-        "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-        "assetSymbol": "HUMANITY",
-        "buyCount": 9,
-        "sellCount": 0,
-        "tokenBought": 5368672.910713,
-        "tokenSold": 0,
-        "netTokenFlow": 5368672.910713,
-        "quoteSpent": 4.06280504,
-        "quoteReceived": 0,
-        "wallets": [
-          "EARLY-B-G4MQZp"
-        ],
-        "latestEventAt": "2026-09-14T05:35:16.000Z",
-        "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
-      },
-      {
-        "chain": "solana",
         "assetKey": "ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs",
         "assetSymbol": "BURNED",
         "buyCount": 3,
@@ -8362,6 +8478,24 @@
       },
       {
         "chain": "solana",
+        "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+        "assetSymbol": "ARFM3JNI",
+        "buyCount": 1,
+        "sellCount": 0,
+        "tokenBought": 160907.250194,
+        "tokenSold": 0,
+        "netTokenFlow": 160907.250194,
+        "quoteSpent": 0.025009,
+        "quoteReceived": 0,
+        "wallets": [
+          "SOL-TRUNOEST"
+        ],
+        "latestEventAt": "2026-09-14T05:51:08.000Z",
+        "walletCount": 1,
+        "direction": "NET_ACCUMULATION"
+      },
+      {
+        "chain": "solana",
         "assetKey": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
         "assetSymbol": "PUMP",
         "buyCount": 1,
@@ -8429,6 +8563,24 @@
           "EARLY-B-BUR4f8"
         ],
         "latestEventAt": "2026-09-13T22:22:50.000Z",
+        "walletCount": 1,
+        "direction": "NET_DISTRIBUTION"
+      },
+      {
+        "chain": "solana",
+        "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+        "assetSymbol": "HUMANITY",
+        "buyCount": 9,
+        "sellCount": 1,
+        "tokenBought": 5368672.910713,
+        "tokenSold": 5368672.910713,
+        "netTokenFlow": 0,
+        "quoteSpent": 4.06280504,
+        "quoteReceived": 5.72516256,
+        "wallets": [
+          "EARLY-B-G4MQZp"
+        ],
+        "latestEventAt": "2026-09-14T05:40:39.000Z",
         "walletCount": 1,
         "direction": "NET_DISTRIBUTION"
       },
@@ -8598,24 +8750,6 @@
       },
       {
         "chain": "solana",
-        "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-        "assetSymbol": "HUMANITY",
-        "buyCount": 9,
-        "sellCount": 0,
-        "tokenBought": 5368672.910713,
-        "tokenSold": 0,
-        "netTokenFlow": 5368672.910713,
-        "quoteSpent": 4.06280504,
-        "quoteReceived": 0,
-        "wallets": [
-          "EARLY-B-G4MQZp"
-        ],
-        "latestEventAt": "2026-09-14T05:35:16.000Z",
-        "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
-      },
-      {
-        "chain": "solana",
         "assetKey": "ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs",
         "assetSymbol": "BURNED",
         "buyCount": 3,
@@ -8688,6 +8822,24 @@
       },
       {
         "chain": "solana",
+        "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+        "assetSymbol": "ARFM3JNI",
+        "buyCount": 1,
+        "sellCount": 0,
+        "tokenBought": 160907.250194,
+        "tokenSold": 0,
+        "netTokenFlow": 160907.250194,
+        "quoteSpent": 0.025009,
+        "quoteReceived": 0,
+        "wallets": [
+          "SOL-TRUNOEST"
+        ],
+        "latestEventAt": "2026-09-14T05:51:08.000Z",
+        "walletCount": 1,
+        "direction": "NET_ACCUMULATION"
+      },
+      {
+        "chain": "solana",
         "assetKey": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
         "assetSymbol": "PUMP",
         "buyCount": 1,
@@ -8755,6 +8907,24 @@
           "EARLY-B-BUR4f8"
         ],
         "latestEventAt": "2026-09-13T22:22:50.000Z",
+        "walletCount": 1,
+        "direction": "NET_DISTRIBUTION"
+      },
+      {
+        "chain": "solana",
+        "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+        "assetSymbol": "HUMANITY",
+        "buyCount": 9,
+        "sellCount": 1,
+        "tokenBought": 5368672.910713,
+        "tokenSold": 5368672.910713,
+        "netTokenFlow": 0,
+        "quoteSpent": 4.06280504,
+        "quoteReceived": 5.72516256,
+        "wallets": [
+          "EARLY-B-G4MQZp"
+        ],
+        "latestEventAt": "2026-09-14T05:40:39.000Z",
         "walletCount": 1,
         "direction": "NET_DISTRIBUTION"
       },
@@ -8924,24 +9094,6 @@
       },
       {
         "chain": "solana",
-        "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
-        "assetSymbol": "HUMANITY",
-        "buyCount": 9,
-        "sellCount": 0,
-        "tokenBought": 5368672.910713,
-        "tokenSold": 0,
-        "netTokenFlow": 5368672.910713,
-        "quoteSpent": 4.06280504,
-        "quoteReceived": 0,
-        "wallets": [
-          "EARLY-B-G4MQZp"
-        ],
-        "latestEventAt": "2026-09-14T05:35:16.000Z",
-        "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
-      },
-      {
-        "chain": "solana",
         "assetKey": "ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs",
         "assetSymbol": "BURNED",
         "buyCount": 3,
@@ -9014,6 +9166,24 @@
       },
       {
         "chain": "solana",
+        "assetKey": "ARfM3jniyBtk9wxBUfsDhEncSV2ux2dQmfBezpXiSTNK",
+        "assetSymbol": "ARFM3JNI",
+        "buyCount": 1,
+        "sellCount": 0,
+        "tokenBought": 160907.250194,
+        "tokenSold": 0,
+        "netTokenFlow": 160907.250194,
+        "quoteSpent": 0.025009,
+        "quoteReceived": 0,
+        "wallets": [
+          "SOL-TRUNOEST"
+        ],
+        "latestEventAt": "2026-09-14T05:51:08.000Z",
+        "walletCount": 1,
+        "direction": "NET_ACCUMULATION"
+      },
+      {
+        "chain": "solana",
         "assetKey": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
         "assetSymbol": "PUMP",
         "buyCount": 1,
@@ -9081,6 +9251,24 @@
           "EARLY-B-BUR4f8"
         ],
         "latestEventAt": "2026-09-13T22:22:50.000Z",
+        "walletCount": 1,
+        "direction": "NET_DISTRIBUTION"
+      },
+      {
+        "chain": "solana",
+        "assetKey": "CeSFzoAqSMXMgodeLzrTMe3V5MdV5Nhinehedxohpump",
+        "assetSymbol": "HUMANITY",
+        "buyCount": 9,
+        "sellCount": 1,
+        "tokenBought": 5368672.910713,
+        "tokenSold": 5368672.910713,
+        "netTokenFlow": 0,
+        "quoteSpent": 4.06280504,
+        "quoteReceived": 5.72516256,
+        "wallets": [
+          "EARLY-B-G4MQZp"
+        ],
+        "latestEventAt": "2026-09-14T05:40:39.000Z",
         "walletCount": 1,
         "direction": "NET_DISTRIBUTION"
       },
@@ -9289,7 +9477,7 @@
   },
   "earlyEntry": {
     "status": "PASS",
-    "generatedAt": "2026-09-14T05:37:55.047Z",
+    "generatedAt": "2026-09-14T05:51:32.687Z",
     "scheduleTargetMinutes": 5,
     "cohort": {
       "total": 19,
@@ -9298,21 +9486,21 @@
       "dynamicTierB": 10
     },
     "scan": {
-      "newEventCount": 2,
+      "newEventCount": 4,
       "newOnchainSwapBuys": 1,
-      "newOnchainSwapSells": 0,
-      "newContextOnly": 1,
-      "retainedEventCount": 134,
-      "activeMintCount6h": 2,
-      "signalCount": 2,
+      "newOnchainSwapSells": 1,
+      "newContextOnly": 2,
+      "retainedEventCount": 138,
+      "activeMintCount6h": 3,
+      "signalCount": 3,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
       "netAccumulationSignalCount": 0,
       "netDistributionSignalCount": 1,
       "roundTripFlatCount": 0,
       "rawNetAccumulationSignalCount": 1,
-      "microProbeCount": 0,
-      "scoutPositionCount": 1
+      "microProbeCount": 1,
+      "scoutPositionCount": 0
     },
     "buyCandidates": [],
     "earlyWatches": [],
