@@ -1,0 +1,46 @@
+name: Record SENT Exit 2026-09-14
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'scripts/record-sent-exit-20260914.mjs'
+      - '.github/workflows/record-sent-exit-20260914.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Record SENT exit
+        run: node scripts/record-sent-exit-20260914.mjs
+      - name: Validate SENT closed
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=JSON.parse(fs.readFileSync('data/positions-state.json','utf8'));
+          const p=s.positions.find(x=>x.id==='sent-20260906');
+          if(!p || p.status!=='CLOSED' || p.exitOrder?.status!=='FILLED_100_PERCENT') process.exit(1);
+          if(p.venue!=='COINBASE') process.exit(1);
+          console.log('SENT CLOSED', p.realizedPnl);
+          NODE
+      - name: Persist
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/positions-state.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'positions: close SENT on confirmed Coinbase limit exit [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
