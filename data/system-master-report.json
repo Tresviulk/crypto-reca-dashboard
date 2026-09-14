@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "systemMasterReport",
-  "generatedAt": "2026-09-14T06:52:31.787Z",
+  "generatedAt": "2026-09-14T06:53:44.125Z",
   "reportContract": {
     "command": "TODO",
     "rule": "TODO must expose every mandatory section. Never collapse the answer to only a few signals; empty modules must be declared NONE or DATA_GAP. No unsupported module may be silently omitted.",
@@ -33,13 +33,13 @@
     "status": "PASS_WITH_DECLARED_GAPS",
     "missingModules": [],
     "timestamps": {
-      "whales": "2026-09-14T06:51:16.188Z",
+      "whales": "2026-09-14T06:52:31.782Z",
       "cabal": "2026-09-14T06:49:35.434955Z",
       "radar": "2026-09-14T08:37:12+02:00",
       "risk": "2026-09-14T08:37:12+02:00",
       "positions": "2026-09-14T06:46:19+02:00",
       "external": "2026-09-14T08:51:41+02:00",
-      "intelligence": "2026-09-14T04:44:32+02:00",
+      "intelligence": "2026-09-14T08:51:41+02:00",
       "whalesEarlyEntry": "2026-09-14T06:51:16.004Z"
     }
   },
@@ -2069,7 +2069,7 @@
   "whales": {
     "schemaVersion": "2.0",
     "module": "whalesCanonicalReport",
-    "generatedAt": "2026-09-14T06:51:16.188Z",
+    "generatedAt": "2026-09-14T06:52:31.782Z",
     "reportContract": {
       "command": "WHALES",
       "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -2305,7 +2305,7 @@
       "earlyEntry": {
         "status": "PASS",
         "generatedAt": "2026-09-14T06:51:16.004Z",
-        "ageMinutes": 0,
+        "ageMinutes": 1.3,
         "cohortSize": 19,
         "failedWallets": 0,
         "txFailures": 0
@@ -8005,7 +8005,7 @@
     "netAccumulation": {
       "schemaVersion": "1.1",
       "module": "whalesNetAccumulationLedger",
-      "generatedAt": "2026-09-14T06:51:16.184Z",
+      "generatedAt": "2026-09-14T06:52:31.778Z",
       "status": "PASS",
       "retentionDays": 30,
       "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -13316,11 +13316,39 @@
     }
   },
   "macroIntelligence": {
-    "generatedAt": "2026-09-14T04:44:32+02:00",
+    "generatedAt": "2026-09-14T08:51:41+02:00",
     "source": "Crypto Reca Intelligence Watch",
     "dataQuality": "PASS",
-    "marketBias": "Middle East energy-supply risk remains elevated and is now visibly transmitting into market prices: Brent opened near $107.51 and WTI near $102.32 after fresh Gulf and Saudi disruptions. The postponed Oman meeting removes a near-term de-escalation path, while the overlay remains PREPARE VOLATILITY with no intelligence-only buy or sell trigger.",
+    "marketBias": "Macro liquidity risk has tightened further: Goldman Sachs and J.P. Morgan now expect a 25 bp Federal Reserve hike this week and market pricing is near 87%, while oil remains above $100 amid unresolved Middle East supply disruption. The overlay remains PREPARE VOLATILITY; intelligence alone creates neither a buy nor a sell signal.",
     "items": [
+      {
+        "id": "NEWS-20260914-FED-HIKE-WALLSTREET",
+        "publishedAt": "2026-09-14",
+        "timestampEuropeMadrid": "2026-09-14 08:51",
+        "assets": [
+          "MARKET",
+          "BTC",
+          "ETH",
+          "SOL",
+          "XRP",
+          "AVAX",
+          "HBAR"
+        ],
+        "headline": "Goldman Sachs and J.P. Morgan now expect a September Fed hike as inflation and oil pressures persist",
+        "summary": "Reuters reports Goldman Sachs and J.P. Morgan now expect the Federal Reserve to raise rates by 25 basis points at the September meeting, while market pricing puts the probability near 87%. The shift follows firm inflation data and oil prices above $100 amid Middle East supply stress.",
+        "sourceName": "Reuters",
+        "sourceUrl": "https://www.reuters.com/business/goldman-sachs-now-expects-fed-hike-rates-september-2026-09-14/",
+        "sourceQuality": "B",
+        "status": "CONFIRMED",
+        "impactDirection": "BEARISH",
+        "impactLevel": "HIGH",
+        "confidence": "HIGH",
+        "horizon": "2-7D",
+        "whyItMatters": "A higher probability of renewed Fed tightening can lift Treasury yields and the dollar and reduce risk-asset liquidity, creating a material headwind for crypto ahead of the September 16 decision.",
+        "action": "PREPARE VOLATILITY",
+        "actionReason": "This materially strengthens the restrictive-liquidity setup ahead of the scheduled FOMC decision, but it does not independently justify REDUCE REVIEW or EXIT REVIEW and is not a sell instruction.",
+        "expiresAt": "2026-09-16T22:30:00+02:00"
+      },
       {
         "id": "NEWS-20260914-OIL-107-TRANSMISSION",
         "publishedAt": "2026-09-13T22:23:00Z",
@@ -13346,7 +13374,7 @@
         "horizon": "24H",
         "whyItMatters": "Oil above $100 with renewed upside pressure can reinforce inflation expectations, high bond yields and tighter global risk liquidity, which is a material headwind for crypto even without a crypto-specific failure.",
         "action": "PREPARE VOLATILITY",
-        "actionReason": "This is a new market-price confirmation of the existing energy shock, but it does not independently justify REDUCE REVIEW or EXIT REVIEW and is not a buy or sell signal.",
+        "actionReason": "This is a market-price confirmation of the existing energy shock, but it does not independently justify REDUCE REVIEW or EXIT REVIEW and is not a buy or sell signal.",
         "expiresAt": "2026-09-15T00:23:00+02:00"
       },
       {
@@ -13363,7 +13391,7 @@
           "HBAR"
         ],
         "headline": "Oman postpones planned Iran-Gulf Hormuz meeting; no new date announced",
-        "summary": "Reuters reports Oman's foreign minister said the planned Monday meeting between Gulf states and Iran has been postponed. No reason or replacement date was announced in the verified report.",
+        "summary": "Reuters reports Oman's foreign minister said the planned Monday meeting between Gulf states and Iran has been postponed. No replacement date was announced in the verified report.",
         "sourceName": "Reuters",
         "sourceUrl": "https://www.reuters.com/world/middle-east/oman-meeting-between-gulf-states-iran-postponed-omani-foreign-minister-says-2026-09-13/",
         "sourceQuality": "B",
@@ -13402,36 +13430,8 @@
         "horizon": "2-7D",
         "whyItMatters": "A prolonged loss of Saudi bypass capacity would deepen the energy-supply shock, sustain inflation pressure and high yields, and tighten global risk-asset liquidity including crypto.",
         "action": "PREPARE VOLATILITY",
-        "actionReason": "The new repair-duration and storage constraints materially extend the previously known pipeline shutdown risk, but this is not a direct crypto protocol failure and does not independently justify REDUCE REVIEW or EXIT REVIEW.",
+        "actionReason": "The repair-duration and storage constraints materially extend the pipeline shutdown risk, but this is not a direct crypto protocol failure and does not independently justify REDUCE REVIEW or EXIT REVIEW.",
         "expiresAt": "2026-09-20T16:40:26+02:00"
-      },
-      {
-        "id": "NEWS-20260913-HORMUZ-VESSEL-PROJECTILE",
-        "publishedAt": "2026-09-13T02:22:00Z",
-        "timestampEuropeMadrid": "2026-09-13 04:22",
-        "assets": [
-          "MARKET",
-          "BTC",
-          "ETH",
-          "SOL",
-          "XRP",
-          "AVAX",
-          "HBAR"
-        ],
-        "headline": "Projectile strike sets Hormuz-transiting vessel on fire; crew evacuated",
-        "summary": "Reuters reports the projectile strike on a vessel transiting the Strait of Hormuz caused a fire and the crew was evacuated. Attribution remains unverified.",
-        "sourceName": "Reuters",
-        "sourceUrl": "https://www.reuters.com/business/energy/new-report-attack-strait-hormuz-shipping-fans-fears-threats-oil-supplies-2026-09-13/",
-        "sourceQuality": "B",
-        "status": "DEVELOPING",
-        "impactDirection": "BEARISH",
-        "impactLevel": "HIGH",
-        "confidence": "HIGH",
-        "horizon": "INTRADAY",
-        "whyItMatters": "Confirmed fire and crew evacuation strengthen the physical-shipping and energy-supply risk at the key Hormuz chokepoint, reinforcing potential oil, inflation, yields and risk-liquidity pressure affecting crypto.",
-        "action": "PREPARE VOLATILITY",
-        "actionReason": "This is a material worsening of the already-open Hormuz shipping incident, but attribution remains unverified and it is not a direct crypto protocol failure; no independent REDUCE REVIEW or EXIT REVIEW trigger.",
-        "expiresAt": "2026-09-14T04:22:00+02:00"
       },
       {
         "id": "NEWS-20260913-HORMUZ-NO-IMMEDIATE-REOPEN",
@@ -13447,7 +13447,7 @@
           "HBAR"
         ],
         "headline": "Iran-Oman understanding does not provide for immediate reopening of Strait of Hormuz",
-        "summary": "Reuters reports an Iranian source said the Iran-Oman understanding lays groundwork for a possible future reopening of Hormuz but does not provide for immediate reopening. A separate Reuters report said Monday's Oman meeting was not expected to produce a signed Hormuz deal; that meeting has since been postponed.",
+        "summary": "Reuters reports an Iranian source said the Iran-Oman understanding lays groundwork for a possible future reopening of Hormuz but does not provide for immediate reopening. The Oman meeting that had been expected to discuss the issue has since been postponed.",
         "sourceName": "Reuters",
         "sourceUrl": "https://www.reuters.com/world/middle-east/iran-oman-understanding-does-not-provide-immediate-reopening-strait-hormuz-2026-09-12/",
         "sourceQuality": "B",
@@ -13458,7 +13458,7 @@
         "horizon": "2-7D",
         "whyItMatters": "Failure to reopen Hormuz promptly prolongs the oil-supply, inflation, yields and risk-liquidity shock affecting crypto and other risk assets.",
         "action": "PREPARE VOLATILITY",
-        "actionReason": "This materially confirms persistence of the energy shock, but it is not a direct crypto protocol failure and does not independently justify REDUCE REVIEW or EXIT REVIEW.",
+        "actionReason": "This confirms persistence of the energy shock, but it is not a direct crypto protocol failure and does not independently justify REDUCE REVIEW or EXIT REVIEW.",
         "expiresAt": "2026-09-20T00:24:00+02:00"
       },
       {
@@ -13503,7 +13503,7 @@
           "HBAR"
         ],
         "headline": "Saudi Arabia shuts East-West oil pipeline after drone attack as Houthis seize Perim Island",
-        "summary": "Reuters reports Saudi Arabia temporarily shut its East-West pipeline after a drone attack originating from Iraq, while Iran-aligned Houthis seized Perim Island at the mouth of the Red Sea. The pipeline had been moving roughly 4-5 million barrels per day, about 4-5% of global supply, and the combined disruptions tighten both Hormuz-bypass capacity and Bab el-Mandeb shipping risk.",
+        "summary": "Reuters reports Saudi Arabia temporarily shut its East-West pipeline after a drone attack originating from Iraq, while Iran-aligned Houthis seized Perim Island at the mouth of the Red Sea. The pipeline had been moving roughly 4-5 million barrels per day, about 4-5% of global supply.",
         "sourceName": "Reuters",
         "sourceUrl": "https://www.reuters.com/business/energy/saudis-shut-down-oil-pipeline-houthis-tighten-grip-red-sea-shipping-2026-09-12/",
         "sourceQuality": "B",
@@ -13531,7 +13531,7 @@
           "HBAR"
         ],
         "headline": "Oil tanker freight rates hit record highs as Middle East shipping attacks tighten capacity",
-        "summary": "Reuters reports VLCC rates from the Gulf of Oman to China reached a record Worldscale 450, equivalent to roughly $11.50 per barrel, after attacks on shipping reduced available tanker capacity. Persistently elevated freight costs can amplify the existing energy-price shock and feed broader inflation pressure.",
+        "summary": "Reuters reports VLCC rates from the Gulf of Oman to China reached a record Worldscale 450, equivalent to roughly $11.50 per barrel, after attacks on shipping reduced available tanker capacity.",
         "sourceName": "Reuters",
         "sourceUrl": "https://www.reuters.com/business/energy/oil-tanker-rates-hit-record-highs-following-iran-us-shipping-attacks-2026-09-11/",
         "sourceQuality": "B",
@@ -13559,7 +13559,7 @@
           "HBAR"
         ],
         "headline": "ECB policymakers open door to further rate hikes if energy shock persists",
-        "summary": "Reuters reports Bundesbank President Joachim Nagel and Estonia's central bank governor Ulo Kaasik signaled further ECB rate increases may be needed if energy prices keep feeding inflation; money markets are pricing at least three more ECB hikes over the next year.",
+        "summary": "Reuters reports Bundesbank President Joachim Nagel and Estonia's central bank governor Ulo Kaasik signaled further ECB rate increases may be needed if energy prices keep feeding inflation.",
         "sourceName": "Reuters",
         "sourceUrl": "https://www.reuters.com/business/finance/ecb-might-need-mildly-restrictive-policy-nagel-says-2026-09-11/",
         "sourceQuality": "B",
@@ -13568,38 +13568,10 @@
         "impactLevel": "HIGH",
         "confidence": "HIGH",
         "horizon": "2-7D",
-        "whyItMatters": "A broader global tightening cycle can keep yields and funding conditions restrictive for crypto even after the U.S. CPI event has passed.",
+        "whyItMatters": "A broader global tightening cycle can keep yields and funding conditions restrictive for crypto.",
         "action": "PREPARE VOLATILITY",
-        "actionReason": "The hawkish follow-through extends the existing restrictive-liquidity regime but does not independently justify REDUCE REVIEW or EXIT REVIEW.",
+        "actionReason": "The hawkish follow-through extends the restrictive-liquidity regime but does not independently justify REDUCE REVIEW or EXIT REVIEW.",
         "expiresAt": "2026-09-18T19:48:14+02:00"
-      },
-      {
-        "id": "NEWS-20260911-US-CPI-FED-REPRICE",
-        "publishedAt": "2026-09-11T12:37:54Z",
-        "timestampEuropeMadrid": "2026-09-11 16:04",
-        "assets": [
-          "MARKET",
-          "BTC",
-          "ETH",
-          "SOL",
-          "XRP",
-          "AVAX",
-          "HBAR"
-        ],
-        "headline": "U.S. August CPI accelerates; markets price roughly 85% chance of a Fed hike next week",
-        "summary": "Reuters reports headline CPI rose 0.4% m/m and 3.4% y/y in August, both in line with consensus, while core CPI rose 0.3% m/m and 2.4% y/y. Subsequent market reporting put the implied probability of a 25 bp Fed hike next week near 85%, up from about 67% before the data, with the U.S. 10-year yield briefly reaching 4.9915%.",
-        "sourceName": "Reuters",
-        "sourceUrl": "https://www.reuters.com/world/china/global-markets-corrected-2026-09-11/",
-        "sourceQuality": "B",
-        "status": "CONFIRMED",
-        "impactDirection": "BEARISH",
-        "impactLevel": "HIGH",
-        "confidence": "HIGH",
-        "horizon": "INTRADAY",
-        "whyItMatters": "The CPI release resolves the scheduled event but materially increases near-term tightening expectations and keeps yields near 5%, which can pressure crypto liquidity and risk appetite.",
-        "action": "PREPARE VOLATILITY",
-        "actionReason": "The <=2h CPI AVOID NEW ENTRY window has expired, but post-release Fed repricing and near-5% yields remain a material volatility risk. This does not independently justify REDUCE REVIEW or EXIT REVIEW.",
-        "expiresAt": "2026-09-12T16:04:52+02:00"
       },
       {
         "id": "NEWS-20260911-IEA-SUPPLY-GAP",
@@ -13628,34 +13600,6 @@
         "action": "PREPARE VOLATILITY",
         "actionReason": "Material macro risk extension; it does not independently justify REDUCE REVIEW or EXIT REVIEW.",
         "expiresAt": "2026-09-18T14:08:00+02:00"
-      },
-      {
-        "id": "NEWS-20260911-GLOBAL-BONDS-OIL-110",
-        "publishedAt": "2026-09-11T00:56:12Z",
-        "timestampEuropeMadrid": "2026-09-11 19:48",
-        "assets": [
-          "MARKET",
-          "BTC",
-          "ETH",
-          "SOL",
-          "XRP",
-          "AVAX",
-          "HBAR"
-        ],
-        "headline": "Brent retreats from $109.97 peak but remains above $100 as supply risk persists",
-        "summary": "Reuters reports Brent fell to about $105.17 by 16:33 GMT after reports of possible temporary talks on Hormuz shipping, reversing part of its earlier surge to $109.97. It still remained on track for a weekly gain above 9%, with major supply disruptions unresolved.",
-        "sourceName": "Reuters",
-        "sourceUrl": "https://www.reuters.com/business/energy/oil-prices-set-end-week-over-100-first-time-nearly-4-months-2026-09-11/",
-        "sourceQuality": "B",
-        "status": "DEVELOPING",
-        "impactDirection": "MIXED",
-        "impactLevel": "HIGH",
-        "confidence": "HIGH",
-        "horizon": "INTRADAY",
-        "whyItMatters": "The pullback reduces immediate inflation panic but oil above $100 and unresolved shipping disruptions keep volatility and restrictive-rates risk elevated.",
-        "action": "PREPARE VOLATILITY",
-        "actionReason": "This is a partial reversal of the intraday oil spike, not a resolution of the broader supply shock; no independent REDUCE REVIEW or EXIT REVIEW trigger.",
-        "expiresAt": "2026-09-12T19:48:14+02:00"
       }
     ]
   },
