@@ -67,7 +67,7 @@ jobs:
       - name: Enforce meaningful shark position sizing
         run: node scripts/whales-early-entry-size-filter.mjs
 
-      - name: Integrate early-entry evidence into WHALES and TODO
+      - name: Integrate early-entry evidence locally for validation
         run: node scripts/whales-early-entry-integrate.mjs
 
       - name: Validate early-entry contract
@@ -82,64 +82,53 @@ jobs:
           if e.get('runStatus') not in {'PASS','PARTIAL'}:
               raise SystemExit(f"early-entry engine not healthy: {e.get('runStatus')}")
           c=e.get('cohort',{})
-          if c.get('total',0) < 6:
-              raise SystemExit('early-entry cohort unexpectedly small')
-          if e.get('executionPolicy') != 'SURVEILLANCE_ONLY_NO_AUTO_TRADE':
-              raise SystemExit('early-entry execution safety policy missing')
-          if not e.get('reconciliation',{}).get('applied'):
-              raise SystemExit('net-accumulation reconciliation was not applied')
-          if not e.get('sizeFilter',{}).get('applied'):
-              raise SystemExit('shark size filter was not applied')
+          if c.get('total',0) < 6: raise SystemExit('early-entry cohort unexpectedly small')
+          if e.get('executionPolicy') != 'SURVEILLANCE_ONLY_NO_AUTO_TRADE': raise SystemExit('early-entry execution safety policy missing')
+          if not e.get('reconciliation',{}).get('applied'): raise SystemExit('net-accumulation reconciliation was not applied')
+          if not e.get('sizeFilter',{}).get('applied'): raise SystemExit('shark size filter was not applied')
           for row in e.get('newEvents',[]):
-              if row.get('action') in {'BUY','SELL'} and float(row.get('confidence',0)) < .88:
-                  raise SystemExit('low-confidence trade classification leaked into confirmed early events')
+              if row.get('action') in {'BUY','SELL'} and float(row.get('confidence',0)) < .88: raise SystemExit('low-confidence trade classification leaked into confirmed early events')
           for row in e.get('buyCandidates',[]):
-              if row.get('netTokenFlow',0) <= 0:
-                  raise SystemExit('non-accumulating token leaked into BUY candidates')
-              if not row.get('cabalValidatedForEntry'):
-                  raise SystemExit('BUY candidate lacks independent CABAL pilot validation')
-              if not row.get('marketHealthy') or row.get('noChase'):
-                  raise SystemExit('unsafe market state leaked into BUY candidates')
-              if row.get('positionSizing',{}).get('meaningfulWalletCount',0) < 1:
-                  raise SystemExit('undersized shark position leaked into BUY candidates')
+              if row.get('netTokenFlow',0) <= 0: raise SystemExit('non-accumulating token leaked into BUY candidates')
+              if not row.get('cabalValidatedForEntry'): raise SystemExit('BUY candidate lacks independent CABAL pilot validation')
+              if not row.get('marketHealthy') or row.get('noChase'): raise SystemExit('unsafe market state leaked into BUY candidates')
+              if row.get('positionSizing',{}).get('meaningfulWalletCount',0) < 1: raise SystemExit('undersized shark position leaked into BUY candidates')
           for row in e.get('signals',[]):
-              if row.get('status') in {'WHALE_DISTRIBUTION','WHALE_ROUND_TRIP_FLAT'} and row.get('action') == 'BUY_CANDIDATE_REVIEW':
-                  raise SystemExit('distribution/round-trip leaked into BUY candidate')
-              if row.get('action') in {'BUY_CANDIDATE_REVIEW','EARLY_SHARK_WATCH'} and row.get('positionSizing',{}).get('meaningfulWalletCount',0) < 1:
-                  raise SystemExit('micro/scout order leaked into actionable shark signal')
+              if row.get('status') in {'WHALE_DISTRIBUTION','WHALE_ROUND_TRIP_FLAT'} and row.get('action') == 'BUY_CANDIDATE_REVIEW': raise SystemExit('distribution/round-trip leaked into BUY candidate')
+              if row.get('action') in {'BUY_CANDIDATE_REVIEW','EARLY_SHARK_WATCH'} and row.get('positionSizing',{}).get('meaningfulWalletCount',0) < 1: raise SystemExit('micro/scout order leaked into actionable shark signal')
           if os.path.exists('data/whales-report.json'):
               w=json.load(open('data/whales-report.json',encoding='utf-8'))
-              if 'earlyEntry' not in w: raise SystemExit('earlyEntry missing from WHALES report')
-              if 'earlyEntry' not in w.get('reportContract',{}).get('mandatorySections',[]): raise SystemExit('earlyEntry missing from WHALES contract')
-          if os.path.exists('data/system-master-report.json'):
-              m=json.load(open('data/system-master-report.json',encoding='utf-8'))
-              if 'whalesEarlyEntry' not in m: raise SystemExit('whalesEarlyEntry missing from TODO master')
-          print('WHALES EARLY ENTRY VALID', e['generatedAt'], 'cohort=',c.get('total'), 'newBuys=',e.get('scan',{}).get('newOnchainSwapBuys'), 'meaningfulAccum=',e.get('scan',{}).get('netAccumulationSignalCount'), 'micro=',e.get('scan',{}).get('microProbeCount'), 'candidates=',e.get('scan',{}).get('buyCandidateCount'))
+              if 'earlyEntry' not in w: raise SystemExit('earlyEntry missing from local WHALES integration')
+          print('WHALES EARLY ENTRY VALID', e['generatedAt'], 'cohort=',c.get('total'), 'newBuys=',e.get('scan',{}).get('newOnchainSwapBuys'), 'meaningfulAccum=',e.get('scan',{}).get('netAccumulationSignalCount'), 'candidates=',e.get('scan',{}).get('buyCandidateCount'))
           PY
 
-      - name: Persist early-entry state and integrations
+      - name: Persist module-owned early-entry state race-safely
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add scripts/whales-early-entry.mjs scripts/whales-early-entry-size-filter.mjs data/whales-early-entry-state.json data/whales-net-accumulation.json
-          test -f data/whales-report.json && git add data/whales-report.json
-          test -f data/system-master-report.json && git add data/system-master-report.json
-          if git diff --cached --quiet; then
-            echo 'No early-entry state change.'
-            exit 0
-          fi
-          git commit -m 'whales: refresh wallet-first early entry state [skip ci]'
+          cp data/whales-early-entry-state.json /tmp/whales-early-entry-state.json
+          cp data/whales-net-accumulation.json /tmp/whales-net-accumulation.json
           for attempt in 1 2 3 4 5; do
-            git pull --rebase origin main
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/whales-early-entry-state.json data/whales-early-entry-state.json
+            cp /tmp/whales-net-accumulation.json data/whales-net-accumulation.json
+            git add data/whales-early-entry-state.json data/whales-net-accumulation.json
+            if git diff --cached --quiet; then
+              echo 'No module-owned early-entry state change.'
+              exit 0
+            fi
+            git commit -m 'whales: refresh wallet-first early entry state [skip ci]'
             if git push origin HEAD:main; then
               echo "WHALES early-entry persisted on attempt ${attempt}."
               exit 0
             fi
+            echo "WHALES early-entry push race on attempt ${attempt}; rebuilding commit on latest main."
             sleep $((attempt * 2))
           done
-          echo 'Failed to persist WHALES early-entry state.' >&2
+          echo 'Failed to persist WHALES early-entry module state.' >&2
           exit 1
 
       - name: Verify persisted early-entry state
@@ -148,4 +137,5 @@ jobs:
           set -euo pipefail
           git fetch origin main
           git show origin/main:data/whales-early-entry-state.json | python -m json.tool >/dev/null
+          git show origin/main:data/whales-net-accumulation.json | python -m json.tool >/dev/null
           echo 'WHALES EARLY ENTRY PERSISTENCE PASS'
