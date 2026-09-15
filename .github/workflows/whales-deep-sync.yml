@@ -74,25 +74,32 @@ jobs:
           print('TODO DEEP', td.get('status'), td.get('persistedResultsAvailable'))
           PY
 
-      - name: Commit DEEP canonical WHALES and TODO atomically
+      - name: Persist DEEP canonical WHALES and TODO race-safely
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/whales-deep-state.json data/whales-report.json data/system-master-report.json
-          if git diff --cached --quiet; then
-            echo 'No WHALES DEEP/report state change.'
-            exit 0
-          fi
-          git commit -m 'whales: refresh deep canonical and TODO state'
+          cp data/whales-deep-state.json /tmp/whales-deep-state.json
+          cp data/whales-report.json /tmp/whales-report.json
+          cp data/system-master-report.json /tmp/system-master-report.json
           for attempt in 1 2 3 4 5; do
-            git pull --rebase origin main
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/whales-deep-state.json data/whales-deep-state.json
+            cp /tmp/whales-report.json data/whales-report.json
+            cp /tmp/system-master-report.json data/system-master-report.json
+            git add data/whales-deep-state.json data/whales-report.json data/system-master-report.json
+            if git diff --cached --quiet; then
+              echo 'No WHALES DEEP/report state change.'
+              exit 0
+            fi
+            git commit -m 'whales: refresh deep canonical and TODO state [skip ci]'
             if git push origin HEAD:main; then
               echo "WHALES DEEP/report chain persisted on attempt ${attempt}."
               exit 0
             fi
-            echo "Push race on attempt ${attempt}; retrying after fetch/rebase."
+            echo "WHALES DEEP push race on attempt ${attempt}; rebuilding commit on latest main."
             sleep $((attempt * 2))
           done
           echo 'Failed to persist WHALES DEEP/report chain after 5 attempts.' >&2
