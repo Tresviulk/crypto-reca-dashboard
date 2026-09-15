@@ -2,7 +2,7 @@ name: CABAL Independent Machine Discovery
 
 on:
   schedule:
-    - cron: '7,22,37,52 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
   push:
     branches: ["main"]
@@ -12,6 +12,7 @@ on:
       - 'scripts/cabal-machine-scan-v141.py'
       - 'scripts/cabal-machine-scan-v15.py'
       - 'scripts/cabal-machine-scan-v151.py'
+      - 'scripts/cabal-machine-scan-v16.py'
       - '.github/workflows/cabal-machine-scan.yml'
 
 permissions:
@@ -37,10 +38,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run CABAL machine v1.5.1
-        run: python scripts/cabal-machine-scan-v151.py
+      - name: Run CABAL machine v1.6 PUMP RADAR
+        run: python scripts/cabal-machine-scan-v16.py
 
-      - name: Validate JSON shape before persistence
+      - name: Validate v1.6 shape before persistence
         shell: bash
         run: |
           set -euo pipefail
@@ -48,11 +49,14 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('data/cabal-machine.json',encoding='utf-8'))
-          required=('generatedAt','coverage','sources','retention','preAccumCandidates','preAccumLifecycle','preAccumOperational','mainMachineOperational','sourceMode')
+          required=('generatedAt','coverage','sources','retention','preAccumCandidates','preAccumLifecycle','preAccumOperational','mainMachineOperational','sourceMode','pumpRadar','pilotEntries','pumpRadarStats','executionEngine')
           missing=[k for k in required if k not in d]
           if missing: raise SystemExit(f'missing required keys: {missing}')
-          if d.get('schemaVersion')!='1.5.1': raise SystemExit(f"unexpected schemaVersion: {d.get('schemaVersion')}")
-          print('CABAL v1.5.1 DIAGNOSTIC', json.dumps({'preAccumOperational':d.get('preAccumOperational'),'mainMachineOperational':d.get('mainMachineOperational'),'sourceMode':d.get('sourceMode'),'coverage':d.get('coverage'),'sources':d.get('sources'),'errors':d.get('errors'),'warnings':d.get('warnings')},ensure_ascii=False))
+          if d.get('schemaVersion')!='1.6': raise SystemExit(f"unexpected schemaVersion: {d.get('schemaVersion')}")
+          e=d.get('executionEngine',{})
+          if e.get('version')!='CABAL_PUMP_PILOT_V1.6': raise SystemExit('wrong execution engine')
+          if not e.get('manualOnly') or e.get('autoTrade') is not False: raise SystemExit('manual-only safety contract missing')
+          print('CABAL v1.6 DIAGNOSTIC', json.dumps({'preAccumOperational':d.get('preAccumOperational'),'mainMachineOperational':d.get('mainMachineOperational'),'sourceMode':d.get('sourceMode'),'pumpRadarStats':d.get('pumpRadarStats'),'pilotEntries':[x.get('asset') for x in d.get('pilotEntries',[])[:10]],'coverage':d.get('coverage'),'sources':d.get('sources')},ensure_ascii=False))
           PY
 
       - name: Persist machine state
@@ -65,19 +69,19 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No CABAL machine state change.'
           else
-            git commit -m 'cabal-machine: refresh independent discovery v1.5.1 [skip ci]'
+            git commit -m 'cabal-machine: refresh pump radar v1.6 [skip ci]'
             git pull --rebase origin main
             git push origin HEAD:main
           fi
 
-      - name: Strict PRE-ACCUM coverage validation
+      - name: Strict PRE-ACCUM and PUMP coverage validation
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           import json
           d=json.load(open('data/cabal-machine.json',encoding='utf-8'))
-          c=d['coverage']; r=d['retention']
+          c=d['coverage']; r=d['retention']; p=d.get('pumpRadarStats',{})
           if not d.get('preAccumOperational'): raise SystemExit('PRE-ACCUM operational=false')
           if c.get('preAccum')!='PASS': raise SystemExit('PRE-ACCUM coverage not PASS')
           if c.get('preAccum250kTo2mUniverseCount',0)<=0: raise SystemExit('250k-2M PRE-ACCUM band not covered')
@@ -85,11 +89,18 @@ jobs:
           if c.get('preAccumDeepLiteSuccessRatio',0)<.80: raise SystemExit('PRE-ACCUM deep-lite success below 80%')
           if not r.get('top30DoesNotGatePreAccum'): raise SystemExit('PRE-ACCUM still gated by Stage-A top-30')
           if c.get('preAccum250kTo2mUniverseCount',0)>=1 and r.get('sub2mReserveFilled',0)<1: raise SystemExit('250k-2M band exists but no qualified sub-2M candidate reached shortlist')
+          if p.get('preAccumLimit',0)<40: raise SystemExit('v1.6 PRE-ACCUM expansion not active')
+          if p.get('preAccumSub2mReserve',0)<20: raise SystemExit('v1.6 sub-2M reserve not active')
+          if p.get('fast15Attempts',0)>0 and p.get('fast15SuccessRatio',0)<.70: raise SystemExit('fast 15m confirmation coverage below 70%')
           banned=('xstock','tokenized stock','tokenised stock','tokenized equity','tokenised equity','tokenized etf','tokenised etf','ondo tokenized')
           for x in d.get('preAccumCandidates',[]):
               name=str(x.get('name') or '').lower()
               if any(b in name for b in banned): raise SystemExit(f"tokenized-equity leakage in PRE-ACCUM: {x.get('asset')} {x.get('name')}")
-          print('CABAL PRE-ACCUM v1.5.1 PASS', d['generatedAt'], 'mode=',d.get('sourceMode'),'250k-2M=',c.get('preAccum250kTo2mUniverseCount'),'sub2m shortlist=',c.get('preAccumSub2mShortlistCount'),'preDone=',c.get('preAccumDeepLiteCompleted'),'mainMachineOperational=',d.get('mainMachineOperational'))
+          for x in d.get('pilotEntries',[]):
+              if x.get('executionSignal')!='PILOT_ENTRY_WINDOW': raise SystemExit('non-pilot leaked into pilotEntries')
+              if not x.get('requiresProtectiveStop') or not x.get('protectiveStopReference'): raise SystemExit(f"pilot without structural stop: {x.get('asset')}")
+              if x.get('pilotSizePctOfPlannedPosition',0)>25: raise SystemExit(f"pilot oversize: {x.get('asset')}")
+          print('CABAL PUMP/PILOT v1.6 PASS', d['generatedAt'], 'mode=',d.get('sourceMode'),'250k-2M=',c.get('preAccum250kTo2mUniverseCount'),'preDone=',c.get('preAccumDeepLiteCompleted'),'fast15=',p.get('fast15Success'),'/',p.get('fast15Attempts'),'pumpTriggers=',p.get('fastPumpTriggerCount'),'pilots=',p.get('pilotEntryCount'))
           PY
 
       - name: Verify persisted payload
@@ -98,6 +109,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           git show origin/main:data/cabal-machine.json | python -m json.tool >/dev/null
-          echo 'CABAL MACHINE v1.5.1 PERSISTENCE PASS'
+          git show origin/main:data/cabal-machine.json | python -c "import sys,json; d=json.load(sys.stdin); assert d.get('schemaVersion')=='1.6'; assert 'pumpRadar' in d and 'pilotEntries' in d"
+          echo 'CABAL MACHINE v1.6 PERSISTENCE PASS'
 
-# validation-trigger: v1.5.1-resilient-prestagea-2026-09-14
+# validation-trigger: v1.6-pump-pilot-2026-09-15
