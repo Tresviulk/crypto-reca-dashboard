@@ -2,12 +2,12 @@
   "schemaVersion": "1.3",
   "module": "whalesDeepPersistence",
   "version": "WHALES_DEEP_PERSIST_V1_3_ROTATING_QUEUE_2026-09-12",
-  "generatedAt": "2026-09-16T03:46:09.812Z",
+  "generatedAt": "2026-09-16T03:58:26.430Z",
   "runStatus": "PASS",
   "source": {
     "transport": "CABAL_WORKER_EMBEDDED_WHALES_DEEP",
     "cabalWorker": "https://cabal-scanner.diondublin21.workers.dev/",
-    "cabalGeneratedAt": "2026-09-16T03:46:16.596Z",
+    "cabalGeneratedAt": "2026-09-16T03:58:31.594Z",
     "cabalPatchVersion": "CABAL_WHALES_V3_1_1_2026-09-12",
     "cabalCoverage": {
       "bucketA": "PASS",
@@ -33,24 +33,24 @@
   ],
   "rotation": {
     "enabled": true,
-    "eligibleTotal": 39,
+    "eligibleTotal": 44,
     "priorityReserve": 2,
     "rotatingSlots": 6,
-    "rotationPoolSize": 37,
+    "rotationPoolSize": 42,
     "batchIndex": 3,
     "batchCount": 7,
     "slotMinutes": 15,
     "estimatedFullRotationMinutes": 105,
-    "queuedThisRun": 31
+    "queuedThisRun": 36
   },
   "scan": {
-    "candidateCount": 52,
-    "triggerCount": 39,
-    "requestedCount": 39,
+    "candidateCount": 55,
+    "triggerCount": 44,
+    "requestedCount": 44,
     "processedCount": 8,
     "okCount": 8,
-    "capacityQueuedCount": 31,
-    "processedCoveragePct": 20.51,
+    "capacityQueuedCount": 36,
+    "processedCoveragePct": 18.18,
     "requestGapCount": 0,
     "meaningfulKnownSignalCount": 0,
     "contextualFlowCount": 0,
@@ -59,14 +59,15 @@
   "results": [
     {
       "candidate": {
-        "asset": "CAP",
+        "asset": "MTL",
         "venue": "KUCOIN",
-        "symbol": "CAP-USDT",
-        "classification": "SECOND-LEG WATCH",
-        "stageAScore": 43.5,
-        "marketCap": 86566372,
-        "turnover24h": 46201579,
+        "symbol": "MTL-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 66,
+        "marketCap": 27312430,
+        "turnover24h": 9402205,
         "bucketHits": [
+          "A",
           "E",
           "T"
         ],
@@ -83,7 +84,128 @@
         "rotationBatchCount": null,
         "rotationSlotMinutes": null
       },
-      "resultGeneratedAt": "2026-09-16T03:46:14.722Z",
+      "resultGeneratedAt": "2026-09-16T03:58:29.941Z",
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
+      "dataQuality": "PARTIAL",
+      "token": {
+        "base": "MTL",
+        "symbol": "MTLUSDT",
+        "venue": "KUCOIN",
+        "marketCap": 27312430,
+        "turnover24h": 9402205,
+        "cabalClassification": "TURNOVER ANOMALY WATCH",
+        "bucketHits": [
+          "A",
+          "E",
+          "T"
+        ],
+        "contract": null,
+        "contractResolution": {
+          "ok": false,
+          "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
+          "chain": "ethereum",
+          "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
+          "observedChains": [],
+          "tokenListDiagnostics": {
+            "attempted": true,
+            "status": 200,
+            "exactMatches": 0
+          },
+          "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+          "coinGeckoReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
+        }
+      },
+      "knownWallets": {
+        "6h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "24h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "72h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        }
+      },
+      "tokenCentric": {
+        "status": "DATA_GAP",
+        "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
+        "chain": "ethereum",
+        "observedChains": [],
+        "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
+      },
+      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+    },
+    {
+      "candidate": {
+        "asset": "GROVE",
+        "venue": "KUCOIN",
+        "symbol": "GROVE-USDT",
+        "classification": "CHURN/DISTRIBUTION RISK",
+        "stageAScore": 82.3,
+        "marketCap": 6073978,
+        "turnover24h": 1077448,
+        "bucketHits": [
+          "A",
+          "B",
+          "C",
+          "T",
+          "M"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "OK",
+      "requestReason": null,
+      "queue": {
+        "queueRank": null,
+        "selectedThisBatch": true,
+        "rotationBatchIndex": null,
+        "rotationBatchCount": null,
+        "rotationSlotMinutes": null
+      },
+      "resultGeneratedAt": "2026-09-16T03:58:30.432Z",
       "windowsHours": [
         6,
         24,
@@ -92,32 +214,37 @@
       "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
       "dataQuality": "PASS",
       "token": {
-        "base": "CAP",
-        "symbol": "CAPUSDT",
+        "base": "GROVE",
+        "symbol": "GROVEUSDT",
         "venue": "KUCOIN",
-        "marketCap": 86566372,
-        "turnover24h": 46201579,
-        "cabalClassification": "SECOND-LEG WATCH",
+        "marketCap": 6073978,
+        "turnover24h": 1077448,
+        "cabalClassification": "CHURN/DISTRIBUTION RISK",
         "bucketHits": [
-          "E",
-          "T"
+          "A",
+          "B",
+          "C",
+          "T",
+          "M"
         ],
-        "contract": "0x99991c6aabba5a096f24f250b73580f5179b9999",
+        "contract": "0xb30fe1cf884b48a22a50d22a9282004f2c5e9406",
         "contractResolution": {
           "ok": true,
-          "contract": "0x99991c6aabba5a096f24f250b73580f5179b9999",
+          "contract": "0xb30fe1cf884b48a22a50d22a9282004f2c5e9406",
           "chain": "ethereum",
           "source": "CoinGeckoApiFallback",
-          "tokenListTimestamp": "2026-09-15T12:05:00.666+00:00",
-          "tokenListExactMatches": 1,
-          "onChainValidation": "OPTIONAL_NOT_REQUIRED_FOR_UNIQUE_CHAIN_MATCH",
+          "observedChains": [
+            "eth",
+            "erc20"
+          ],
+          "kucoinChain": "eth",
           "tokenListDiagnostics": {
             "attempted": true,
             "status": 200,
             "exactMatches": 1,
-            "onChainSymbol": "0x99991c6a"
+            "onChainSymbol": "0xb30fe1cf"
           },
-          "primaryResolverFailure": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
+          "primaryResolverFailure": "DEXSCREENER_SEARCH_HTTP_429"
         }
       },
       "knownWallets": {
@@ -186,19 +313,16 @@
     },
     {
       "candidate": {
-        "asset": "GROVE",
+        "asset": "LIT",
         "venue": "KUCOIN",
-        "symbol": "GROVE-USDT",
-        "classification": "CHURN/DISTRIBUTION RISK",
-        "stageAScore": 83.3,
-        "marketCap": 6085834,
-        "turnover24h": 1079827,
+        "symbol": "LIT-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 30.8,
+        "marketCap": 1021869434,
+        "turnover24h": 91360128,
         "bucketHits": [
-          "A",
           "B",
-          "C",
-          "T",
-          "M"
+          "T"
         ],
         "executionSignal": null,
         "decisionUrgency": null
@@ -213,7 +337,7 @@
         "rotationBatchCount": null,
         "rotationSlotMinutes": null
       },
-      "resultGeneratedAt": "2026-09-16T03:46:14.687Z",
+      "resultGeneratedAt": "2026-09-16T03:58:30.896Z",
       "windowsHours": [
         6,
         24,
@@ -222,35 +346,33 @@
       "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
       "dataQuality": "PASS",
       "token": {
-        "base": "GROVE",
-        "symbol": "GROVEUSDT",
+        "base": "LIT",
+        "symbol": "LITUSDT",
         "venue": "KUCOIN",
-        "marketCap": 6085834,
-        "turnover24h": 1079827,
-        "cabalClassification": "CHURN/DISTRIBUTION RISK",
+        "marketCap": 1021869434,
+        "turnover24h": 91360128,
+        "cabalClassification": "TURNOVER ANOMALY WATCH",
         "bucketHits": [
-          "A",
           "B",
-          "C",
-          "T",
-          "M"
+          "T"
         ],
-        "contract": "0xb30fe1cf884b48a22a50d22a9282004f2c5e9406",
+        "contract": "0x232ce3bd40fcd6f80f3d55a522d03f25df784ee2",
         "contractResolution": {
           "ok": true,
-          "contract": "0xb30fe1cf884b48a22a50d22a9282004f2c5e9406",
+          "contract": "0x232ce3bd40fcd6f80f3d55a522d03f25df784ee2",
           "chain": "ethereum",
           "source": "CoinGeckoApiFallback",
-          "tokenListTimestamp": "2026-09-15T12:05:00.666+00:00",
-          "tokenListExactMatches": 1,
-          "onChainValidation": "OPTIONAL_NOT_REQUIRED_FOR_UNIQUE_CHAIN_MATCH",
+          "observedChains": [
+            "eth",
+            "erc20"
+          ],
+          "kucoinChain": "eth",
           "tokenListDiagnostics": {
             "attempted": true,
             "status": 200,
-            "exactMatches": 1,
-            "onChainSymbol": "0xb30fe1cf"
+            "exactMatches": 4
           },
-          "primaryResolverFailure": "DEXSCREENER_ONCHAIN_SYMBOL_VALIDATION_FAILED"
+          "primaryResolverFailure": "DEXSCREENER_SEARCH_HTTP_429"
         }
       },
       "knownWallets": {
@@ -323,9 +445,9 @@
         "venue": "KUCOIN",
         "symbol": "AERO-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 28.6,
-        "marketCap": 523449320,
-        "turnover24h": 27645482,
+        "stageAScore": 27.3,
+        "marketCap": 523065816,
+        "turnover24h": 27445559,
         "bucketHits": [
           "B",
           "T"
@@ -343,7 +465,7 @@
         "rotationBatchCount": null,
         "rotationSlotMinutes": null
       },
-      "resultGeneratedAt": "2026-09-16T03:46:15.123Z",
+      "resultGeneratedAt": "2026-09-16T03:58:30.803Z",
       "windowsHours": [
         6,
         24,
@@ -355,391 +477,11 @@
         "base": "AERO",
         "symbol": "AEROUSDT",
         "venue": "KUCOIN",
-        "marketCap": 523449320,
-        "turnover24h": 27645482,
+        "marketCap": 523065816,
+        "turnover24h": 27445559,
         "cabalClassification": "TURNOVER ANOMALY WATCH",
         "bucketHits": [
           "B",
-          "T"
-        ],
-        "contract": null,
-        "contractResolution": {
-          "ok": false,
-          "reason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-          "chain": "ethereum",
-          "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
-          "observedChains": [
-            "robinhood",
-            "base",
-            "solana"
-          ],
-          "tokenListDiagnostics": {
-            "attempted": true,
-            "status": 200,
-            "exactMatches": 0
-          },
-          "dexScreenerReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-          "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
-        }
-      },
-      "knownWallets": {
-        "6h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "24h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "72h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        }
-      },
-      "tokenCentric": {
-        "status": "DATA_GAP",
-        "reason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-        "chain": "ethereum",
-        "observedChains": [
-          "robinhood",
-          "base",
-          "solana"
-        ],
-        "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
-      },
-      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
-    },
-    {
-      "candidate": {
-        "asset": "PAXG",
-        "venue": "KUCOIN",
-        "symbol": "PAXG-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 18.3,
-        "marketCap": 1881251267,
-        "turnover24h": 178294941,
-        "bucketHits": [
-          "B",
-          "T"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "OK",
-      "requestReason": null,
-      "queue": {
-        "queueRank": null,
-        "selectedThisBatch": true,
-        "rotationBatchIndex": null,
-        "rotationBatchCount": null,
-        "rotationSlotMinutes": null
-      },
-      "resultGeneratedAt": "2026-09-16T03:46:16.588Z",
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
-      "dataQuality": "PARTIAL",
-      "token": {
-        "base": "PAXG",
-        "symbol": "PAXGUSDT",
-        "venue": "KUCOIN",
-        "marketCap": 1881251267,
-        "turnover24h": 178294941,
-        "cabalClassification": "TURNOVER ANOMALY WATCH",
-        "bucketHits": [
-          "B",
-          "T"
-        ],
-        "contract": null,
-        "contractResolution": {
-          "ok": false,
-          "reason": "CONTRACT_RESOLUTION_PROVIDERS_UNAVAILABLE",
-          "chain": "ethereum",
-          "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
-          "observedChains": [
-            "solana",
-            "cronos",
-            "polygon",
-            "robinhood",
-            "ethereum"
-          ],
-          "tokenListDiagnostics": {
-            "attempted": true,
-            "status": 200,
-            "exactMatches": 1,
-            "onChainSymbol": "0x45804880"
-          },
-          "dexScreenerReason": "DEXSCREENER_ONCHAIN_SYMBOL_VALIDATION_FAILED",
-          "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
-        }
-      },
-      "knownWallets": {
-        "6h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "24h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "72h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        }
-      },
-      "tokenCentric": {
-        "status": "DATA_GAP",
-        "reason": "CONTRACT_RESOLUTION_PROVIDERS_UNAVAILABLE",
-        "chain": "ethereum",
-        "observedChains": [
-          "solana",
-          "cronos",
-          "polygon",
-          "robinhood",
-          "ethereum"
-        ],
-        "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
-      },
-      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
-    },
-    {
-      "candidate": {
-        "asset": "CP",
-        "venue": "KUCOIN",
-        "symbol": "CP-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 35.1,
-        "marketCap": 16682945,
-        "turnover24h": 19258742,
-        "bucketHits": [
-          "A",
-          "T"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "OK",
-      "requestReason": null,
-      "queue": {
-        "queueRank": null,
-        "selectedThisBatch": true,
-        "rotationBatchIndex": null,
-        "rotationBatchCount": null,
-        "rotationSlotMinutes": null
-      },
-      "resultGeneratedAt": "2026-09-16T03:46:15.197Z",
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
-      "dataQuality": "PARTIAL",
-      "token": {
-        "base": "CP",
-        "symbol": "CPUSDT",
-        "venue": "KUCOIN",
-        "marketCap": 16682945,
-        "turnover24h": 19258742,
-        "cabalClassification": "TURNOVER ANOMALY WATCH",
-        "bucketHits": [
-          "A",
-          "T"
-        ],
-        "contract": null,
-        "contractResolution": {
-          "ok": false,
-          "reason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-          "chain": "ethereum",
-          "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
-          "observedChains": [
-            "bsc",
-            "base",
-            "robinhood",
-            "solana"
-          ],
-          "tokenListDiagnostics": {
-            "attempted": true,
-            "status": 200,
-            "exactMatches": 0
-          },
-          "dexScreenerReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-          "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
-        }
-      },
-      "knownWallets": {
-        "6h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "24h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "72h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        }
-      },
-      "tokenCentric": {
-        "status": "DATA_GAP",
-        "reason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-        "chain": "ethereum",
-        "observedChains": [
-          "bsc",
-          "base",
-          "robinhood",
-          "solana"
-        ],
-        "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
-      },
-      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
-    },
-    {
-      "candidate": {
-        "asset": "LAB",
-        "venue": "KUCOIN",
-        "symbol": "LAB-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 33.2,
-        "marketCap": 38995153,
-        "turnover24h": 10472138,
-        "bucketHits": [
-          "T"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "OK",
-      "requestReason": null,
-      "queue": {
-        "queueRank": null,
-        "selectedThisBatch": true,
-        "rotationBatchIndex": null,
-        "rotationBatchCount": null,
-        "rotationSlotMinutes": null
-      },
-      "resultGeneratedAt": "2026-09-16T03:46:15.641Z",
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
-      "dataQuality": "PARTIAL",
-      "token": {
-        "base": "LAB",
-        "symbol": "LABUSDT",
-        "venue": "KUCOIN",
-        "marketCap": 38995153,
-        "turnover24h": 10472138,
-        "cabalClassification": "TURNOVER ANOMALY WATCH",
-        "bucketHits": [
           "T"
         ],
         "contract": null,
@@ -748,19 +490,14 @@
           "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
           "chain": "ethereum",
           "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
-          "observedChains": [
-            "robinhood",
-            "bsc",
-            "solana",
-            "ethereum"
-          ],
+          "observedChains": [],
           "tokenListDiagnostics": {
             "attempted": true,
             "status": 200,
             "exactMatches": 0
           },
-          "dexScreenerReason": "DEXSCREENER_ONCHAIN_SYMBOL_VALIDATION_FAILED",
-          "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
+          "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+          "coinGeckoReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
         }
       },
       "knownWallets": {
@@ -814,27 +551,23 @@
         "status": "DATA_GAP",
         "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
         "chain": "ethereum",
-        "observedChains": [
-          "robinhood",
-          "bsc",
-          "solana",
-          "ethereum"
-        ],
+        "observedChains": [],
         "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
       },
       "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
     },
     {
       "candidate": {
-        "asset": "DASH",
+        "asset": "ESPORTS",
         "venue": "KUCOIN",
-        "symbol": "DASH-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 31.2,
-        "marketCap": 645921740,
-        "turnover24h": 90782001,
+        "symbol": "ESPORTS-USDT",
+        "classification": "MICROCAP ANOMALY WATCH",
+        "stageAScore": 25,
+        "marketCap": 1447721,
+        "turnover24h": 876848,
         "bucketHits": [
-          "T"
+          "T",
+          "M"
         ],
         "executionSignal": null,
         "decisionUrgency": null
@@ -849,132 +582,7 @@
         "rotationBatchCount": null,
         "rotationSlotMinutes": null
       },
-      "resultGeneratedAt": "2026-09-16T03:46:16.251Z",
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
-      "dataQuality": "PASS",
-      "token": {
-        "base": "DASH",
-        "symbol": "DASHUSDT",
-        "venue": "KUCOIN",
-        "marketCap": 645921740,
-        "turnover24h": 90782001,
-        "cabalClassification": "TURNOVER ANOMALY WATCH",
-        "bucketHits": [
-          "T"
-        ],
-        "contract": "0xedc3be0080f65c628964f44ba3f2b6057e60f8dc",
-        "contractResolution": {
-          "ok": true,
-          "contract": "0xedc3be0080f65c628964f44ba3f2b6057e60f8dc",
-          "chain": "ethereum",
-          "source": "CoinGeckoApiFallback",
-          "tokenListTimestamp": "2026-09-15T12:05:00.666+00:00",
-          "tokenListExactMatches": 1,
-          "onChainValidation": "OPTIONAL_NOT_REQUIRED_FOR_UNIQUE_CHAIN_MATCH",
-          "tokenListDiagnostics": {
-            "attempted": true,
-            "status": 200,
-            "exactMatches": 1,
-            "onChainSymbol": "0xedc3be00"
-          },
-          "primaryResolverFailure": "DEXSCREENER_ONCHAIN_SYMBOL_VALIDATION_FAILED"
-        }
-      },
-      "knownWallets": {
-        "6h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "24h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        },
-        "72h": {
-          "signalCount": 0,
-          "buyCount": 0,
-          "sellCount": 0,
-          "uniqueBuyWallets": 0,
-          "uniqueSellWallets": 0,
-          "buyWallets": [],
-          "sellWallets": [],
-          "tokenBought": 0,
-          "tokenSold": 0,
-          "netKnownWalletTokenFlow": 0,
-          "quoteSpentOnBuys": 0,
-          "quoteReceivedOnSells": 0,
-          "convergence": false
-        }
-      },
-      "tokenCentric": {
-        "status": "PASS",
-        "chain": "ethereum",
-        "pages": 1,
-        "truncated": false,
-        "transferCount": 0,
-        "usableTransferCount": 0,
-        "observedTransferUnits": 0,
-        "topNetInflows": [],
-        "topNetOutflows": [],
-        "knownWatchedWalletsWithPositiveNetFlow": [],
-        "temporary72hCohort": [],
-        "interpretationWarning": "Net token transfer flow is not proof of a buy. Unlabelled addresses may be exchanges, bridges, treasury, LP, custody or internal routing unless independently identified.",
-        "addressLabelCoverage": "WATCHED_WALLETS_ONLY_LIMITED"
-      },
-      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
-    },
-    {
-      "candidate": {
-        "asset": "ANSEM",
-        "venue": "KUCOIN",
-        "symbol": "ANSEM-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 26.8,
-        "marketCap": 49065557,
-        "turnover24h": 11314230,
-        "bucketHits": [
-          "T"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "OK",
-      "requestReason": null,
-      "queue": {
-        "queueRank": null,
-        "selectedThisBatch": true,
-        "rotationBatchIndex": null,
-        "rotationBatchCount": null,
-        "rotationSlotMinutes": null
-      },
-      "resultGeneratedAt": "2026-09-16T03:46:16.066Z",
+      "resultGeneratedAt": "2026-09-16T03:58:30.311Z",
       "windowsHours": [
         6,
         24,
@@ -983,34 +591,30 @@
       "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
       "dataQuality": "PARTIAL",
       "token": {
-        "base": "ANSEM",
-        "symbol": "ANSEMUSDT",
+        "base": "ESPORTS",
+        "symbol": "ESPORTSUSDT",
         "venue": "KUCOIN",
-        "marketCap": 49065557,
-        "turnover24h": 11314230,
-        "cabalClassification": "TURNOVER ANOMALY WATCH",
+        "marketCap": 1447721,
+        "turnover24h": 876848,
+        "cabalClassification": "MICROCAP ANOMALY WATCH",
         "bucketHits": [
-          "T"
+          "T",
+          "M"
         ],
         "contract": null,
         "contractResolution": {
           "ok": false,
-          "reason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
+          "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
           "chain": "ethereum",
           "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
-          "observedChains": [
-            "solana",
-            "robinhood",
-            "base",
-            "bsc"
-          ],
+          "observedChains": [],
           "tokenListDiagnostics": {
             "attempted": true,
             "status": 200,
             "exactMatches": 0
           },
-          "dexScreenerReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
-          "coinGeckoReason": "COINGECKO_SEARCH_HTTP_403"
+          "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+          "coinGeckoReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
         }
       },
       "knownWallets": {
@@ -1062,14 +666,356 @@
       },
       "tokenCentric": {
         "status": "DATA_GAP",
-        "reason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN",
+        "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
         "chain": "ethereum",
-        "observedChains": [
-          "solana",
-          "robinhood",
-          "base",
-          "bsc"
+        "observedChains": [],
+        "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
+      },
+      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+    },
+    {
+      "candidate": {
+        "asset": "DASH",
+        "venue": "KUCOIN",
+        "symbol": "DASH-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 31.5,
+        "marketCap": 645791392,
+        "turnover24h": 90406192,
+        "bucketHits": [
+          "T"
         ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "OK",
+      "requestReason": null,
+      "queue": {
+        "queueRank": null,
+        "selectedThisBatch": true,
+        "rotationBatchIndex": null,
+        "rotationBatchCount": null,
+        "rotationSlotMinutes": null
+      },
+      "resultGeneratedAt": "2026-09-16T03:58:31.226Z",
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
+      "dataQuality": "PARTIAL",
+      "token": {
+        "base": "DASH",
+        "symbol": "DASHUSDT",
+        "venue": "KUCOIN",
+        "marketCap": 645791392,
+        "turnover24h": 90406192,
+        "cabalClassification": "TURNOVER ANOMALY WATCH",
+        "bucketHits": [
+          "T"
+        ],
+        "contract": null,
+        "contractResolution": {
+          "ok": false,
+          "reason": "CONTRACT_RESOLUTION_PROVIDERS_UNAVAILABLE",
+          "chain": "ethereum",
+          "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
+          "observedChains": [],
+          "tokenListDiagnostics": {
+            "attempted": true,
+            "status": 200,
+            "exactMatches": 1,
+            "onChainSymbol": "0xedc3be00"
+          },
+          "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+          "coinGeckoReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
+        }
+      },
+      "knownWallets": {
+        "6h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "24h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "72h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        }
+      },
+      "tokenCentric": {
+        "status": "DATA_GAP",
+        "reason": "CONTRACT_RESOLUTION_PROVIDERS_UNAVAILABLE",
+        "chain": "ethereum",
+        "observedChains": [],
+        "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
+      },
+      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+    },
+    {
+      "candidate": {
+        "asset": "WIF",
+        "venue": "KUCOIN",
+        "symbol": "WIF-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 28.9,
+        "marketCap": 179204426,
+        "turnover24h": 56626915,
+        "bucketHits": [
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "OK",
+      "requestReason": null,
+      "queue": {
+        "queueRank": null,
+        "selectedThisBatch": true,
+        "rotationBatchIndex": null,
+        "rotationBatchCount": null,
+        "rotationSlotMinutes": null
+      },
+      "resultGeneratedAt": "2026-09-16T03:58:31.518Z",
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
+      "dataQuality": "PARTIAL",
+      "token": {
+        "base": "WIF",
+        "symbol": "WIFUSDT",
+        "venue": "KUCOIN",
+        "marketCap": 179204426,
+        "turnover24h": 56626915,
+        "cabalClassification": "TURNOVER ANOMALY WATCH",
+        "bucketHits": [
+          "T"
+        ],
+        "contract": null,
+        "contractResolution": {
+          "ok": false,
+          "reason": "CONTRACT_RESOLUTION_PROVIDERS_UNAVAILABLE",
+          "chain": "ethereum",
+          "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
+          "observedChains": [],
+          "tokenListDiagnostics": {
+            "attempted": true,
+            "status": 200,
+            "exactMatches": 1,
+            "onChainSymbol": "0x886c869c"
+          },
+          "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+          "coinGeckoReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
+        }
+      },
+      "knownWallets": {
+        "6h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "24h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "72h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        }
+      },
+      "tokenCentric": {
+        "status": "DATA_GAP",
+        "reason": "CONTRACT_RESOLUTION_PROVIDERS_UNAVAILABLE",
+        "chain": "ethereum",
+        "observedChains": [],
+        "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
+      },
+      "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
+    },
+    {
+      "candidate": {
+        "asset": "LAB",
+        "venue": "KUCOIN",
+        "symbol": "LAB-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 28.9,
+        "marketCap": 38811691,
+        "turnover24h": 10461899,
+        "bucketHits": [
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "OK",
+      "requestReason": null,
+      "queue": {
+        "queueRank": null,
+        "selectedThisBatch": true,
+        "rotationBatchIndex": null,
+        "rotationBatchCount": null,
+        "rotationSlotMinutes": null
+      },
+      "resultGeneratedAt": "2026-09-16T03:58:31.587Z",
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": "NO_KNOWN_WALLET_SIGNAL",
+      "dataQuality": "PARTIAL",
+      "token": {
+        "base": "LAB",
+        "symbol": "LABUSDT",
+        "venue": "KUCOIN",
+        "marketCap": 38811691,
+        "turnover24h": 10461899,
+        "cabalClassification": "TURNOVER ANOMALY WATCH",
+        "bucketHits": [
+          "T"
+        ],
+        "contract": null,
+        "contractResolution": {
+          "ok": false,
+          "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
+          "chain": "ethereum",
+          "source": "StaticTokenListThenDexScreenerThenCoinGeckoApi",
+          "observedChains": [],
+          "tokenListDiagnostics": {
+            "attempted": true,
+            "status": 200,
+            "exactMatches": 0
+          },
+          "dexScreenerReason": "DEXSCREENER_SEARCH_HTTP_429",
+          "coinGeckoReason": "TOKEN_NOT_ON_CONFIGURED_ALCHEMY_CHAIN"
+        }
+      },
+      "knownWallets": {
+        "6h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "24h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        },
+        "72h": {
+          "signalCount": 0,
+          "buyCount": 0,
+          "sellCount": 0,
+          "uniqueBuyWallets": 0,
+          "uniqueSellWallets": 0,
+          "buyWallets": [],
+          "sellWallets": [],
+          "tokenBought": 0,
+          "tokenSold": 0,
+          "netKnownWalletTokenFlow": 0,
+          "quoteSpentOnBuys": 0,
+          "quoteReceivedOnSells": 0,
+          "convergence": false
+        }
+      },
+      "tokenCentric": {
+        "status": "DATA_GAP",
+        "reason": "TOKEN_NOT_IN_CONFIGURED_CHAIN_TOKEN_LIST",
+        "chain": "ethereum",
+        "observedChains": [],
         "resolver": "StaticTokenListThenDexScreenerThenCoinGeckoApi"
       },
       "interpretation": "Known-wallet BUY/SELL signals are reconstructed from the tracked-wallet transaction set. Contract resolution uses CoinGecko's static chain token list first, validates the symbol on-chain, then falls back to DexScreener and the CoinGecko API. Token-centric net transfer flows are contextual evidence only and are not automatically classified as buys or whale accumulation."
@@ -1078,15 +1024,17 @@
   "capacityQueue": [
     {
       "candidate": {
-        "asset": "MTL",
+        "asset": "AKE",
         "venue": "KUCOIN",
-        "symbol": "MTL-USDT",
+        "symbol": "AKE-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 73.6,
-        "marketCap": 27467964,
-        "turnover24h": 9552749,
+        "stageAScore": 55.4,
+        "marketCap": 647389366,
+        "turnover24h": 90110225,
         "bucketHits": [
           "A",
+          "B",
+          "C",
           "E",
           "T"
         ],
@@ -1118,17 +1066,14 @@
     },
     {
       "candidate": {
-        "asset": "AKE",
+        "asset": "DEBIT",
         "venue": "KUCOIN",
-        "symbol": "AKE-USDT",
-        "classification": "EARLY-MOVE",
-        "stageAScore": 60.7,
-        "marketCap": 660363195,
-        "turnover24h": 93280583,
+        "symbol": "DEBIT-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 38.4,
+        "marketCap": 40368991,
+        "turnover24h": 26762791,
         "bucketHits": [
-          "A",
-          "B",
-          "C",
           "E",
           "T"
         ],
@@ -1139,7 +1084,7 @@
       "requestStatus": "QUEUED_LIMIT",
       "requestReason": "ROTATING_QUEUE_WAIT",
       "queue": {
-        "queueRank": 4,
+        "queueRank": 9,
         "selectedThisBatch": false,
         "rotationBatchIndex": 3,
         "rotationBatchCount": 7,
@@ -1160,13 +1105,13 @@
     },
     {
       "candidate": {
-        "asset": "KII",
+        "asset": "CAP",
         "venue": "KUCOIN",
-        "symbol": "KII-USDT",
-        "classification": "PRE-MOVE",
-        "stageAScore": 30.3,
-        "marketCap": 27009703,
-        "turnover24h": 203728390,
+        "symbol": "CAP-USDT",
+        "classification": "SECOND-LEG WATCH",
+        "stageAScore": 28.9,
+        "marketCap": 86291691,
+        "turnover24h": 45262383,
         "bucketHits": [
           "E"
         ],
@@ -1177,7 +1122,7 @@
       "requestStatus": "QUEUED_LIMIT",
       "requestReason": "ROTATING_QUEUE_WAIT",
       "queue": {
-        "queueRank": 11,
+        "queueRank": 5,
         "selectedThisBatch": false,
         "rotationBatchIndex": 3,
         "rotationBatchCount": 7,
@@ -1201,10 +1146,10 @@
         "asset": "MARSCOIN",
         "venue": "KUCOIN",
         "symbol": "MARSCOIN-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 73.5,
-        "marketCap": 91831269,
-        "turnover24h": 40797988,
+        "classification": "EARLY-MOVE",
+        "stageAScore": 73.8,
+        "marketCap": 91795625,
+        "turnover24h": 40050658,
         "bucketHits": [
           "A",
           "T"
@@ -1240,10 +1185,10 @@
         "asset": "SYN",
         "venue": "KUCOIN",
         "symbol": "SYN-USDT",
-        "classification": "PRE-MOVE",
-        "stageAScore": 69.2,
-        "marketCap": 22879490,
-        "turnover24h": 22555525,
+        "classification": "LATE/POST-PUMP",
+        "stageAScore": 58.9,
+        "marketCap": 23563166,
+        "turnover24h": 20958546,
         "bucketHits": [
           "A",
           "T"
@@ -1255,7 +1200,7 @@
       "requestStatus": "QUEUED_LIMIT",
       "requestReason": "ROTATING_QUEUE_WAIT",
       "queue": {
-        "queueRank": 6,
+        "queueRank": 7,
         "selectedThisBatch": false,
         "rotationBatchIndex": 3,
         "rotationBatchCount": 7,
@@ -1276,13 +1221,13 @@
     },
     {
       "candidate": {
-        "asset": "LSK",
+        "asset": "CP",
         "venue": "KUCOIN",
-        "symbol": "LSK-USDT",
-        "classification": "LATE/POST-PUMP",
-        "stageAScore": 56,
-        "marketCap": 112328264,
-        "turnover24h": 107377369,
+        "symbol": "CP-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 55.1,
+        "marketCap": 17077415,
+        "turnover24h": 19928341,
         "bucketHits": [
           "A",
           "T"
@@ -1319,9 +1264,9 @@
         "venue": "KUCOIN",
         "symbol": "CHIP-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 54.4,
-        "marketCap": 75808651,
-        "turnover24h": 16468581,
+        "stageAScore": 53.5,
+        "marketCap": 75653679,
+        "turnover24h": 16312021,
         "bucketHits": [
           "A",
           "B",
@@ -1360,9 +1305,9 @@
         "venue": "KUCOIN",
         "symbol": "AIN-USDT",
         "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 48.5,
-        "marketCap": 4331454,
-        "turnover24h": 25780497,
+        "stageAScore": 53.2,
+        "marketCap": 4032990,
+        "turnover24h": 14812425,
         "bucketHits": [
           "B",
           "T",
@@ -1375,7 +1320,86 @@
       "requestStatus": "QUEUED_LIMIT",
       "requestReason": "ROTATING_QUEUE_WAIT",
       "queue": {
-        "queueRank": 5,
+        "queueRank": 4,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "LSK",
+        "venue": "KUCOIN",
+        "symbol": "LSK-USDT",
+        "classification": "LATE/POST-PUMP",
+        "stageAScore": 47.4,
+        "marketCap": 109939844,
+        "turnover24h": 109049308,
+        "bucketHits": [
+          "A",
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 14,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "HANA",
+        "venue": "KUCOIN",
+        "symbol": "HANA-USDT",
+        "classification": "MICROCAP ANOMALY WATCH",
+        "stageAScore": 47.1,
+        "marketCap": 3660820,
+        "turnover24h": 1867340,
+        "bucketHits": [
+          "B",
+          "T",
+          "M"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 6,
         "selectedThisBatch": false,
         "rotationBatchIndex": 3,
         "rotationBatchCount": 7,
@@ -1400,9 +1424,9 @@
         "venue": "KUCOIN",
         "symbol": "USELESS-USDT",
         "classification": "PRE-MOVE",
-        "stageAScore": 40.6,
-        "marketCap": 222808666,
-        "turnover24h": 39386438,
+        "stageAScore": 43.4,
+        "marketCap": 223339916,
+        "turnover24h": 39574760,
         "bucketHits": [
           "A",
           "T"
@@ -1435,131 +1459,13 @@
     },
     {
       "candidate": {
-        "asset": "PLAY",
-        "venue": "KUCOIN",
-        "symbol": "PLAY-USDT",
-        "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 40.1,
-        "marketCap": 12684186,
-        "turnover24h": 7772562,
-        "bucketHits": [
-          "T",
-          "M"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "QUEUED_LIMIT",
-      "requestReason": "ROTATING_QUEUE_WAIT",
-      "queue": {
-        "queueRank": 15,
-        "selectedThisBatch": false,
-        "rotationBatchIndex": 3,
-        "rotationBatchCount": 7,
-        "rotationSlotMinutes": 15
-      },
-      "resultGeneratedAt": null,
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": null,
-      "dataQuality": null,
-      "token": null,
-      "knownWallets": null,
-      "tokenCentric": null,
-      "interpretation": null
-    },
-    {
-      "candidate": {
-        "asset": "HANA",
-        "venue": "KUCOIN",
-        "symbol": "HANA-USDT",
-        "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 38.6,
-        "marketCap": 3653629,
-        "turnover24h": 1862190,
-        "bucketHits": [
-          "B",
-          "T",
-          "M"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "QUEUED_LIMIT",
-      "requestReason": "ROTATING_QUEUE_WAIT",
-      "queue": {
-        "queueRank": 7,
-        "selectedThisBatch": false,
-        "rotationBatchIndex": 3,
-        "rotationBatchCount": 7,
-        "rotationSlotMinutes": 15
-      },
-      "resultGeneratedAt": null,
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": null,
-      "dataQuality": null,
-      "token": null,
-      "knownWallets": null,
-      "tokenCentric": null,
-      "interpretation": null
-    },
-    {
-      "candidate": {
-        "asset": "4STOCK",
-        "venue": "KUCOIN",
-        "symbol": "4STOCK-USDT",
-        "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 36,
-        "marketCap": 9229333,
-        "turnover24h": 13859857,
-        "bucketHits": [
-          "T",
-          "M"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "QUEUED_LIMIT",
-      "requestReason": "ROTATING_QUEUE_WAIT",
-      "queue": {
-        "queueRank": 9,
-        "selectedThisBatch": false,
-        "rotationBatchIndex": 3,
-        "rotationBatchCount": 7,
-        "rotationSlotMinutes": 15
-      },
-      "resultGeneratedAt": null,
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": null,
-      "dataQuality": null,
-      "token": null,
-      "knownWallets": null,
-      "tokenCentric": null,
-      "interpretation": null
-    },
-    {
-      "candidate": {
         "asset": "PYTH",
         "venue": "KUCOIN",
         "symbol": "PYTH-USDT",
-        "classification": "PRE-MOVE",
-        "stageAScore": 32.4,
-        "marketCap": 417149629,
-        "turnover24h": 29371928,
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 32.5,
+        "marketCap": 418489530,
+        "turnover24h": 29268315,
         "bucketHits": [
           "B",
           "T"
@@ -1571,7 +1477,7 @@
       "requestStatus": "QUEUED_LIMIT",
       "requestReason": "ROTATING_QUEUE_WAIT",
       "queue": {
-        "queueRank": 14,
+        "queueRank": 19,
         "selectedThisBatch": false,
         "rotationBatchIndex": 3,
         "rotationBatchCount": 7,
@@ -1596,9 +1502,9 @@
         "venue": "KUCOIN",
         "symbol": "BR-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 30.6,
-        "marketCap": 64863739,
-        "turnover24h": 12771990,
+        "stageAScore": 32.2,
+        "marketCap": 64401590,
+        "turnover24h": 12493519,
         "bucketHits": [
           "B",
           "T"
@@ -1631,13 +1537,169 @@
     },
     {
       "candidate": {
+        "asset": "PAXG",
+        "venue": "KUCOIN",
+        "symbol": "PAXG-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 18.8,
+        "marketCap": 1880094462,
+        "turnover24h": 178469759,
+        "bucketHits": [
+          "B",
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 30,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "FIL",
+        "venue": "KUCOIN",
+        "symbol": "FIL-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 16.3,
+        "marketCap": 674386459,
+        "turnover24h": 154271829,
+        "bucketHits": [
+          "B",
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 31,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "PLAY",
+        "venue": "KUCOIN",
+        "symbol": "PLAY-USDT",
+        "classification": "MICROCAP ANOMALY WATCH",
+        "stageAScore": 32.2,
+        "marketCap": 12593931,
+        "turnover24h": 7787536,
+        "bucketHits": [
+          "T",
+          "M"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 15,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
         "asset": "ALIGN",
         "venue": "KUCOIN",
         "symbol": "ALIGN-USDT",
         "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 28,
-        "marketCap": 12116377,
-        "turnover24h": 10699211,
+        "stageAScore": 30.9,
+        "marketCap": 12215675,
+        "turnover24h": 10892444,
+        "bucketHits": [
+          "T",
+          "M"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 11,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "4STOCK",
+        "venue": "KUCOIN",
+        "symbol": "4STOCK-USDT",
+        "classification": "MICROCAP ANOMALY WATCH",
+        "stageAScore": 29.4,
+        "marketCap": 9160085,
+        "turnover24h": 13738242,
         "bucketHits": [
           "T",
           "M"
@@ -1674,9 +1736,9 @@
         "venue": "KUCOIN",
         "symbol": "TMX-USDT",
         "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 25,
-        "marketCap": 3918398,
-        "turnover24h": 3425104,
+        "stageAScore": 27.2,
+        "marketCap": 3800565,
+        "turnover24h": 3354207,
         "bucketHits": [
           "T",
           "M"
@@ -1713,9 +1775,9 @@
         "venue": "KUCOIN",
         "symbol": "FORTH-USDT",
         "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 25,
-        "marketCap": 2868383,
-        "turnover24h": 1838175,
+        "stageAScore": 27.2,
+        "marketCap": 2866276,
+        "turnover24h": 1568707,
         "bucketHits": [
           "T",
           "M"
@@ -1748,15 +1810,14 @@
     },
     {
       "candidate": {
-        "asset": "ESPORTS",
+        "asset": "TEA",
         "venue": "KUCOIN",
-        "symbol": "ESPORTS-USDT",
+        "symbol": "TEA-USDT",
         "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 25,
-        "marketCap": 1447906,
-        "turnover24h": 880676,
+        "stageAScore": 18.8,
+        "marketCap": 831890,
+        "turnover24h": 3085203,
         "bucketHits": [
-          "T",
           "M"
         ],
         "executionSignal": null,
@@ -1766,7 +1827,7 @@
       "requestStatus": "QUEUED_LIMIT",
       "requestReason": "ROTATING_QUEUE_WAIT",
       "queue": {
-        "queueRank": 19,
+        "queueRank": 40,
         "selectedThisBatch": false,
         "rotationBatchIndex": 3,
         "rotationBatchCount": 7,
@@ -1791,9 +1852,9 @@
         "venue": "KUCOIN",
         "symbol": "AEON-USDT",
         "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 17,
-        "marketCap": 9517652,
-        "turnover24h": 8192476,
+        "stageAScore": 17.4,
+        "marketCap": 9545923,
+        "turnover24h": 7755236,
         "bucketHits": [
           "M"
         ],
@@ -1804,7 +1865,7 @@
       "requestStatus": "QUEUED_LIMIT",
       "requestReason": "ROTATING_QUEUE_WAIT",
       "queue": {
-        "queueRank": 37,
+        "queueRank": 43,
         "selectedThisBatch": false,
         "rotationBatchIndex": 3,
         "rotationBatchCount": 7,
@@ -1825,89 +1886,13 @@
     },
     {
       "candidate": {
-        "asset": "TEA",
+        "asset": "RAY",
         "venue": "KUCOIN",
-        "symbol": "TEA-USDT",
-        "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 15.9,
-        "marketCap": 833548,
-        "turnover24h": 3119665,
-        "bucketHits": [
-          "M"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "QUEUED_LIMIT",
-      "requestReason": "ROTATING_QUEUE_WAIT",
-      "queue": {
-        "queueRank": 38,
-        "selectedThisBatch": false,
-        "rotationBatchIndex": 3,
-        "rotationBatchCount": 7,
-        "rotationSlotMinutes": 15
-      },
-      "resultGeneratedAt": null,
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": null,
-      "dataQuality": null,
-      "token": null,
-      "knownWallets": null,
-      "tokenCentric": null,
-      "interpretation": null
-    },
-    {
-      "candidate": {
-        "asset": "YOM",
-        "venue": "KUCOIN",
-        "symbol": "YOM-USDT",
-        "classification": "MICROCAP ANOMALY WATCH",
-        "stageAScore": 13,
-        "marketCap": 1631878,
-        "turnover24h": 692707,
-        "bucketHits": [
-          "M"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "QUEUED_LIMIT",
-      "requestReason": "ROTATING_QUEUE_WAIT",
-      "queue": {
-        "queueRank": 39,
-        "selectedThisBatch": false,
-        "rotationBatchIndex": 3,
-        "rotationBatchCount": 7,
-        "rotationSlotMinutes": 15
-      },
-      "resultGeneratedAt": null,
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": null,
-      "dataQuality": null,
-      "token": null,
-      "knownWallets": null,
-      "tokenCentric": null,
-      "interpretation": null
-    },
-    {
-      "candidate": {
-        "asset": "XCN",
-        "venue": "KUCOIN",
-        "symbol": "XCN-USDT",
+        "symbol": "RAY-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 24.1,
-        "marketCap": 156415171,
-        "turnover24h": 29013546,
+        "stageAScore": 28.8,
+        "marketCap": 337305018,
+        "turnover24h": 44284265,
         "bucketHits": [
           "T"
         ],
@@ -1939,13 +1924,13 @@
     },
     {
       "candidate": {
-        "asset": "PENGU",
+        "asset": "ANSEM",
         "venue": "KUCOIN",
-        "symbol": "PENGU-USDT",
+        "symbol": "ANSEM-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 24.1,
-        "marketCap": 427589062,
-        "turnover24h": 143719010,
+        "stageAScore": 27.7,
+        "marketCap": 49172980,
+        "turnover24h": 11355759,
         "bucketHits": [
           "T"
         ],
@@ -1977,13 +1962,13 @@
     },
     {
       "candidate": {
-        "asset": "CYS",
+        "asset": "PENGU",
         "venue": "KUCOIN",
-        "symbol": "CYS-USDT",
+        "symbol": "PENGU-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 21.9,
-        "marketCap": 20891393,
-        "turnover24h": 6113948,
+        "stageAScore": 27.7,
+        "marketCap": 427709681,
+        "turnover24h": 143887693,
         "bucketHits": [
           "T"
         ],
@@ -2020,84 +2005,8 @@
         "symbol": "LAPTOP-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
         "stageAScore": 18,
-        "marketCap": 86438762,
-        "turnover24h": 17318692,
-        "bucketHits": [
-          "T"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "QUEUED_LIMIT",
-      "requestReason": "ROTATING_QUEUE_WAIT",
-      "queue": {
-        "queueRank": 30,
-        "selectedThisBatch": false,
-        "rotationBatchIndex": 3,
-        "rotationBatchCount": 7,
-        "rotationSlotMinutes": 15
-      },
-      "resultGeneratedAt": null,
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": null,
-      "dataQuality": null,
-      "token": null,
-      "knownWallets": null,
-      "tokenCentric": null,
-      "interpretation": null
-    },
-    {
-      "candidate": {
-        "asset": "PONS",
-        "venue": "KUCOIN",
-        "symbol": "PONS-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 18,
-        "marketCap": 421734944,
-        "turnover24h": 112880221,
-        "bucketHits": [
-          "T"
-        ],
-        "executionSignal": null,
-        "decisionUrgency": null
-      },
-      "requested": true,
-      "requestStatus": "QUEUED_LIMIT",
-      "requestReason": "ROTATING_QUEUE_WAIT",
-      "queue": {
-        "queueRank": 31,
-        "selectedThisBatch": false,
-        "rotationBatchIndex": 3,
-        "rotationBatchCount": 7,
-        "rotationSlotMinutes": 15
-      },
-      "resultGeneratedAt": null,
-      "windowsHours": [
-        6,
-        24,
-        72
-      ],
-      "overallWhaleStatus": null,
-      "dataQuality": null,
-      "token": null,
-      "knownWallets": null,
-      "tokenCentric": null,
-      "interpretation": null
-    },
-    {
-      "candidate": {
-        "asset": "PENDLE",
-        "venue": "KUCOIN",
-        "symbol": "PENDLE-USDT",
-        "classification": "TURNOVER ANOMALY WATCH",
-        "stageAScore": 18,
-        "marketCap": 389198018,
-        "turnover24h": 67873505,
+        "marketCap": 86272230,
+        "turnover24h": 18272939,
         "bucketHits": [
           "T"
         ],
@@ -2129,13 +2038,13 @@
     },
     {
       "candidate": {
-        "asset": "TUT",
+        "asset": "PONS",
         "venue": "KUCOIN",
-        "symbol": "TUT-USDT",
+        "symbol": "PONS-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
         "stageAScore": 18,
-        "marketCap": 16217560,
-        "turnover24h": 16808018,
+        "marketCap": 417476453,
+        "turnover24h": 112658782,
         "bucketHits": [
           "T"
         ],
@@ -2167,13 +2076,13 @@
     },
     {
       "candidate": {
-        "asset": "FLOCK",
+        "asset": "PENDLE",
         "venue": "KUCOIN",
-        "symbol": "FLOCK-USDT",
+        "symbol": "PENDLE-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
         "stageAScore": 18,
-        "marketCap": 30621090,
-        "turnover24h": 20364546,
+        "marketCap": 389354503,
+        "turnover24h": 69844013,
         "bucketHits": [
           "T"
         ],
@@ -2205,13 +2114,13 @@
     },
     {
       "candidate": {
-        "asset": "FF",
+        "asset": "TUT",
         "venue": "KUCOIN",
-        "symbol": "FF-USDT",
+        "symbol": "TUT-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
         "stageAScore": 18,
-        "marketCap": 430156024,
-        "turnover24h": 87745862,
+        "marketCap": 16312546,
+        "turnover24h": 16879135,
         "bucketHits": [
           "T"
         ],
@@ -2243,13 +2152,13 @@
     },
     {
       "candidate": {
-        "asset": "OP",
+        "asset": "FLOCK",
         "venue": "KUCOIN",
-        "symbol": "OP-USDT",
+        "symbol": "FLOCK-USDT",
         "classification": "TURNOVER ANOMALY WATCH",
         "stageAScore": 18,
-        "marketCap": 213803522,
-        "turnover24h": 71657705,
+        "marketCap": 30505836,
+        "turnover24h": 21333817,
         "bucketHits": [
           "T"
         ],
@@ -2278,6 +2187,234 @@
       "knownWallets": null,
       "tokenCentric": null,
       "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "FF",
+        "venue": "KUCOIN",
+        "symbol": "FF-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 18,
+        "marketCap": 430039284,
+        "turnover24h": 65154693,
+        "bucketHits": [
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 37,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "OP",
+        "venue": "KUCOIN",
+        "symbol": "OP-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 18,
+        "marketCap": 213901028,
+        "turnover24h": 71137255,
+        "bucketHits": [
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 38,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "XPL",
+        "venue": "KUCOIN",
+        "symbol": "XPL-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 18,
+        "marketCap": 223452810,
+        "turnover24h": 39917182,
+        "bucketHits": [
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 39,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "YOM",
+        "venue": "KUCOIN",
+        "symbol": "YOM-USDT",
+        "classification": "MICROCAP ANOMALY WATCH",
+        "stageAScore": 15.8,
+        "marketCap": 1632861,
+        "turnover24h": 695075,
+        "bucketHits": [
+          "M"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 44,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "GRVT",
+        "venue": "KUCOIN",
+        "symbol": "GRVT-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 15,
+        "marketCap": 18973397,
+        "turnover24h": 5056526,
+        "bucketHits": [
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 41,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
+    },
+    {
+      "candidate": {
+        "asset": "NOT",
+        "venue": "KUCOIN",
+        "symbol": "NOT-USDT",
+        "classification": "TURNOVER ANOMALY WATCH",
+        "stageAScore": 15,
+        "marketCap": 41695109,
+        "turnover24h": 7144478,
+        "bucketHits": [
+          "T"
+        ],
+        "executionSignal": null,
+        "decisionUrgency": null
+      },
+      "requested": true,
+      "requestStatus": "QUEUED_LIMIT",
+      "requestReason": "ROTATING_QUEUE_WAIT",
+      "queue": {
+        "queueRank": 42,
+        "selectedThisBatch": false,
+        "rotationBatchIndex": 3,
+        "rotationBatchCount": 7,
+        "rotationSlotMinutes": 15
+      },
+      "resultGeneratedAt": null,
+      "windowsHours": [
+        6,
+        24,
+        72
+      ],
+      "overallWhaleStatus": null,
+      "dataQuality": null,
+      "token": null,
+      "knownWallets": null,
+      "tokenCentric": null,
+      "interpretation": null
     }
   ],
   "meaningfulKnownSignals": [],
@@ -2286,8 +2423,8 @@
   "persistence": {
     "persistedResultsAvailable": true,
     "sourceFreshness": "CURRENT_RUN",
-    "previousGeneratedAt": "2026-09-16T03:19:48.675Z",
-    "previousRotationBatchIndex": 1
+    "previousGeneratedAt": "2026-09-16T03:46:09.812Z",
+    "previousRotationBatchIndex": 3
   },
   "interpretation": "WHALES DEEP runs 6h/24h/72h validation. Two highest-priority qualifying names are continuously reserved; remaining DEEP slots rotate every scheduled interval through the queue. Token transfer flows remain contextual and are never automatically relabeled as buys or accumulation."
 }
