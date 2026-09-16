@@ -2,8 +2,8 @@
   "schemaVersion": "1.0",
   "module": "whalesEarlyEntryEngine",
   "version": "WHALES_EARLY_ENTRY_V1_2026-09-13",
-  "generatedAt": "2026-09-16T14:24:13.147Z",
-  "runStatus": "PASS",
+  "generatedAt": "2026-09-16T14:40:39.419Z",
+  "runStatus": "PARTIAL",
   "purpose": "Wallet-first early-entry detection. Start from shark wallets, classify real on-chain swap direction, resolve the token/pair and only then use CABAL as secondary confirmation.",
   "executionPolicy": "SURVEILLANCE_ONLY_NO_AUTO_TRADE",
   "scheduleTargetMinutes": 5,
@@ -206,18 +206,25 @@
     ],
     "providerStats": {
       "https://solana-rpc.publicnode.com": {
-        "calls": 25,
-        "successes": 25,
-        "failures": 0,
+        "calls": 56,
+        "successes": 22,
+        "failures": 34,
         "recoveredFallbacks": 0,
-        "lastError": null
+        "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+      },
+      "https://api.mainnet-beta.solana.com": {
+        "calls": 34,
+        "successes": 0,
+        "failures": 34,
+        "recoveredFallbacks": 0,
+        "lastError": "HTTP_429"
       }
     },
     "failedWallets": 0,
-    "txFailures": 0,
+    "txFailures": 17,
     "fallbackRecoveries": 0,
-    "walletsPass": 20,
-    "walletsPartial": 0,
+    "walletsPass": 17,
+    "walletsPartial": 3,
     "walletsError": 0
   },
   "scan": {
@@ -225,7 +232,7 @@
     "newOnchainSwapBuys": 0,
     "newOnchainSwapSells": 0,
     "newContextOnly": 1,
-    "retainedEventCount": 1793,
+    "retainedEventCount": 1794,
     "activeMintCount6h": 3,
     "signalCount": 3,
     "buyCandidateCount": 0,
@@ -257,9 +264,9 @@
       "ageDays": null,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
-      "signaturesSeen": 3,
-      "newSignatures": 2,
-      "classifiedEvents": 0
+      "signaturesSeen": 1,
+      "newSignatures": 1,
+      "classifiedEvents": 1
     },
     {
       "label": "SOL-CENTED",
@@ -269,10 +276,10 @@
       "alphaScore": 100,
       "winRate": null,
       "ageDays": null,
-      "status": "PASS",
+      "status": "PARTIAL",
       "rpcProvider": "https://solana-rpc.publicnode.com",
-      "signaturesSeen": 1,
-      "newSignatures": 1,
+      "signaturesSeen": 5,
+      "newSignatures": 5,
       "classifiedEvents": 0
     },
     {
@@ -283,10 +290,10 @@
       "alphaScore": 100,
       "winRate": null,
       "ageDays": null,
-      "status": "PASS",
+      "status": "PARTIAL",
       "rpcProvider": "https://solana-rpc.publicnode.com",
-      "signaturesSeen": 0,
-      "newSignatures": 0,
+      "signaturesSeen": 5,
+      "newSignatures": 5,
       "classifiedEvents": 0
     },
     {
@@ -325,11 +332,11 @@
       "alphaScore": 100,
       "winRate": null,
       "ageDays": null,
-      "status": "PASS",
+      "status": "PARTIAL",
       "rpcProvider": "https://solana-rpc.publicnode.com",
-      "signaturesSeen": 1,
-      "newSignatures": 1,
-      "classifiedEvents": 1
+      "signaturesSeen": 10,
+      "newSignatures": 8,
+      "classifiedEvents": 0
     },
     {
       "label": "EARLY-A-54FksN",
@@ -524,7 +531,7 @@
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 1,
-      "newSignatures": 1,
+      "newSignatures": 0,
       "classifiedEvents": 0
     }
   ],
@@ -534,8 +541,8 @@
       "action": "CONTEXT",
       "classification": "TOKEN_FLOW_CONTEXT_ONLY",
       "confidence": 0,
-      "walletLabel": "SOL-WEST",
-      "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
+      "walletLabel": "SOL-GAKE",
+      "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
       "walletSource": "FIXED_TIER_A",
       "walletTier": "FIXED_TIER_A",
       "alphaScore": 100,
@@ -545,20 +552,48 @@
       "tokenAmount": null,
       "tokenFlows": [
         {
-          "mint": "2LvWENpRhf4wA77ngW1GdN8yVvWmqiCy2PR7xii1P8Br",
-          "delta": 100
+          "mint": "BWPao2gnkpNWtS35ZuPRNTEtwUVEVxtiESzZzDvNpump",
+          "delta": 13699.343939
         }
       ],
       "quoteAsset": null,
       "quoteAmount": null,
-      "signature": "4ghSTXFbto6GVyU1EKGAA3h82iiQuLHh1PJPkAUFVf8y5UefuKJYqxhkzLC6Usi9uPo4AnTz8Bxu2goK85prHH6r",
-      "blockTime": 1789568462,
-      "eventTime": "2026-09-16T14:21:02.000Z",
+      "signature": "3j5zCxqADrv96YkJe2LnyWi1aKBn6irSttB5C4nJQKr7dAJGmPdkkMTbRZCSFQaRJ9DpbK8PBHq2W7Tvoam6UV4Z",
+      "blockTime": 1789568711,
+      "eventTime": "2026-09-16T14:25:11.000Z",
       "firstTouch": false,
       "rpcProvider": "https://solana-rpc.publicnode.com"
     }
   ],
   "events": [
+    {
+      "chain": "solana",
+      "action": "CONTEXT",
+      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
+      "confidence": 0,
+      "walletLabel": "SOL-GAKE",
+      "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+      "walletSource": "FIXED_TIER_A",
+      "walletTier": "FIXED_TIER_A",
+      "alphaScore": 100,
+      "winRate": null,
+      "walletWeight": 1,
+      "mint": null,
+      "tokenAmount": null,
+      "tokenFlows": [
+        {
+          "mint": "BWPao2gnkpNWtS35ZuPRNTEtwUVEVxtiESzZzDvNpump",
+          "delta": 13699.343939
+        }
+      ],
+      "quoteAsset": null,
+      "quoteAmount": null,
+      "signature": "3j5zCxqADrv96YkJe2LnyWi1aKBn6irSttB5C4nJQKr7dAJGmPdkkMTbRZCSFQaRJ9DpbK8PBHq2W7Tvoam6UV4Z",
+      "blockTime": 1789568711,
+      "eventTime": "2026-09-16T14:25:11.000Z",
+      "firstTouch": false,
+      "rpcProvider": "https://solana-rpc.publicnode.com"
+    },
     {
       "chain": "solana",
       "action": "CONTEXT",
@@ -49251,6 +49286,107 @@
       "status": "MICRO_PROBE_CONTEXT_ONLY",
       "action": "IGNORE_FOR_ACTIONABLE_SIGNAL",
       "reason": "Detected buy is only a micro probe. Orders below 1 SOL / $100 are not treated as whale/shark evidence.",
+      "mint": "2MM45WbvNzf4QTd8G7XAHfbG6n5q4LjAF7SoRFcZpump",
+      "symbol": "ELON",
+      "name": "ELON",
+      "pair": "ELON/SOL or ELON/USDC (DEX-dependent)",
+      "dex": "pumpswap",
+      "pairAddress": "6q271jdZi7wCVa6TkaU5W1PoeAL2wbtJe245gsufVJhu",
+      "pairUrl": "https://dexscreener.com/solana/6q271jdzi7wcva6tkau5w1poeal2wbtje245gsufvjhu",
+      "priceUsd": 0.003252,
+      "liquidityUsd": 148598.71,
+      "marketCapUsd": 3076503,
+      "fdvUsd": 3076503,
+      "volume24hUsd": 224998.42,
+      "priceChange5mPct": 0.15,
+      "priceChange1hPct": 1.19,
+      "priceChange6hPct": 509,
+      "priceChange24hPct": 7961,
+      "pairCreatedAt": "2026-09-16T06:25:20.000Z",
+      "buyCount": 1,
+      "sellCount": 0,
+      "tokenBought": 6758.508529,
+      "tokenSold": 0,
+      "netTokenFlow": 6758.508529,
+      "uniqueBuyWalletCount": 1,
+      "uniqueSellWalletCount": 0,
+      "uniqueBuyWallets": [
+        "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n"
+      ],
+      "uniqueSellWallets": [],
+      "flatRoundTripWallets": [],
+      "netAccumulatingWalletCount": 1,
+      "tierAPriorityBuyCount": 0,
+      "firstTouchBuyCount": 0,
+      "avgConfidence": 0.9,
+      "whaleScore": 0.72,
+      "firstBuyAt": "2026-09-16T11:22:34.000Z",
+      "latestBuyAt": "2026-09-16T11:22:34.000Z",
+      "minutesSinceFirstBuy": 198.1,
+      "noChase": false,
+      "liquidityHealthy": true,
+      "marketCapHealthy": true,
+      "marketHealthy": true,
+      "cabal": null,
+      "cabalValidatedForEntry": false,
+      "buyEvidence": [
+        {
+          "walletLabel": "EARLY-B-78AJPh",
+          "wallet": "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n",
+          "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+          "walletTier": "TIER_B",
+          "alphaScore": 85.63,
+          "firstTouch": false,
+          "confidence": 0.9,
+          "quoteAsset": "SOL",
+          "quoteAmount": 0.11084844,
+          "tokenAmount": 6758.508529,
+          "signature": "2rQaw4kndBfmm8i8XZwxT4hEcRp7qGiitoPgJcSxpfuEzb8aZU2ZeLD5nQaRh3tR9oSHcu1MBmwM3hqDW1PERA5K",
+          "eventTime": "2026-09-16T11:22:34.000Z"
+        }
+      ],
+      "sellEvidence": [],
+      "dataQuality": "PASS",
+      "positionSizing": {
+        "ruleVersion": "SHARK_SIZE_FILTER_V1_2026-09-13",
+        "strongestTier": "MICRO_PROBE",
+        "meaningfulWalletCount": 0,
+        "priorityMeaningfulWalletCount": 0,
+        "minActionable": {
+          "sol": 5,
+          "stableUsd": 500
+        },
+        "strongConviction": {
+          "sol": 10,
+          "stableUsd": 1000
+        },
+        "minRetentionRatio": 0.5,
+        "perWallet": [
+          {
+            "wallet": "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n",
+            "walletLabel": "EARLY-B-78AJPh",
+            "walletTier": "TIER_B",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "quoteSizing": {
+              "tier": "MICRO_PROBE",
+              "sol": 0.110848,
+              "stableUsd": 0,
+              "byAsset": {
+                "SOL": 0.110848
+              }
+            },
+            "retentionRatio": 1,
+            "meaningful": false
+          }
+        ]
+      },
+      "preSizeFilterStatus": "WHALE_DISCOVERY",
+      "preSizeFilterAction": "WATCH"
+    },
+    {
+      "status": "MICRO_PROBE_CONTEXT_ONLY",
+      "action": "IGNORE_FOR_ACTIONABLE_SIGNAL",
+      "reason": "Detected buy is only a micro probe. Orders below 1 SOL / $100 are not treated as whale/shark evidence.",
       "mint": "DhFkcn7LfHVbmaJ45ovDLmbytSKYxiTV7SAxvMEpump",
       "symbol": "HERMES",
       "name": "Hermès International S.C.A.",
@@ -49287,7 +49423,7 @@
       "whaleScore": 0.72,
       "firstBuyAt": "2026-09-16T09:25:58.000Z",
       "latestBuyAt": "2026-09-16T09:25:58.000Z",
-      "minutesSinceFirstBuy": 298.3,
+      "minutesSinceFirstBuy": 314.7,
       "noChase": false,
       "liquidityHealthy": false,
       "marketCapHealthy": true,
@@ -49349,107 +49485,6 @@
       "preSizeFilterAction": "WATCH_RISK_REJECT"
     },
     {
-      "status": "MICRO_PROBE_CONTEXT_ONLY",
-      "action": "IGNORE_FOR_ACTIONABLE_SIGNAL",
-      "reason": "Detected buy is only a micro probe. Orders below 1 SOL / $100 are not treated as whale/shark evidence.",
-      "mint": "2MM45WbvNzf4QTd8G7XAHfbG6n5q4LjAF7SoRFcZpump",
-      "symbol": "ELON",
-      "name": "ELON",
-      "pair": "ELON/SOL or ELON/USDC (DEX-dependent)",
-      "dex": "pumpswap",
-      "pairAddress": "6q271jdZi7wCVa6TkaU5W1PoeAL2wbtJe245gsufVJhu",
-      "pairUrl": "https://dexscreener.com/solana/6q271jdzi7wcva6tkau5w1poeal2wbtje245gsufvjhu",
-      "priceUsd": 0.003245,
-      "liquidityUsd": 148437.38,
-      "marketCapUsd": 3070546,
-      "fdvUsd": 3070546,
-      "volume24hUsd": 224691.06,
-      "priceChange5mPct": 0.16,
-      "priceChange1hPct": 49.06,
-      "priceChange6hPct": 581,
-      "priceChange24hPct": 7945,
-      "pairCreatedAt": "2026-09-16T06:25:20.000Z",
-      "buyCount": 1,
-      "sellCount": 0,
-      "tokenBought": 6758.508529,
-      "tokenSold": 0,
-      "netTokenFlow": 6758.508529,
-      "uniqueBuyWalletCount": 1,
-      "uniqueSellWalletCount": 0,
-      "uniqueBuyWallets": [
-        "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n"
-      ],
-      "uniqueSellWallets": [],
-      "flatRoundTripWallets": [],
-      "netAccumulatingWalletCount": 1,
-      "tierAPriorityBuyCount": 0,
-      "firstTouchBuyCount": 0,
-      "avgConfidence": 0.9,
-      "whaleScore": 0.72,
-      "firstBuyAt": "2026-09-16T11:22:34.000Z",
-      "latestBuyAt": "2026-09-16T11:22:34.000Z",
-      "minutesSinceFirstBuy": 181.7,
-      "noChase": true,
-      "liquidityHealthy": true,
-      "marketCapHealthy": true,
-      "marketHealthy": true,
-      "cabal": null,
-      "cabalValidatedForEntry": false,
-      "buyEvidence": [
-        {
-          "walletLabel": "EARLY-B-78AJPh",
-          "wallet": "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n",
-          "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
-          "walletTier": "TIER_B",
-          "alphaScore": 85.63,
-          "firstTouch": false,
-          "confidence": 0.9,
-          "quoteAsset": "SOL",
-          "quoteAmount": 0.11084844,
-          "tokenAmount": 6758.508529,
-          "signature": "2rQaw4kndBfmm8i8XZwxT4hEcRp7qGiitoPgJcSxpfuEzb8aZU2ZeLD5nQaRh3tR9oSHcu1MBmwM3hqDW1PERA5K",
-          "eventTime": "2026-09-16T11:22:34.000Z"
-        }
-      ],
-      "sellEvidence": [],
-      "dataQuality": "PASS",
-      "positionSizing": {
-        "ruleVersion": "SHARK_SIZE_FILTER_V1_2026-09-13",
-        "strongestTier": "MICRO_PROBE",
-        "meaningfulWalletCount": 0,
-        "priorityMeaningfulWalletCount": 0,
-        "minActionable": {
-          "sol": 5,
-          "stableUsd": 500
-        },
-        "strongConviction": {
-          "sol": 10,
-          "stableUsd": 1000
-        },
-        "minRetentionRatio": 0.5,
-        "perWallet": [
-          {
-            "wallet": "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n",
-            "walletLabel": "EARLY-B-78AJPh",
-            "walletTier": "TIER_B",
-            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
-            "quoteSizing": {
-              "tier": "MICRO_PROBE",
-              "sol": 0.110848,
-              "stableUsd": 0,
-              "byAsset": {
-                "SOL": 0.110848
-              }
-            },
-            "retentionRatio": 1,
-            "meaningful": false
-          }
-        ]
-      },
-      "preSizeFilterStatus": "SHARK_BUY_LATE",
-      "preSizeFilterAction": "DO_NOT_CHASE"
-    },
-    {
       "status": "WHALE_DISTRIBUTION",
       "action": "AVOID_OR_REVIEW",
       "reason": "Current 6h classified wallet flows are net distribution after offsetting buys against sells.",
@@ -49460,15 +49495,15 @@
       "dex": "pumpswap",
       "pairAddress": "12jkJZsZkPYuR6xnSuWman8LvjgKBaUctFoSw4M2feNK",
       "pairUrl": "https://dexscreener.com/solana/12jkjzszkpyur6xnsuwman8lvjgkbauctfosw4m2fenk",
-      "priceUsd": 0.008458,
-      "liquidityUsd": 238934.86,
-      "marketCapUsd": 8455985,
-      "fdvUsd": 8455985,
-      "volume24hUsd": 228730.55,
-      "priceChange5mPct": -0.07,
-      "priceChange1hPct": 0.87,
-      "priceChange6hPct": 45.92,
-      "priceChange24hPct": 20953,
+      "priceUsd": 0.00847,
+      "liquidityUsd": 239140.12,
+      "marketCapUsd": 8468651,
+      "fdvUsd": 8468651,
+      "volume24hUsd": 229028.97,
+      "priceChange5mPct": 0.75,
+      "priceChange1hPct": 0.96,
+      "priceChange6hPct": 19.06,
+      "priceChange24hPct": 20984,
       "pairCreatedAt": "2026-09-16T01:45:34.000Z",
       "buyCount": 0,
       "sellCount": 1,
@@ -49519,8 +49554,6 @@
   "buyCandidates": [],
   "earlyWatches": [],
   "processedSignatures": [
-    "4G65gcmkCpL9VyTgVU3kmzGG7NwghCwDGY1wEmgrhbqoZ4yWUmmxJw58eWmdKnuoLoANhu3cBnY5xbPVhQ9ho69F",
-    "KJ5z5ukg2xAoNWip3TRQhGRjAQfi6oYaCmf6CMWeBV7gfjNYScttpQmwy4Qp5FqGgLF3gNGS4BAyx8fzphb1TTa",
     "22h76H5wXJ35tBMUS8LFFeM265SAb3mAKGB271wsYP5LCmb32YuikiD7d5hLdoQAhvfyhZZUk9xw4zfaTq3sYUJf",
     "NzGjm58HKKfenNDvfAtqDexn2Wvv52tibe3NRLD3ovNFnuWarVkTkZc5LZkx6SG1kfkWmqpXhyjbimsegb8Hxyj",
     "66jTaSRVw38FHZ65NTCRurBi7Q5h2RQ3WFP6xBkNR3UQ9dPxctbAmvUZZY41kbVhpyBHacYfeBWVzSjKi1566PJ4",
@@ -52018,7 +52051,9 @@
     "5TPfh11oRibYmqdbPgq3gaxMQ9cL3mtNdaec6U2DpWMigFo2XqNYZT8QJTvAtnBLSpAbHTfezn58JKpFzfWD7jUn",
     "BJBt1iHdL6uSfxApt5G79r6XHWEMPapdLt4VtDHV1gbWfxWroRq86cShha7QqKh5TkvQCftt9FYcPezYvjux7rz",
     "4ghSTXFbto6GVyU1EKGAA3h82iiQuLHh1PJPkAUFVf8y5UefuKJYqxhkzLC6Usi9uPo4AnTz8Bxu2goK85prHH6r",
-    "44ML7r7oAQENEXppfQLuMWztHxKyXCM41YrmW8BCVZizbskRfWKNaYsVHhbbvfvaH8rqc4RMaxq7PXBNRyizQcnf"
+    "44ML7r7oAQENEXppfQLuMWztHxKyXCM41YrmW8BCVZizbskRfWKNaYsVHhbbvfvaH8rqc4RMaxq7PXBNRyizQcnf",
+    "3j5zCxqADrv96YkJe2LnyWi1aKBn6irSttB5C4nJQKr7dAJGmPdkkMTbRZCSFQaRJ9DpbK8PBHq2W7Tvoam6UV4Z",
+    "k43cf4JR1vPNJK2SaWgjTTNpMTXjTeg3pmRjN4uU3eeFRdNad7sVv5K7pHGvkkajkpUdpBk4UoTvXuCw5RYY1Ar"
   ],
   "walletMintHistory": {
     "F3MsrweASYcZcAN9mg6o76hef1Xzh7P7qv6BM9acSMJP:ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs": {
@@ -60421,22 +60456,22 @@
     },
     "J2jX7BtALMMqRXNopBZD7NW3HhveBBubSUUuKRsepump": {
       "status": "PASS",
-      "checkedAt": "2026-09-16T14:24:12.894Z",
+      "checkedAt": "2026-09-16T14:40:39.171Z",
       "mint": "J2jX7BtALMMqRXNopBZD7NW3HhveBBubSUUuKRsepump",
       "symbol": "PAID",
       "name": "Paid",
       "dexId": "pumpswap",
       "pairAddress": "12jkJZsZkPYuR6xnSuWman8LvjgKBaUctFoSw4M2feNK",
       "pairUrl": "https://dexscreener.com/solana/12jkjzszkpyur6xnsuwman8lvjgkbauctfosw4m2fenk",
-      "priceUsd": 0.008458,
-      "liquidityUsd": 238934.86,
-      "marketCapUsd": 8455985,
-      "fdvUsd": 8455985,
-      "volume24hUsd": 228730.55,
-      "priceChange5mPct": -0.07,
-      "priceChange1hPct": 0.87,
-      "priceChange6hPct": 45.92,
-      "priceChange24hPct": 20953,
+      "priceUsd": 0.00847,
+      "liquidityUsd": 239140.12,
+      "marketCapUsd": 8468651,
+      "fdvUsd": 8468651,
+      "volume24hUsd": 229028.97,
+      "priceChange5mPct": 0.75,
+      "priceChange1hPct": 0.96,
+      "priceChange6hPct": 19.06,
+      "priceChange24hPct": 20984,
       "pairCreatedAt": "2026-09-16T01:45:34.000Z"
     },
     "EdTyzBp2CA1yQf7CTaU4za32Q4mHPNbaHEMv5x6npump": {
@@ -61126,22 +61161,22 @@
     },
     "2MM45WbvNzf4QTd8G7XAHfbG6n5q4LjAF7SoRFcZpump": {
       "status": "PASS",
-      "checkedAt": "2026-09-16T14:24:12.699Z",
+      "checkedAt": "2026-09-16T14:40:38.993Z",
       "mint": "2MM45WbvNzf4QTd8G7XAHfbG6n5q4LjAF7SoRFcZpump",
       "symbol": "ELON",
       "name": "ELON",
       "dexId": "pumpswap",
       "pairAddress": "6q271jdZi7wCVa6TkaU5W1PoeAL2wbtJe245gsufVJhu",
       "pairUrl": "https://dexscreener.com/solana/6q271jdzi7wcva6tkau5w1poeal2wbtje245gsufvjhu",
-      "priceUsd": 0.003245,
-      "liquidityUsd": 148437.38,
-      "marketCapUsd": 3070546,
-      "fdvUsd": 3070546,
-      "volume24hUsd": 224691.06,
-      "priceChange5mPct": 0.16,
-      "priceChange1hPct": 49.06,
-      "priceChange6hPct": 581,
-      "priceChange24hPct": 7945,
+      "priceUsd": 0.003252,
+      "liquidityUsd": 148598.71,
+      "marketCapUsd": 3076503,
+      "fdvUsd": 3076503,
+      "volume24hUsd": 224998.42,
+      "priceChange5mPct": 0.15,
+      "priceChange1hPct": 1.19,
+      "priceChange6hPct": 509,
+      "priceChange24hPct": 7961,
       "pairCreatedAt": "2026-09-16T06:25:20.000Z"
     },
     "G3TccfGkvRTChwAfZAKxmHwwUwdeBN2B9t8p94tLpump": {
@@ -61206,7 +61241,7 @@
     },
     "DhFkcn7LfHVbmaJ45ovDLmbytSKYxiTV7SAxvMEpump": {
       "status": "PASS",
-      "checkedAt": "2026-09-16T14:24:13.065Z",
+      "checkedAt": "2026-09-16T14:40:39.336Z",
       "mint": "DhFkcn7LfHVbmaJ45ovDLmbytSKYxiTV7SAxvMEpump",
       "symbol": "HERMES",
       "name": "Hermès International S.C.A.",
@@ -61233,7 +61268,7 @@
   ],
   "reconciliation": {
     "applied": true,
-    "generatedAt": "2026-09-16T14:24:13.267Z",
+    "generatedAt": "2026-09-16T14:40:39.550Z",
     "version": "EARLY_ENTRY_RECONCILE_V1_2026-09-13",
     "rules": [
       "BUY signals require positive net token accumulation after offsetting classified sells.",
@@ -61245,7 +61280,7 @@
   },
   "sizeFilter": {
     "applied": true,
-    "generatedAt": "2026-09-16T14:24:13.357Z",
+    "generatedAt": "2026-09-16T14:40:39.640Z",
     "version": "SHARK_SIZE_FILTER_V1_2026-09-13",
     "thresholds": {
       "microProbeBelow": {
