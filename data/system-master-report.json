@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "systemMasterReport",
-  "generatedAt": "2026-09-16T03:59:48.073Z",
+  "generatedAt": "2026-09-16T04:13:52.466Z",
   "reportContract": {
     "command": "TODO",
     "rule": "TODO must expose every mandatory section. Never collapse the answer to only a few signals; empty modules must be declared NONE or DATA_GAP. No unsupported module may be silently omitted.",
@@ -25,7 +25,8 @@
       "catalystsListings",
       "processMisses",
       "dataGaps",
-      "finalDecisionMatrix"
+      "finalDecisionMatrix",
+      "whalesEarlyEntry"
     ]
   },
   "systemHealth": {
@@ -38,7 +39,8 @@
       "risk": "2026-09-16T05:29:17+02:00",
       "positions": "2026-09-14T06:46:19+02:00",
       "external": "2026-09-16T04:51:31+02:00",
-      "intelligence": "2026-09-14T22:04:26+02:00"
+      "intelligence": "2026-09-14T22:04:26+02:00",
+      "whalesEarlyEntry": "2026-09-16T03:58:50.526Z"
     }
   },
   "marketRadar": {
@@ -31952,7 +31954,8 @@
     "CEX_NATIVE_ETH_FLOW_LABELING_NOT_IMPLEMENTED",
     "CEX_EVM_LABELING_PARTIAL",
     "EXTERNAL_SMART_MONEY_LABELING_NOT_IMPLEMENTED",
-    "PORTFOLIO_OPEN_MTM_INCOMPLETE"
+    "PORTFOLIO_OPEN_MTM_INCOMPLETE",
+    "EARLY_ENTRY_PUBLIC_RPC_5M_POLLING_NOT_SUBSECOND_STREAM"
   ],
   "finalDecisionMatrix": {
     "whaleHighConviction": [],
@@ -32006,6 +32009,382 @@
         "modeledLoss": null
       }
     ],
-    "rule": "Final BUY candidates should preferably combine early CABAL structure, validated whale evidence, acceptable risk and no contradictory macro/data-quality flags. No module auto-executes."
+    "rule": "Final BUY candidates should preferably combine early CABAL structure, validated whale evidence, acceptable risk and no contradictory macro/data-quality flags. No module auto-executes.",
+    "whaleEarlyEntries": []
+  },
+  "whalesEarlyEntry": {
+    "status": "PARTIAL",
+    "generatedAt": "2026-09-16T03:58:50.526Z",
+    "scheduleTargetMinutes": 5,
+    "cohort": {
+      "total": 20,
+      "fixedTierA": 6,
+      "discoveryTierA": 3,
+      "dynamicTierB": 11
+    },
+    "scan": {
+      "newEventCount": 17,
+      "newOnchainSwapBuys": 10,
+      "newOnchainSwapSells": 4,
+      "newContextOnly": 3,
+      "retainedEventCount": 1541,
+      "activeMintCount6h": 30,
+      "signalCount": 74,
+      "buyCandidateCount": 0,
+      "earlyWatchCount": 0,
+      "netAccumulationSignalCount": 0,
+      "netDistributionSignalCount": 26,
+      "roundTripFlatCount": 29,
+      "rawNetAccumulationSignalCount": 13,
+      "microProbeCount": 2,
+      "scoutPositionCount": 11
+    },
+    "buyCandidates": [],
+    "earlyWatches": [],
+    "topCandidates": [
+      {
+        "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
+        "action": "WATCH_RISK_REJECT",
+        "reason": "Net shark accumulation exists, but verified liquidity is below the $50,000 minimum for an actionable early-entry review.",
+        "mint": "9TvpAqgPaAK6BwzMVge8kqGxhxa6Vy6PCzf6Ayndpump",
+        "symbol": null,
+        "name": null,
+        "pair": null,
+        "dex": null,
+        "pairAddress": null,
+        "pairUrl": null,
+        "priceUsd": null,
+        "liquidityUsd": null,
+        "marketCapUsd": null,
+        "fdvUsd": null,
+        "volume24hUsd": null,
+        "priceChange5mPct": null,
+        "priceChange1hPct": null,
+        "priceChange6hPct": null,
+        "priceChange24hPct": null,
+        "pairCreatedAt": null,
+        "buyCount": 2,
+        "sellCount": 1,
+        "tokenBought": 31170949.046814,
+        "tokenSold": 31170949.046814,
+        "netTokenFlow": 0,
+        "uniqueBuyWalletCount": 1,
+        "uniqueSellWalletCount": 0,
+        "uniqueBuyWallets": [
+          "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT"
+        ],
+        "uniqueSellWallets": [],
+        "flatRoundTripWallets": [],
+        "netAccumulatingWalletCount": 1,
+        "tierAPriorityBuyCount": 1,
+        "firstTouchBuyCount": 1,
+        "avgConfidence": 0.9,
+        "whaleScore": 1,
+        "firstBuyAt": "2026-09-16T03:58:04.000Z",
+        "latestBuyAt": "2026-09-16T03:58:12.000Z",
+        "minutesSinceFirstBuy": 0.8,
+        "noChase": false,
+        "liquidityHealthy": false,
+        "marketCapHealthy": true,
+        "marketHealthy": false,
+        "cabal": null,
+        "cabalValidatedForEntry": false,
+        "buyEvidence": [
+          {
+            "walletLabel": "SOL-TRUNOEST",
+            "wallet": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
+            "walletSource": "FIXED_TIER_A",
+            "walletTier": "FIXED_TIER_A",
+            "alphaScore": 100,
+            "firstTouch": true,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 3.01949572,
+            "tokenAmount": 30896305.401572,
+            "signature": "4U2svsbxyGJUTkcY8U9Qg1Hacri8X4WezCaGxsLRQgKEQZYyUSmifWwd8XuLbMk7ibanB1ReS8Bx1WvQn8W6wuRk",
+            "eventTime": "2026-09-16T03:58:04.000Z"
+          },
+          {
+            "walletLabel": "SOL-TRUNOEST",
+            "wallet": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
+            "walletSource": "FIXED_TIER_A",
+            "walletTier": "FIXED_TIER_A",
+            "alphaScore": 100,
+            "firstTouch": false,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 0.025009,
+            "tokenAmount": 274643.645242,
+            "signature": "2fWye8npu6ZTyV5S5JU9HwYpRtAczr2f91q8mdNkPpFs8SzFgiAsNy1Ycv7PkKx3mmEaEtiJVT1sh3nvMfpiELJ5",
+            "eventTime": "2026-09-16T03:58:12.000Z"
+          }
+        ],
+        "sellEvidence": [
+          {
+            "walletLabel": "SOL-TRUNOEST",
+            "wallet": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
+            "walletSource": "FIXED_TIER_A",
+            "walletTier": "FIXED_TIER_A",
+            "alphaScore": 100,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 2.64640137,
+            "tokenAmount": 31170949.046814,
+            "signature": "3eYBwKRdGM9k1oxXGDuup4pNEHznXT715XHwe8smVLB8ufKbKQtcgMMFQVpHaMT2Mdt2HQh1FajMXUv9U1KnBy5V",
+            "eventTime": "2026-09-16T03:58:20.000Z"
+          }
+        ],
+        "dataQuality": "PARTIAL"
+      },
+      {
+        "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
+        "action": "WATCH_RISK_REJECT",
+        "reason": "Net shark accumulation exists, but verified liquidity is below the $50,000 minimum for an actionable early-entry review.",
+        "mint": "AxUwe3ex83MCKvsvhXwW2adw5L4dENwHyy5t5MX7crUV",
+        "symbol": "LCAT",
+        "name": "Ledger Cat",
+        "pair": "LCAT/SOL or LCAT/USDC (DEX-dependent)",
+        "dex": "pumpswap",
+        "pairAddress": "EBJ64tyjejgf3cewGZsp8FdQnNnFibPUryYuZnCp4Xyi",
+        "pairUrl": "https://dexscreener.com/solana/ebj64tyjejgf3cewgzsp8fdqnnnfibpuryyuzncp4xyi",
+        "priceUsd": 0.000009784,
+        "liquidityUsd": 6619.55,
+        "marketCapUsd": 9484,
+        "fdvUsd": 9484,
+        "volume24hUsd": 332337.72,
+        "priceChange5mPct": -8.02,
+        "priceChange1hPct": -38.76,
+        "priceChange6hPct": -75.54,
+        "priceChange24hPct": -75.54,
+        "pairCreatedAt": "2026-09-15T22:49:04.000Z",
+        "buyCount": 3,
+        "sellCount": 2,
+        "tokenBought": 48407443.041123,
+        "tokenSold": 48407443.041123,
+        "netTokenFlow": 0,
+        "uniqueBuyWalletCount": 1,
+        "uniqueSellWalletCount": 0,
+        "uniqueBuyWallets": [
+          "BUR4f8GKVEonrw91vMrA2vFd13hwNJf6SuUiMRHKXCW9"
+        ],
+        "uniqueSellWallets": [],
+        "flatRoundTripWallets": [],
+        "netAccumulatingWalletCount": 1,
+        "tierAPriorityBuyCount": 0,
+        "firstTouchBuyCount": 1,
+        "avgConfidence": 0.9,
+        "whaleScore": 0.72,
+        "firstBuyAt": "2026-09-15T22:19:43.000Z",
+        "latestBuyAt": "2026-09-15T23:04:45.000Z",
+        "minutesSinceFirstBuy": 339.1,
+        "noChase": false,
+        "liquidityHealthy": false,
+        "marketCapHealthy": true,
+        "marketHealthy": false,
+        "cabal": null,
+        "cabalValidatedForEntry": false,
+        "buyEvidence": [
+          {
+            "walletLabel": "EARLY-B-BUR4f8",
+            "wallet": "BUR4f8GKVEonrw91vMrA2vFd13hwNJf6SuUiMRHKXCW9",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 81.79,
+            "firstTouch": true,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 3.00251884,
+            "tokenAmount": 21271641.981992,
+            "signature": "2VKvkNMeCrZYXcCnYhUnbWUKWnKaQav7oVmCmfDrRUM1RL9R4iSmbXGGRhcWAR971uCGzhyBQqdohoh5prgwREE2",
+            "eventTime": "2026-09-15T22:19:43.000Z"
+          },
+          {
+            "walletLabel": "EARLY-B-BUR4f8",
+            "wallet": "BUR4f8GKVEonrw91vMrA2vFd13hwNJf6SuUiMRHKXCW9",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 81.79,
+            "firstTouch": false,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 4.001005,
+            "tokenAmount": 20762507.093632,
+            "signature": "4AeBfAoxtjxqecQLBJAyv9SEJygbHY7rUo9QCbpGDhWUqHyz4TgEdZXzVvE7kwhAJjMiNNr4VDtG5o8u8MRFFmn",
+            "eventTime": "2026-09-15T23:03:55.000Z"
+          },
+          {
+            "walletLabel": "EARLY-B-BUR4f8",
+            "wallet": "BUR4f8GKVEonrw91vMrA2vFd13hwNJf6SuUiMRHKXCW9",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 81.79,
+            "firstTouch": false,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 1.001005,
+            "tokenAmount": 6373293.965499,
+            "signature": "5KFTz3Q6xjpFyV1FZgmDfhNGZMCHFCL94tcgaQ5eqvKR9dyV9jTxhjMHhNSevpq5Th2h9EiV1MpqEqHznQezB3hq",
+            "eventTime": "2026-09-15T23:04:45.000Z"
+          }
+        ],
+        "sellEvidence": [
+          {
+            "walletLabel": "EARLY-B-BUR4f8",
+            "wallet": "BUR4f8GKVEonrw91vMrA2vFd13hwNJf6SuUiMRHKXCW9",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 81.79,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 3.49872704,
+            "tokenAmount": 21271641.981992,
+            "signature": "53nbLCZw26eNSNb9kLkHZDWToKLErHjjdb71GQWT62nvGB4PnC6N5wLk4Dm1HKZMWCKwbaDdSH2mfbCfmFJPHFzk",
+            "eventTime": "2026-09-15T22:21:10.000Z"
+          },
+          {
+            "walletLabel": "EARLY-B-BUR4f8",
+            "wallet": "BUR4f8GKVEonrw91vMrA2vFd13hwNJf6SuUiMRHKXCW9",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 81.79,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 4.14127271,
+            "tokenAmount": 27135801.059131,
+            "signature": "3cTTs641HDfH4ynGc98zM8iNcCmK64FAE6wkzVpW3s8onMkkFhG7sfU7u5qwfyJZjN8U4FHqk5QgQ8RZoPRCDfjV",
+            "eventTime": "2026-09-15T23:08:34.000Z"
+          }
+        ],
+        "dataQuality": "PASS"
+      },
+      {
+        "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
+        "action": "WATCH_RISK_REJECT",
+        "reason": "Net shark accumulation exists, but verified liquidity is below the $50,000 minimum for an actionable early-entry review.",
+        "mint": "AT2Td3Fmz59GrNCtYvjV85EWZYWHpVzBy7k6v7RWXcjq",
+        "symbol": "DICKBUTT",
+        "name": "DICKBUTT",
+        "pair": "DICKBUTT/SOL or DICKBUTT/USDC (DEX-dependent)",
+        "dex": "pumpfun",
+        "pairAddress": "BtX7DLt6nhNpfM15KbnbwTBCwyyjhPfEuNzmqLrpHbCU",
+        "pairUrl": "https://dexscreener.com/solana/btx7dlt6nhnpfm15kbnbwtbcwyyjhpfeunzmqlrphbcu",
+        "priceUsd": 0.000002832,
+        "liquidityUsd": null,
+        "marketCapUsd": 2832.63,
+        "fdvUsd": 2832.63,
+        "volume24hUsd": 16446.13,
+        "priceChange5mPct": null,
+        "priceChange1hPct": -0.11,
+        "priceChange6hPct": -7.66,
+        "priceChange24hPct": -7.66,
+        "pairCreatedAt": "2026-09-16T01:38:22.000Z",
+        "buyCount": 1,
+        "sellCount": 2,
+        "tokenBought": 4420839.187804,
+        "tokenSold": 4420839.187804,
+        "netTokenFlow": 0,
+        "uniqueBuyWalletCount": 1,
+        "uniqueSellWalletCount": 0,
+        "uniqueBuyWallets": [
+          "8EYEcBspezzGvMmCxpEFLj3PUuvJxa2D8sW4r8tjwYy5"
+        ],
+        "uniqueSellWallets": [],
+        "flatRoundTripWallets": [],
+        "netAccumulatingWalletCount": 1,
+        "tierAPriorityBuyCount": 0,
+        "firstTouchBuyCount": 1,
+        "avgConfidence": 0.96,
+        "whaleScore": 0.72,
+        "firstBuyAt": "2026-09-16T01:42:02.000Z",
+        "latestBuyAt": "2026-09-16T01:42:02.000Z",
+        "minutesSinceFirstBuy": 136.8,
+        "noChase": false,
+        "liquidityHealthy": false,
+        "marketCapHealthy": true,
+        "marketHealthy": false,
+        "cabal": null,
+        "cabalValidatedForEntry": false,
+        "buyEvidence": [
+          {
+            "walletLabel": "EARLY-B-8EYEcB",
+            "wallet": "8EYEcBspezzGvMmCxpEFLj3PUuvJxa2D8sW4r8tjwYy5",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 75.98,
+            "firstTouch": true,
+            "confidence": 0.96,
+            "quoteAsset": "USDC",
+            "quoteAmount": 25,
+            "tokenAmount": 4420839.187804,
+            "signature": "3d1yvUk8Gm4QS8zX6q8FWgiX2GJx1s5m14ahz9KqtBHeDrtnp2V8bpSADhhwpygn5ubWs3fB44yw8tMrcFWpegb7",
+            "eventTime": "2026-09-16T01:42:02.000Z"
+          }
+        ],
+        "sellEvidence": [
+          {
+            "walletLabel": "EARLY-B-8EYEcB",
+            "wallet": "8EYEcBspezzGvMmCxpEFLj3PUuvJxa2D8sW4r8tjwYy5",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 75.98,
+            "confidence": 0.96,
+            "quoteAsset": "USDC",
+            "quoteAmount": 28.568309,
+            "tokenAmount": 2940696.644242,
+            "signature": "2R9tjWQNGtoJJ8HXoyPnzUzVvRQXMwYuTK3JGadknBDsGzvhPNbcedLVa6dmP1g7Eq9sWFsYYffmYumTnNpKRGE1",
+            "eventTime": "2026-09-16T01:44:47.000Z"
+          },
+          {
+            "walletLabel": "EARLY-B-8EYEcB",
+            "wallet": "8EYEcBspezzGvMmCxpEFLj3PUuvJxa2D8sW4r8tjwYy5",
+            "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
+            "walletTier": "TIER_B",
+            "alphaScore": 75.98,
+            "confidence": 0.96,
+            "quoteAsset": "USDC",
+            "quoteAmount": 8.017713,
+            "tokenAmount": 1480142.543562,
+            "signature": "qsDo8p4u9h96zHwqngorR5D11LYEjL92ULZFs1tf5efK3uhveG4Dj4ov1w6hMWBARaAzA1SvGqVz57twr2mZK4k",
+            "eventTime": "2026-09-16T01:45:46.000Z"
+          }
+        ],
+        "dataQuality": "PASS"
+      }
+    ],
+    "health": {
+      "rpcMode": "RESILIENT_PUBLIC_RPC_FAILOVER",
+      "rpcProviders": [
+        "https://solana-rpc.publicnode.com",
+        "https://api.mainnet-beta.solana.com"
+      ],
+      "providerStats": {
+        "https://solana-rpc.publicnode.com": {
+          "calls": 45,
+          "successes": 37,
+          "failures": 8,
+          "recoveredFallbacks": 0,
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+        },
+        "https://api.mainnet-beta.solana.com": {
+          "calls": 8,
+          "successes": 0,
+          "failures": 8,
+          "recoveredFallbacks": 0,
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+        }
+      },
+      "failedWallets": 0,
+      "txFailures": 4,
+      "fallbackRecoveries": 0,
+      "walletsPass": 19,
+      "walletsPartial": 1,
+      "walletsError": 0
+    },
+    "dataGaps": [
+      "GitHub Actions/public RPC is near-real-time polling, not a sub-second WebSocket/gRPC stream; detection latency can be several minutes.",
+      "Swap classification is high-confidence balance-delta inference using SOL/WSOL/USDC/USDT quote legs; ambiguous transfers remain CONTEXT and never become BUY.",
+      "Insider/deployer/sybil graph is not yet a complete independent attribution layer.",
+      "DexScreener metadata can be missing or lag during the first minutes of a new token."
+    ]
   }
 }
