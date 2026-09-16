@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "systemMasterReport",
-  "generatedAt": "2026-09-16T08:09:04.858Z",
+  "generatedAt": "2026-09-16T08:14:59.195Z",
   "reportContract": {
     "command": "TODO",
     "rule": "TODO must expose every mandatory section. Never collapse the answer to only a few signals; empty modules must be declared NONE or DATA_GAP. No unsupported module may be silently omitted.",
@@ -25,7 +25,8 @@
       "catalystsListings",
       "processMisses",
       "dataGaps",
-      "finalDecisionMatrix"
+      "finalDecisionMatrix",
+      "whalesEarlyEntry"
     ]
   },
   "systemHealth": {
@@ -38,7 +39,8 @@
       "risk": "2026-09-16T09:30:05+02:00",
       "positions": "2026-09-14T06:46:19+02:00",
       "external": "2026-09-16T09:51:19+02:00",
-      "intelligence": "2026-09-14T22:04:26+02:00"
+      "intelligence": "2026-09-14T22:04:26+02:00",
+      "whalesEarlyEntry": "2026-09-16T07:59:32.167Z"
     }
   },
   "marketRadar": {
@@ -33730,7 +33732,8 @@
     "CEX_NATIVE_ETH_FLOW_LABELING_NOT_IMPLEMENTED",
     "CEX_EVM_LABELING_PARTIAL",
     "EXTERNAL_SMART_MONEY_LABELING_NOT_IMPLEMENTED",
-    "PORTFOLIO_OPEN_MTM_INCOMPLETE"
+    "PORTFOLIO_OPEN_MTM_INCOMPLETE",
+    "EARLY_ENTRY_PUBLIC_RPC_5M_POLLING_NOT_SUBSECOND_STREAM"
   ],
   "finalDecisionMatrix": {
     "whaleHighConviction": [],
@@ -33784,6 +33787,161 @@
         "modeledLoss": null
       }
     ],
-    "rule": "Final BUY candidates should preferably combine early CABAL structure, validated whale evidence, acceptable risk and no contradictory macro/data-quality flags. No module auto-executes."
+    "rule": "Final BUY candidates should preferably combine early CABAL structure, validated whale evidence, acceptable risk and no contradictory macro/data-quality flags. No module auto-executes.",
+    "whaleEarlyEntries": []
+  },
+  "whalesEarlyEntry": {
+    "status": "PASS",
+    "generatedAt": "2026-09-16T07:59:32.167Z",
+    "scheduleTargetMinutes": 5,
+    "cohort": {
+      "total": 20,
+      "fixedTierA": 6,
+      "discoveryTierA": 3,
+      "dynamicTierB": 11
+    },
+    "scan": {
+      "newEventCount": 4,
+      "newOnchainSwapBuys": 0,
+      "newOnchainSwapSells": 1,
+      "newContextOnly": 3,
+      "retainedEventCount": 1683,
+      "activeMintCount6h": 30,
+      "signalCount": 44,
+      "buyCandidateCount": 0,
+      "earlyWatchCount": 0,
+      "netAccumulationSignalCount": 0,
+      "netDistributionSignalCount": 12,
+      "roundTripFlatCount": 22,
+      "rawNetAccumulationSignalCount": 7,
+      "microProbeCount": 4,
+      "scoutPositionCount": 3
+    },
+    "buyCandidates": [],
+    "earlyWatches": [],
+    "topCandidates": [
+      {
+        "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
+        "action": "WATCH_RISK_REJECT",
+        "reason": "Net shark accumulation exists, but verified liquidity is below the $50,000 minimum for an actionable early-entry review.",
+        "mint": "9TvpAqgPaAK6BwzMVge8kqGxhxa6Vy6PCzf6Ayndpump",
+        "symbol": "POINTLESS",
+        "name": "Pointless Coin",
+        "pair": "POINTLESS/SOL or POINTLESS/USDC (DEX-dependent)",
+        "dex": "pumpfun",
+        "pairAddress": "6xYa2irzzj7ULr4fwFDqS65YvbRixBZdNUQF2B8EQ2rL",
+        "pairUrl": "https://dexscreener.com/solana/6xya2irzzj7ulr4fwfdqs65yvbrixbzdnuqf2b8eq2rl",
+        "priceUsd": null,
+        "liquidityUsd": null,
+        "marketCapUsd": null,
+        "fdvUsd": null,
+        "volume24hUsd": 0,
+        "priceChange5mPct": null,
+        "priceChange1hPct": null,
+        "priceChange6hPct": null,
+        "priceChange24hPct": null,
+        "pairCreatedAt": "2026-09-16T03:58:01.000Z",
+        "buyCount": 2,
+        "sellCount": 1,
+        "tokenBought": 31170949.046814,
+        "tokenSold": 31170949.046814,
+        "netTokenFlow": 0,
+        "uniqueBuyWalletCount": 1,
+        "uniqueSellWalletCount": 0,
+        "uniqueBuyWallets": [
+          "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT"
+        ],
+        "uniqueSellWallets": [],
+        "flatRoundTripWallets": [],
+        "netAccumulatingWalletCount": 1,
+        "tierAPriorityBuyCount": 1,
+        "firstTouchBuyCount": 1,
+        "avgConfidence": 0.9,
+        "whaleScore": 1,
+        "firstBuyAt": "2026-09-16T03:58:04.000Z",
+        "latestBuyAt": "2026-09-16T03:58:12.000Z",
+        "minutesSinceFirstBuy": 241.5,
+        "noChase": false,
+        "liquidityHealthy": false,
+        "marketCapHealthy": true,
+        "marketHealthy": false,
+        "cabal": null,
+        "cabalValidatedForEntry": false,
+        "buyEvidence": [
+          {
+            "walletLabel": "SOL-TRUNOEST",
+            "wallet": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
+            "walletSource": "FIXED_TIER_A",
+            "walletTier": "FIXED_TIER_A",
+            "alphaScore": 100,
+            "firstTouch": true,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 3.01949572,
+            "tokenAmount": 30896305.401572,
+            "signature": "4U2svsbxyGJUTkcY8U9Qg1Hacri8X4WezCaGxsLRQgKEQZYyUSmifWwd8XuLbMk7ibanB1ReS8Bx1WvQn8W6wuRk",
+            "eventTime": "2026-09-16T03:58:04.000Z"
+          },
+          {
+            "walletLabel": "SOL-TRUNOEST",
+            "wallet": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
+            "walletSource": "FIXED_TIER_A",
+            "walletTier": "FIXED_TIER_A",
+            "alphaScore": 100,
+            "firstTouch": false,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 0.025009,
+            "tokenAmount": 274643.645242,
+            "signature": "2fWye8npu6ZTyV5S5JU9HwYpRtAczr2f91q8mdNkPpFs8SzFgiAsNy1Ycv7PkKx3mmEaEtiJVT1sh3nvMfpiELJ5",
+            "eventTime": "2026-09-16T03:58:12.000Z"
+          }
+        ],
+        "sellEvidence": [
+          {
+            "walletLabel": "SOL-TRUNOEST",
+            "wallet": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
+            "walletSource": "FIXED_TIER_A",
+            "walletTier": "FIXED_TIER_A",
+            "alphaScore": 100,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 2.64640137,
+            "tokenAmount": 31170949.046814,
+            "signature": "3eYBwKRdGM9k1oxXGDuup4pNEHznXT715XHwe8smVLB8ufKbKQtcgMMFQVpHaMT2Mdt2HQh1FajMXUv9U1KnBy5V",
+            "eventTime": "2026-09-16T03:58:20.000Z"
+          }
+        ],
+        "dataQuality": "PASS"
+      }
+    ],
+    "health": {
+      "rpcMode": "RESILIENT_PUBLIC_RPC_FAILOVER",
+      "rpcProviders": [
+        "https://solana-rpc.publicnode.com",
+        "https://api.mainnet-beta.solana.com"
+      ],
+      "providerStats": {
+        "https://solana-rpc.publicnode.com": {
+          "calls": 31,
+          "successes": 31,
+          "failures": 0,
+          "recoveredFallbacks": 0,
+          "lastError": null
+        }
+      },
+      "failedWallets": 0,
+      "txFailures": 0,
+      "fallbackRecoveries": 0,
+      "walletsPass": 20,
+      "walletsPartial": 0,
+      "walletsError": 0
+    },
+    "dataGaps": [
+      "GitHub Actions/public RPC is near-real-time polling, not a sub-second WebSocket/gRPC stream; detection latency can be several minutes.",
+      "Swap classification is high-confidence balance-delta inference using SOL/WSOL/USDC/USDT quote legs; ambiguous transfers remain CONTEXT and never become BUY.",
+      "Insider/deployer/sybil graph is not yet a complete independent attribution layer.",
+      "DexScreener metadata can be missing or lag during the first minutes of a new token."
+    ]
   }
 }
