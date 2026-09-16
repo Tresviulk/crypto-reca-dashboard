@@ -2,7 +2,10 @@ name: WHALES Deep Sync
 
 on:
   schedule:
-    - cron: '4,19,34,49 * * * *'
+    # TEMPORARY D1 SAFETY GATE (2026-09-16): run every 2 hours while the
+    # indexed WHALES D1 read patch is deployed/validated. Restore 15-minute
+    # rotation only after daily D1 reads are confirmed comfortably below cap.
+    - cron: '4 */2 * * *'
   workflow_dispatch:
   push:
     branches: ["main"]
