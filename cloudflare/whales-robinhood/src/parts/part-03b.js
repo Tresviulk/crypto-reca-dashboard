@@ -121,3 +121,26 @@ readTokenSignals = async function readTokenSignalsIndexed(env, base, contract, h
     .sort((a, b2) => Number(b2.id || 0) - Number(a.id || 0))
     .slice(0, DEEP_MAX_ROWS);
 };
+
+// Deployment marker: inject a harmless diagnostic field into WHALES JSON
+// responses so the live Worker can be verified without Cloudflare dashboard
+// access. This does not alter signal logic.
+if (!globalThis.__WHALES_D1_READ_OPT_RESPONSE_MARKER__) {
+  const originalResponseJson = Response.json.bind(Response);
+  Response.json = function whalesJsonWithD1Marker(body, init) {
+    if (
+      body &&
+      typeof body === "object" &&
+      !Array.isArray(body) &&
+      (body.patchVersion === WHALES_PATCH_VERSION ||
+        body.service === "WHALES PROJECT - Robinhood Lean Monitor")
+    ) {
+      body = {
+        ...body,
+        d1ReadOptimization: WHALES_D1_READ_OPT_VERSION
+      };
+    }
+    return originalResponseJson(body, init);
+  };
+  globalThis.__WHALES_D1_READ_OPT_RESPONSE_MARKER__ = true;
+}
