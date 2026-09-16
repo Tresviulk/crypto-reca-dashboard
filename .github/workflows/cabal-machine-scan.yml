@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: cabal-independent-machine-discovery
@@ -74,6 +75,71 @@ jobs:
             git push origin HEAD:main
           fi
 
+      - name: CABAL instant PILOT alert
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+
+          data=json.loads(Path('data/cabal-machine.json').read_text(encoding='utf-8'))
+          pilots=data.get('pilotEntries') or []
+          active={
+              str(x.get('asset') or '').strip().upper(): x
+              for x in pilots
+              if x.get('executionSignal')=='PILOT_ENTRY_WINDOW' and x.get('asset')
+          }
+          repo=os.environ['GH_REPO']
+          prefix='[CABAL PILOT] '
+
+          def gh(*args):
+              p=subprocess.run(['gh', *args], text=True, capture_output=True)
+              if p.returncode != 0:
+                  raise SystemExit(f"gh {' '.join(args)} failed: {p.stderr}")
+              return p.stdout
+
+          open_issues=json.loads(gh('issue','list','--repo',repo,'--state','open','--limit','100','--json','number,title'))
+          alert_issues={}
+          for issue in open_issues:
+              title=issue.get('title') or ''
+              if title.startswith(prefix):
+                  asset=title[len(prefix):].strip().upper()
+                  alert_issues[asset]=issue
+
+          for asset, issue in alert_issues.items():
+              if asset not in active:
+                  gh('issue','close',str(issue['number']),'--repo',repo,'--comment','CABAL pilot signal is no longer active. Closing so a future reactivation can generate a new alert.')
+                  print('CLOSED PILOT ALERT', asset, issue['number'])
+
+          for asset, x in active.items():
+              if asset in alert_issues:
+                  print('PILOT ALERT ALREADY OPEN', asset, alert_issues[asset]['number'])
+                  continue
+              body=(
+                  '@Tresviulk **CABAL PILOT ENTRY ALERT**\n\n'
+                  f"- Asset: **{asset} ({x.get('name') or asset})**\n"
+                  f"- Venue: **{x.get('venue')}**\n"
+                  f"- CABAL price: **{x.get('price')}**\n"
+                  f"- Pilot entry max: **{x.get('pilotEntryMax')}**\n"
+                  f"- Pilot size: **{x.get('pilotSizePctOfPlannedPosition')}% of planned position**\n"
+                  f"- Confirmation/add trigger: **{x.get('confirmationAddTrigger')}**\n"
+                  f"- Protective stop reference: **{x.get('protectiveStopReference')}**\n"
+                  f"- Signal: **{x.get('executionSignal')}**\n"
+                  f"- CABAL generatedAt: **{data.get('generatedAt')}**\n\n"
+                  'Manual SPOT only. No auto-trade.\n\n'
+                  'This issue is created automatically immediately after a CABAL scan detects a new active pilot. '
+                  'It will be closed when the signal disappears, allowing a later reactivation to alert again.'
+              )
+              out=gh('issue','create','--repo',repo,'--title',f'{prefix}{asset}','--body',body,'--assignee','Tresviulk')
+              print('CREATED PILOT ALERT', asset, out.strip())
+
+          print('CABAL PILOT ALERT PASS active=', ','.join(sorted(active)) if active else 'NONE')
+          PY
+
       - name: Strict PRE-ACCUM and PUMP coverage validation
         shell: bash
         run: |
@@ -112,4 +178,4 @@ jobs:
           git show origin/main:data/cabal-machine.json | python -c "import sys,json; d=json.load(sys.stdin); assert d.get('schemaVersion')=='1.6'; assert 'pumpRadar' in d and 'pilotEntries' in d"
           echo 'CABAL MACHINE v1.6 PERSISTENCE PASS'
 
-# validation-trigger: v1.6-pump-pilot-2026-09-15
+# validation-trigger: v1.6-pump-pilot-alerts-2026-09-16
