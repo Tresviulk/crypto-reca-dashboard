@@ -2,7 +2,9 @@ name: WHALES State Sync
 
 on:
   schedule:
-    - cron: '3,18,33,48 * * * *'
+    # TEMPORARY D1 SAFETY GATE (2026-09-16): hourly while D1 read usage is
+    # stabilized and the indexed DEEP patch is validated live.
+    - cron: '3 * * * *'
   workflow_dispatch:
   push:
     branches: ["main"]
@@ -34,7 +36,7 @@ jobs:
           set -euo pipefail
           ROOT='https://whales-robinhood.diondublin21.workers.dev'
           curl --fail --silent --show-error --retry 3 --retry-delay 2 "$ROOT/" -o /tmp/health.json
-          curl --fail --silent --show-error --retry 3 --retry-delay 2 "$ROOT/summary?limit=1000" -o /tmp/summary.json
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 "$ROOT/summary?limit=300" -o /tmp/summary.json
           python - <<'PY'
           import json
           from datetime import datetime, timezone
