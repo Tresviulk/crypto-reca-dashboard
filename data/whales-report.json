@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-17T14:56:28.930Z",
+  "generatedAt": "2026-09-17T15:18:34.697Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -74,13 +74,13 @@
       "withdrawals": 0
     },
     "earlyEntry": {
-      "status": "PASS",
-      "generatedAt": "2026-09-17T14:48:37.271Z",
+      "status": "PARTIAL",
+      "generatedAt": "2026-09-17T15:00:46.496Z",
       "cohortSize": 20,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
-      "newOnchainSwapBuys": 4,
-      "newOnchainSwapSells": 1
+      "newOnchainSwapBuys": 0,
+      "newOnchainSwapSells": 0
     }
   },
   "health": {
@@ -177,12 +177,12 @@
       "generatedAt": "2026-09-16T08:09:04.791Z"
     },
     "earlyEntry": {
-      "status": "PASS",
-      "generatedAt": "2026-09-17T14:48:37.271Z",
-      "ageMinutes": 7.9,
+      "status": "PARTIAL",
+      "generatedAt": "2026-09-17T15:00:46.496Z",
+      "ageMinutes": 17.8,
       "cohortSize": 20,
       "failedWallets": 0,
-      "txFailures": 0
+      "txFailures": 14
     }
   },
   "coverage": {
@@ -6414,7 +6414,7 @@
   "netAccumulation": {
     "schemaVersion": "1.1",
     "module": "whalesNetAccumulationLedger",
-    "generatedAt": "2026-09-17T14:56:28.893Z",
+    "generatedAt": "2026-09-17T15:18:34.661Z",
     "status": "PASS",
     "retentionDays": 30,
     "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -6423,7 +6423,7 @@
       "base": "PASS",
       "arbitrum": "PASS",
       "solanaTradeFeed": "PASS",
-      "earlyEntryEngine": "PASS"
+      "earlyEntryEngine": "PARTIAL"
     },
     "eventCount": 1631,
     "events": [
@@ -42332,42 +42332,6 @@
         },
         {
           "chain": "solana",
-          "assetKey": "gqZNgVc8VEaaU6ngAeEEDA7wbmnXTrE98bws4NVidex",
-          "assetSymbol": "SI",
-          "buyCount": 0,
-          "sellCount": 1,
-          "tokenBought": 0,
-          "tokenSold": 24529267.143421,
-          "netTokenFlow": -24529267.143421,
-          "quoteSpent": 0,
-          "quoteReceived": 9.86168767,
-          "wallets": [
-            "SOL-WEST"
-          ],
-          "latestEventAt": "2026-09-17T09:14:57.000Z",
-          "walletCount": 1,
-          "direction": "NET_DISTRIBUTION"
-        },
-        {
-          "chain": "solana",
-          "assetKey": "2G7PAVufb3NENsD5qHUhpq6hXQiBnHgzBcsfsdhgpump",
-          "assetSymbol": "SNOZ",
-          "buyCount": 6,
-          "sellCount": 1,
-          "tokenBought": 4265059.114734,
-          "tokenSold": 27134166.027144,
-          "netTokenFlow": -22869106.91241,
-          "quoteSpent": 0.33788222,
-          "quoteReceived": 1.48143925,
-          "wallets": [
-            "SOL-WEST"
-          ],
-          "latestEventAt": "2026-09-17T09:16:33.000Z",
-          "walletCount": 1,
-          "direction": "NET_DISTRIBUTION"
-        },
-        {
-          "chain": "solana",
           "assetKey": "BvQrEJ4hvbnuNyjs6GhY1ugpRi7ih689MNWAqU3wyiMF",
           "assetSymbol": "XOGE",
           "buyCount": 4,
@@ -71926,8 +71890,8 @@
     "rule": "TOKEN_FLOW_CONTEXT_ONLY is never promoted to BUY/SELL without trade-level evidence. Net accumulation uses confirmed classifications only. CEX labels are context signals and never proof of sale/purchase."
   },
   "earlyEntry": {
-    "status": "PASS",
-    "generatedAt": "2026-09-17T14:48:37.271Z",
+    "status": "PARTIAL",
+    "generatedAt": "2026-09-17T15:00:46.496Z",
     "scheduleTargetMinutes": 5,
     "cohort": {
       "total": 20,
@@ -71936,17 +71900,17 @@
       "dynamicTierB": 11
     },
     "scan": {
-      "newEventCount": 6,
-      "newOnchainSwapBuys": 4,
-      "newOnchainSwapSells": 1,
-      "newContextOnly": 1,
-      "retainedEventCount": 2218,
-      "activeMintCount6h": 14,
-      "signalCount": 14,
+      "newEventCount": 0,
+      "newOnchainSwapBuys": 0,
+      "newOnchainSwapSells": 0,
+      "newContextOnly": 0,
+      "retainedEventCount": 2210,
+      "activeMintCount6h": 13,
+      "signalCount": 13,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
       "netAccumulationSignalCount": 0,
-      "netDistributionSignalCount": 8,
+      "netDistributionSignalCount": 7,
       "roundTripFlatCount": 4,
       "rawNetAccumulationSignalCount": 2,
       "microProbeCount": 0,
@@ -71963,18 +71927,25 @@
       ],
       "providerStats": {
         "https://solana-rpc.publicnode.com": {
-          "calls": 27,
-          "successes": 27,
-          "failures": 0,
+          "calls": 48,
+          "successes": 20,
+          "failures": 28,
           "recoveredFallbacks": 0,
-          "lastError": null
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+        },
+        "https://api.mainnet-beta.solana.com": {
+          "calls": 28,
+          "successes": 0,
+          "failures": 28,
+          "recoveredFallbacks": 0,
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
         }
       },
       "failedWallets": 0,
-      "txFailures": 0,
+      "txFailures": 14,
       "fallbackRecoveries": 0,
-      "walletsPass": 20,
-      "walletsPartial": 0,
+      "walletsPass": 18,
+      "walletsPartial": 2,
       "walletsError": 0
     },
     "dataGaps": [
