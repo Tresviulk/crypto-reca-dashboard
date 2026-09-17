@@ -38,7 +38,8 @@ jobs:
           NTFY_TOPIC = "cabal-jr-7k29m4xq81"
           STATE_PATH = "data/ntfy-alert-state.json"
           COOLDOWN_HOURS = 12
-          MAX_ASSETS_PER_PUSH = 4
+          GLOBAL_COOLDOWN_MINUTES = 20
+          MAX_ASSETS_PER_PUSH = 2
 
           now = datetime.now(timezone.utc)
           now_iso = now.isoformat().replace("+00:00","Z")
@@ -75,6 +76,12 @@ jobs:
               if not t:
                   return 1e9
               return (now-t).total_seconds()/3600.0
+
+          def minutes_since(s):
+              t=parse_time(s)
+              if not t:
+                  return 1e9
+              return (now-t).total_seconds()/60.0
 
           if not os.path.exists("data/cabal-machine.json"):
               raise SystemExit("Missing data/cabal-machine.json")
@@ -145,7 +152,15 @@ jobs:
                   "price":p.get("price"),
                   "entryMax":p.get("pilotEntryMax"),
                   "stop":p.get("protectiveStopReference"),
-                  "reason":p.get("pilotReason") or p.get("classification") or "PILOT_ENTRY_WINDOW"
+                  "reason":p.get("pilotReason") or p.get("classification") or "PILOT_ENTRY_WINDOW",
+                  "stageScore":p.get("stageAScore"),
+                  "rvol1h":p.get("rvol1h"),
+                  "rvol15m":((p.get("fastPump15m") or {}).get("rvol15m")),
+                  "rs1":p.get("relativeStrength1hVsBTC"),
+                  "intrahourRS":p.get("intrahourRelativeStrengthVsBTC"),
+                  "bucketB":bool(p.get("bucketB")),
+                  "bucketC":bool(p.get("bucketC")),
+                  "classification":p.get("classification")
               }
 
           for p in (whales.get("buyCandidates") or []):
@@ -193,29 +208,52 @@ jobs:
           prev_active=set(prev.get("active") or [])
           last_alert=dict(prev.get("lastAlertAt") or {})
 
+          def quality_ok(row):
+              if row.get("lane")=="WHALES":
+                  return True
+              reason=str(row.get("reason") or "").upper()
+              score=num(row.get("stageScore")) or 0
+              rvol1=num(row.get("rvol1h")) or 0
+              rvol15=num(row.get("rvol15m"))
+              rs1=num(row.get("rs1")) or 0
+              irs=num(row.get("intrahourRS")) or 0
+              b=bool(row.get("bucketB"))
+              c=bool(row.get("bucketC"))
+              if reason=="PRE_ACCUM_TRIGGER":
+                  return score>=50 and rvol1>=2 and b and c and (rs1>0 or irs>=0.2)
+              if reason=="FAST_PUMP_15M":
+                  return rvol15 is not None and rvol15>=2 and irs>=0.2 and b and c and score>=15
+              if reason=="ABC_EARLY_STRUCTURE":
+                  return score>=35 and b and c
+              if reason=="SECOND_LEG_TRIGGER":
+                  return score>=35 and b
+              return False
+
           new_rows=[]
           if healthy and not first_run:
               for key,row in candidates.items():
-                  if key in prev_active:
+                  if not quality_ok(row):
                       continue
                   if hours_since(last_alert.get(key)) < COOLDOWN_HOURS:
                       continue
                   new_rows.append(row)
 
-          new_rows.sort(key=lambda x:(x["rank"], x["asset"]), reverse=True)
+          new_rows.sort(key=lambda x:(x["rank"], num(x.get("stageScore")) or 0, x["asset"]), reverse=True)
 
           alert_payload=None
 
           # NTFY is purchase-opportunity-only. If CABAL is unhealthy, remain silent.
           system_last=prev.get("systemLastAlertAt")
-          if healthy and new_rows:
+          system_ready=minutes_since(system_last) >= GLOBAL_COOLDOWN_MINUTES
+          if healthy and new_rows and system_ready:
               selected=new_rows[:MAX_ASSETS_PER_PUSH]
               cards=[]
               for r in selected:
                   icon="🐋" if r["lane"]=="WHALES" else ("🚨" if r["urgency"]=="IMMEDIATE" else "⚡")
                   parts=[
                       f'{icon} {r["asset"]}',
-                      f'PLATAFORMA: {r["venue"]}'
+                      f'PLATAFORMA: {r["venue"]}',
+                      f'SCORE: {fmt(r.get("stageScore"))}'
                   ]
                   if num(r.get("price")) is not None:
                       parts.append(f'PRECIO AHORA: {fmt(r["price"])}')
@@ -231,13 +269,15 @@ jobs:
                   cards.append(f'+{len(new_rows)-MAX_ASSETS_PER_PUSH} señales adicionales filtradas en esta ronda.')
 
               alert_payload={
-                  "title":"🚨 CABAL — COMPRAR AHORA",
+                  "title":"🚨 CABAL — COMPRA PILOTO VALIDADA",
                   "priority":"high",
-                  "message":"\n\n".join(cards) + "\n\nACCIÓN: revisar compra ahora. SPOT manual; no se ejecuta ninguna orden automáticamente."
+                  "message":"\n\n".join(cards) + "\n\nACCIÓN: señal de compra piloto. Compra solo si el precio sigue <= COMPRA MÁX. Tú decides el importe. SPOT manual; no se ejecuta ninguna orden automáticamente."
               }
 
-              # Mark all qualifying new rows as alerted so one run cannot create a notification storm.
-              for r in new_rows:
+              system_last=now_iso
+              # Mark only assets actually included in the push. Others remain pending and
+              # must still be active + quality-valid after the global cooldown.
+              for r in selected:
                   last_alert[r["key"]]=now_iso
 
           # First run is seed-only: no notification for already-active signals.
