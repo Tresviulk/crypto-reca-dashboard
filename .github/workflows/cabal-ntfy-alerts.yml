@@ -1,0 +1,339 @@
+name: CABAL NTFY Alerts
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - '.github/workflows/cabal-ntfy-alerts.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cabal-ntfy-alerts
+  cancel-in-progress: true
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Build single-channel alert
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, math
+          from datetime import datetime, timezone
+
+          NTFY_TOPIC = "cabal-jr-7k29m4xq81"
+          STATE_PATH = "data/ntfy-alert-state.json"
+          COOLDOWN_HOURS = 12
+          MAX_ASSETS_PER_PUSH = 4
+
+          now = datetime.now(timezone.utc)
+          now_iso = now.isoformat().replace("+00:00","Z")
+
+          def num(v):
+              try:
+                  x=float(v)
+                  return x if math.isfinite(x) else None
+              except:
+                  return None
+
+          def fmt(v):
+              x=num(v)
+              if x is None:
+                  return "n/a"
+              if abs(x) >= 1000:
+                  return f"{x:,.2f}".replace(",","")
+              if abs(x) >= 1:
+                  return f"{x:.6f}".rstrip("0").rstrip(".")
+              if abs(x) >= 0.01:
+                  return f"{x:.6f}".rstrip("0").rstrip(".")
+              return f"{x:.10f}".rstrip("0").rstrip(".")
+
+          def parse_time(s):
+              if not s:
+                  return None
+              try:
+                  return datetime.fromisoformat(str(s).replace("Z","+00:00"))
+              except:
+                  return None
+
+          def hours_since(s):
+              t=parse_time(s)
+              if not t:
+                  return 1e9
+              return (now-t).total_seconds()/3600.0
+
+          if not os.path.exists("data/cabal-machine.json"):
+              raise SystemExit("Missing data/cabal-machine.json")
+
+          cabal=json.load(open("data/cabal-machine.json",encoding="utf-8"))
+          whales={}
+          if os.path.exists("data/whales-early-entry-state.json"):
+              try:
+                  with open("data/whales-early-entry-state.json",encoding="utf-8") as f:
+                      whales=json.load(f)
+              except Exception as e:
+                  whales={"_parse_error":str(e)}
+
+          prev={
+              "schemaVersion":"1.0",
+              "active":[],
+              "lastAlertAt":{},
+              "systemLastAlertAt":None
+          }
+          first_run = not os.path.exists(STATE_PATH)
+          if not first_run:
+              try:
+                  prev.update(json.load(open(STATE_PATH,encoding="utf-8")))
+              except Exception:
+                  first_run=True
+
+          generated=parse_time(cabal.get("generatedAt"))
+          age_min=((now-generated).total_seconds()/60.0) if generated else 1e9
+          coverage=cabal.get("coverage") or {}
+          healthy=(
+              cabal.get("ok") is True
+              and cabal.get("preAccumOperational") is True
+              and cabal.get("mainMachineOperational") is True
+              and coverage.get("preAccum")=="PASS"
+              and age_min <= 30
+          )
+
+          candidates={}
+          cabal_by_asset={}
+
+          for p in (cabal.get("pilotEntries") or []):
+              asset=str(p.get("asset") or p.get("base") or "").upper().strip()
+              if not asset:
+                  continue
+              cabal_by_asset[asset]=p
+              if p.get("executionSignal")!="PILOT_ENTRY_WINDOW":
+                  continue
+              if p.get("pilotEntryEligible") is not True:
+                  continue
+              if p.get("requiresProtectiveStop") is not True:
+                  continue
+              if num(p.get("pilotEntryMax")) is None or num(p.get("protectiveStopReference")) is None:
+                  continue
+              urgency=str(p.get("decisionUrgency") or "").upper()
+              if urgency not in {"HIGH","IMMEDIATE"}:
+                  continue
+              key=f"CABAL:{asset}"
+              rank=80 if urgency=="IMMEDIATE" else 60
+              if str(p.get("pilotReason") or "").upper()=="FAST_PUMP_15M":
+                  rank+=15
+              candidates[key]={
+                  "key":key,
+                  "asset":asset,
+                  "lane":"CABAL",
+                  "rank":rank,
+                  "urgency":urgency,
+                  "venue":p.get("venue") or "n/a",
+                  "price":p.get("price"),
+                  "entryMax":p.get("pilotEntryMax"),
+                  "stop":p.get("protectiveStopReference"),
+                  "reason":p.get("pilotReason") or p.get("classification") or "PILOT_ENTRY_WINDOW"
+              }
+
+          for p in (whales.get("buyCandidates") or []):
+              if p.get("cabalValidatedForEntry") is not True:
+                  continue
+              if p.get("marketHealthy") is not True:
+                  continue
+              if p.get("noChase") is True:
+                  continue
+              if (num(p.get("netTokenFlow")) or 0) <= 0:
+                  continue
+              sizing=p.get("positionSizing") or {}
+              if (num(sizing.get("meaningfulWalletCount")) or 0) < 1:
+                  continue
+              asset=str(
+                  p.get("asset") or p.get("symbol") or p.get("tokenSymbol")
+                  or p.get("base") or ""
+              ).upper().strip()
+              if not asset or len(asset)>20:
+                  continue
+
+              cp=cabal_by_asset.get(asset,{})
+              key=f"WHALES:{asset}"
+              candidates[key]={
+                  "key":key,
+                  "asset":asset,
+                  "lane":"WHALES",
+                  "rank":100,
+                  "urgency":"HIGH",
+                  "venue":cp.get("venue") or p.get("venue") or "n/a",
+                  "price":cp.get("price") or p.get("price") or p.get("currentPrice"),
+                  "entryMax":cp.get("pilotEntryMax") or p.get("pilotEntryMax"),
+                  "stop":cp.get("protectiveStopReference") or p.get("protectiveStopReference"),
+                  "reason":"WHALES + CABAL",
+                  "wallets":int(num(sizing.get("meaningfulWalletCount")) or 0)
+              }
+
+          # If the same asset exists in WHALES and CABAL, keep only WHALES+CABAL.
+          whale_assets={x["asset"] for x in candidates.values() if x["lane"]=="WHALES"}
+          for key in list(candidates):
+              if candidates[key]["lane"]=="CABAL" and candidates[key]["asset"] in whale_assets:
+                  del candidates[key]
+
+          active=set(candidates)
+          prev_active=set(prev.get("active") or [])
+          last_alert=dict(prev.get("lastAlertAt") or {})
+
+          new_rows=[]
+          if healthy and not first_run:
+              for key,row in candidates.items():
+                  if key in prev_active:
+                      continue
+                  if hours_since(last_alert.get(key)) < COOLDOWN_HOURS:
+                      continue
+                  new_rows.append(row)
+
+          new_rows.sort(key=lambda x:(x["rank"], x["asset"]), reverse=True)
+
+          alert_payload=None
+
+          # System health gets one low-frequency warning and suppresses trade alerts.
+          system_last=prev.get("systemLastAlertAt")
+          if not healthy:
+              if not first_run and hours_since(system_last) >= 6:
+                  reasons=[]
+                  if cabal.get("ok") is not True: reasons.append("machine ok=false")
+                  if cabal.get("preAccumOperational") is not True: reasons.append("PRE-ACCUM off")
+                  if cabal.get("mainMachineOperational") is not True: reasons.append("main machine off")
+                  if coverage.get("preAccum")!="PASS": reasons.append("coverage PRE-ACCUM not PASS")
+                  if age_min>30: reasons.append(f"data stale {age_min:.0f}m")
+                  alert_payload={
+                      "title":"⚠️ CABAL — SISTEMA",
+                      "priority":"default",
+                      "message":"CABAL no está plenamente operativo: " + ", ".join(reasons) + ". No actuar hasta recuperar cobertura."
+                  }
+                  system_last=now_iso
+          elif new_rows:
+              selected=new_rows[:MAX_ASSETS_PER_PUSH]
+              lines=[]
+              for r in selected:
+                  icon="🐋" if r["lane"]=="WHALES" else ("🚨" if r["urgency"]=="IMMEDIATE" else "⚡")
+                  detail=f'{icon} {r["asset"]} | {r["venue"]}'
+                  if num(r.get("price")) is not None:
+                      detail+=f' | ahora {fmt(r["price"])}'
+                  if num(r.get("entryMax")) is not None:
+                      detail+=f' | max {fmt(r["entryMax"])}'
+                  if num(r.get("stop")) is not None:
+                      detail+=f' | stop {fmt(r["stop"])}'
+                  if r["lane"]=="WHALES" and r.get("wallets"):
+                      detail+=f' | {r["wallets"]} wallets'
+                  lines.append(detail)
+
+              if len(new_rows)>MAX_ASSETS_PER_PUSH:
+                  lines.append(f'+{len(new_rows)-MAX_ASSETS_PER_PUSH} señales adicionales filtradas en esta ronda.')
+
+              alert_payload={
+                  "title":"🚨 CABAL — ENTRY REVIEW",
+                  "priority":"high",
+                  "message":"\n".join(lines) + "\n\nRevisar ahora. SPOT manual; no se ejecuta ninguna compra automáticamente."
+              }
+
+              # Mark all qualifying new rows as alerted so one run cannot create a notification storm.
+              for r in new_rows:
+                  last_alert[r["key"]]=now_iso
+
+          # First run is seed-only: no notification for already-active signals.
+          if first_run:
+              for key in active:
+                  last_alert[key]=now_iso
+
+          state={
+              "schemaVersion":"1.0",
+              "generatedAt":now_iso,
+              "seeded":True,
+              "active":sorted(active),
+              "lastAlertAt":last_alert,
+              "systemLastAlertAt":system_last,
+              "health":{
+                  "healthy":healthy,
+                  "cabalGeneratedAt":cabal.get("generatedAt"),
+                  "ageMinutes":round(age_min,2) if age_min < 1e8 else None,
+                  "preAccumOperational":cabal.get("preAccumOperational"),
+                  "mainMachineOperational":cabal.get("mainMachineOperational"),
+                  "preAccumCoverage":coverage.get("preAccum"),
+                  "whalesStateParsed":("_parse_error" not in whales)
+              }
+          }
+
+          with open("/tmp/ntfy-alert-state.json","w",encoding="utf-8") as f:
+              json.dump(state,f,ensure_ascii=False,indent=2)
+
+          with open("/tmp/ntfy-payload.json","w",encoding="utf-8") as f:
+              json.dump(alert_payload,f,ensure_ascii=False)
+
+          print(json.dumps({
+              "firstRun":first_run,
+              "healthy":healthy,
+              "activeSignals":len(active),
+              "newAlerts":len(new_rows),
+              "willNotify":bool(alert_payload)
+          },ensure_ascii=False))
+          PY
+
+      - name: Send at most one ntfy push
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$(cat /tmp/ntfy-payload.json)" = "null" ]; then
+            echo "No notification this run."
+            exit 0
+          fi
+
+          title=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["title"])')
+          priority=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["priority"])')
+          message=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["message"])')
+
+          curl -fsS \
+            -H "Title: $title" \
+            -H "Priority: $priority" \
+            --data-binary "$message" \
+            https://ntfy.sh/cabal-jr-7k29m4xq81
+
+      - name: Persist alert state without triggering other alerts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          cp /tmp/ntfy-alert-state.json /tmp/state.json
+
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/state.json data/ntfy-alert-state.json
+            git add data/ntfy-alert-state.json
+
+            if git diff --cached --quiet; then
+              echo "Alert state unchanged."
+              exit 0
+            fi
+
+            git commit -m 'cabal: refresh ntfy alert state [skip ci]'
+            if git push origin HEAD:main; then
+              echo "NTFY alert state persisted."
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+
+          echo "Could not persist ntfy alert state after retries." >&2
+          exit 1
