@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'data/cabal-machine.json'
+      - 'data/whales-early-entry-state.json'
+      - '.github/workflows/cabal-critical-mobile-alerts.yml'
 
 permissions:
   contents: read
@@ -93,7 +99,6 @@ jobs:
                   )
                   alerts.append({'lane':'WHALES','asset':asset,'title':title,'body':body})
 
-          # Deduplicate same title inside a single run.
           unique={a['title']:a for a in alerts}
           out=list(unique.values())
           with open('/tmp/cabal-alerts.json','w',encoding='utf-8') as f:
