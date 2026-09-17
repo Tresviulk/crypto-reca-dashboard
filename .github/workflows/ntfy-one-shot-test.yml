@@ -1,0 +1,25 @@
+name: NTFY One Shot Test
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - '.github/workflows/ntfy-one-shot-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Send ntfy test
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS \
+            -H 'Title: CABAL prueba' \
+            -H 'Priority: high' \
+            -d 'Prueba CABAL: si recibes esto, el canal ntfy funciona correctamente.' \
+            https://ntfy.sh/cabal-jr-7k29m4xq81
