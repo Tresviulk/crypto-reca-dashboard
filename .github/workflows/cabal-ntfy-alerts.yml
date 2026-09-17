@@ -206,45 +206,34 @@ jobs:
 
           alert_payload=None
 
-          # System health gets one low-frequency warning and suppresses trade alerts.
+          # NTFY is purchase-opportunity-only. If CABAL is unhealthy, remain silent.
           system_last=prev.get("systemLastAlertAt")
-          if not healthy:
-              if not first_run and hours_since(system_last) >= 6:
-                  reasons=[]
-                  if cabal.get("ok") is not True: reasons.append("machine ok=false")
-                  if cabal.get("preAccumOperational") is not True: reasons.append("PRE-ACCUM off")
-                  if cabal.get("mainMachineOperational") is not True: reasons.append("main machine off")
-                  if coverage.get("preAccum")!="PASS": reasons.append("coverage PRE-ACCUM not PASS")
-                  if age_min>30: reasons.append(f"data stale {age_min:.0f}m")
-                  alert_payload={
-                      "title":"⚠️ CABAL — SISTEMA",
-                      "priority":"default",
-                      "message":"CABAL no está plenamente operativo: " + ", ".join(reasons) + ". No actuar hasta recuperar cobertura."
-                  }
-                  system_last=now_iso
-          elif new_rows:
+          if healthy and new_rows:
               selected=new_rows[:MAX_ASSETS_PER_PUSH]
-              lines=[]
+              cards=[]
               for r in selected:
                   icon="🐋" if r["lane"]=="WHALES" else ("🚨" if r["urgency"]=="IMMEDIATE" else "⚡")
-                  detail=f'{icon} {r["asset"]} | {r["venue"]}'
+                  parts=[
+                      f'{icon} {r["asset"]}',
+                      f'PLATAFORMA: {r["venue"]}'
+                  ]
                   if num(r.get("price")) is not None:
-                      detail+=f' | ahora {fmt(r["price"])}'
+                      parts.append(f'PRECIO AHORA: {fmt(r["price"])}')
                   if num(r.get("entryMax")) is not None:
-                      detail+=f' | max {fmt(r["entryMax"])}'
+                      parts.append(f'COMPRA MÁX.: {fmt(r["entryMax"])}')
                   if num(r.get("stop")) is not None:
-                      detail+=f' | stop {fmt(r["stop"])}'
+                      parts.append(f'STOP: {fmt(r["stop"])}')
                   if r["lane"]=="WHALES" and r.get("wallets"):
-                      detail+=f' | {r["wallets"]} wallets'
-                  lines.append(detail)
+                      parts.append(f'WHALES: {r["wallets"]} wallets relevantes')
+                  cards.append("\n".join(parts))
 
               if len(new_rows)>MAX_ASSETS_PER_PUSH:
-                  lines.append(f'+{len(new_rows)-MAX_ASSETS_PER_PUSH} señales adicionales filtradas en esta ronda.')
+                  cards.append(f'+{len(new_rows)-MAX_ASSETS_PER_PUSH} señales adicionales filtradas en esta ronda.')
 
               alert_payload={
-                  "title":"🚨 CABAL — ENTRY REVIEW",
+                  "title":"🚨 CABAL — REVISAR COMPRA",
                   "priority":"high",
-                  "message":"\n".join(lines) + "\n\nRevisar ahora. SPOT manual; no se ejecuta ninguna compra automáticamente."
+                  "message":"\n\n".join(cards) + "\n\nACCIÓN: revisar compra ahora. SPOT manual; no se ejecuta ninguna orden automáticamente."
               }
 
               # Mark all qualifying new rows as alerted so one run cannot create a notification storm.
