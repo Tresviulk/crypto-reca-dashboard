@@ -39,7 +39,8 @@ jobs:
           NTFY_TOPIC = "cabal-jr-7k29m4xq81"
           STATE_PATH = "data/ntfy-alert-state.json"
           COOLDOWN_HOURS = 12
-          GLOBAL_COOLDOWN_MINUTES = 20
+          GLOBAL_COOLDOWN_MINUTES = 10
+          REQUIRED_FRESH_SCANS = 2
           MAX_ASSETS_PER_PUSH = 2
 
           now = datetime.now(timezone.utc)
@@ -100,7 +101,9 @@ jobs:
               "schemaVersion":"1.0",
               "active":[],
               "lastAlertAt":{},
-              "systemLastAlertAt":None
+              "systemLastAlertAt":None,
+              "qualifiedSeenCount":{},
+              "lastCabalGeneratedAt":None
           }
           first_run = not os.path.exists(STATE_PATH)
           if not first_run:
@@ -161,7 +164,9 @@ jobs:
                   "intrahourRS":p.get("intrahourRelativeStrengthVsBTC"),
                   "bucketB":bool(p.get("bucketB")),
                   "bucketC":bool(p.get("bucketC")),
-                  "classification":p.get("classification")
+                  "classification":p.get("classification"),
+                  "effort":p.get("effortVsResult"),
+                  "price24":p.get("priceChange24hPct")
               }
 
           for p in (whales.get("buyCandidates") or []):
@@ -196,7 +201,17 @@ jobs:
                   "entryMax":cp.get("pilotEntryMax") or p.get("pilotEntryMax"),
                   "stop":cp.get("protectiveStopReference") or p.get("protectiveStopReference"),
                   "reason":"WHALES + CABAL",
-                  "wallets":int(num(sizing.get("meaningfulWalletCount")) or 0)
+                  "wallets":int(num(sizing.get("meaningfulWalletCount")) or 0),
+                  "stageScore":cp.get("stageAScore"),
+                  "rvol1h":cp.get("rvol1h"),
+                  "rvol15m":((cp.get("fastPump15m") or {}).get("rvol15m")),
+                  "rs1":cp.get("relativeStrength1hVsBTC"),
+                  "intrahourRS":cp.get("intrahourRelativeStrengthVsBTC"),
+                  "bucketB":bool(cp.get("bucketB")),
+                  "bucketC":bool(cp.get("bucketC")),
+                  "classification":cp.get("classification"),
+                  "effort":cp.get("effortVsResult"),
+                  "price24":cp.get("priceChange24hPct")
               }
 
           # If the same asset exists in WHALES and CABAL, keep only WHALES+CABAL.
@@ -206,12 +221,24 @@ jobs:
                   del candidates[key]
 
           active=set(candidates)
-          prev_active=set(prev.get("active") or [])
           last_alert=dict(prev.get("lastAlertAt") or {})
+          seen=dict(prev.get("qualifiedSeenCount") or {})
+          current_scan_id=str(cabal.get("generatedAt") or "")
+          previous_scan_id=str(prev.get("lastCabalGeneratedAt") or "")
+          is_new_cabal_scan=bool(current_scan_id and current_scan_id != previous_scan_id)
 
-          def quality_ok(row):
-              if row.get("lane")=="WHALES":
-                  return True
+          def final_buy_ok(row):
+              price=num(row.get("price"))
+              entry_max=num(row.get("entryMax"))
+              if price is None or entry_max is None or price > entry_max:
+                  return False
+
+              classification=str(row.get("classification") or "").upper()
+              effort=str(row.get("effort") or "").upper()
+              if "CHURN" in classification or "DISTRIBUTION" in classification or classification=="NO SETUP" or effort=="POOR":
+                  return False
+
+              # WHALES never bypasses CABAL quality: it can only strengthen an already valid setup.
               reason=str(row.get("reason") or "").upper()
               score=num(row.get("stageScore")) or 0
               rvol1=num(row.get("rvol1h")) or 0
@@ -220,20 +247,37 @@ jobs:
               irs=num(row.get("intrahourRS")) or 0
               b=bool(row.get("bucketB"))
               c=bool(row.get("bucketC"))
+
+              if reason=="WHALES + CABAL":
+                  return score>=20 and b and c and ((rvol15 is not None and rvol15>=5 and irs>=0.30) or (rvol1>=5 and rs1>=0.25))
               if reason=="PRE_ACCUM_TRIGGER":
-                  return score>=50 and rvol1>=2 and b and c and (rs1>0 or irs>=0.2)
+                  return score>=55 and rvol1>=5 and b and c and (rs1>=0.25 or irs>=0.25)
               if reason=="FAST_PUMP_15M":
-                  return rvol15 is not None and rvol15>=2 and irs>=0.2 and b and c and score>=15
+                  return score>=20 and rvol15 is not None and rvol15>=5 and irs>=0.30 and b and c
               if reason=="ABC_EARLY_STRUCTURE":
-                  return score>=35 and b and c
+                  return score>=50 and b and c and rs1>0
               if reason=="SECOND_LEG_TRIGGER":
-                  return score>=35 and b
+                  return score>=50 and b and c and irs>=0.20
               return False
+
+          qualified_now={}
+          for key,row in candidates.items():
+              if final_buy_ok(row):
+                  qualified_now[key]=row
+                  if is_new_cabal_scan:
+                      seen[key]=min(int(seen.get(key,0))+1,99)
+              elif is_new_cabal_scan:
+                  seen.pop(key,None)
+
+          if is_new_cabal_scan:
+              for key in list(seen):
+                  if key not in qualified_now:
+                      seen.pop(key,None)
 
           new_rows=[]
           if healthy and not first_run:
-              for key,row in candidates.items():
-                  if not quality_ok(row):
+              for key,row in qualified_now.items():
+                  if int(seen.get(key,0)) < REQUIRED_FRESH_SCANS:
                       continue
                   if hours_since(last_alert.get(key)) < COOLDOWN_HOURS:
                       continue
@@ -270,9 +314,9 @@ jobs:
                   cards.append(f'+{len(new_rows)-MAX_ASSETS_PER_PUSH} señales adicionales filtradas en esta ronda.')
 
               alert_payload={
-                  "title":"🚨 CABAL — COMPRA PILOTO VALIDADA",
+                  "title":"🟢 CABAL — COMPRAR AHORA",
                   "priority":"high",
-                  "message":"\n\n".join(cards) + "\n\nACCIÓN: señal de compra piloto. Compra solo si el precio sigue <= COMPRA MÁX. Tú decides el importe. SPOT manual; no se ejecuta ninguna orden automáticamente."
+                  "message":"\n\n".join(cards) + "\n\nACCIÓN: COMPRAR SPOT AHORA mientras el precio siga <= COMPRA MÁX. Tú decides el importe. No se ejecuta ninguna orden automáticamente."
               }
 
               system_last=now_iso
@@ -287,12 +331,14 @@ jobs:
                   last_alert[key]=now_iso
 
           state={
-              "schemaVersion":"1.0",
+              "schemaVersion":"1.1",
               "generatedAt":now_iso,
               "seeded":True,
               "active":sorted(active),
               "lastAlertAt":last_alert,
               "systemLastAlertAt":system_last,
+              "qualifiedSeenCount":seen,
+              "lastCabalGeneratedAt":current_scan_id,
               "health":{
                   "healthy":healthy,
                   "cabalGeneratedAt":cabal.get("generatedAt"),
@@ -314,6 +360,7 @@ jobs:
               "firstRun":first_run,
               "healthy":healthy,
               "activeSignals":len(active),
+              "qualifiedNow":len(qualified_now),
               "newAlerts":len(new_rows),
               "willNotify":bool(alert_payload)
           },ensure_ascii=False))
