@@ -39,9 +39,11 @@ jobs:
           NTFY_TOPIC = "cabal-jr-7k29m4xq81"
           STATE_PATH = "data/ntfy-alert-state.json"
           COOLDOWN_HOURS = 12
-          GLOBAL_COOLDOWN_MINUTES = 10
-          REQUIRED_FRESH_SCANS = 2
-          MAX_ASSETS_PER_PUSH = 2
+          GLOBAL_COOLDOWN_MINUTES = 20
+          REQUIRED_FRESH_SCANS = 3
+          MAX_ASSETS_PER_PUSH = 1
+          MIN_EDGE_SCORE = 65.0
+          MIN_EDGE_MARGIN = 3.0
 
           now = datetime.now(timezone.utc)
           now_iso = now.isoformat().replace("+00:00","Z")
@@ -161,7 +163,10 @@ jobs:
                   "rvol1h":p.get("rvol1h"),
                   "rvol15m":((p.get("fastPump15m") or {}).get("rvol15m")),
                   "rs1":p.get("relativeStrength1hVsBTC"),
+                  "rs4":p.get("relativeStrength4hVsBTC"),
                   "intrahourRS":p.get("intrahourRelativeStrengthVsBTC"),
+                  "price1":p.get("priceChange1hPct"),
+                  "price4":p.get("priceChange4hPct"),
                   "bucketB":bool(p.get("bucketB")),
                   "bucketC":bool(p.get("bucketC")),
                   "classification":p.get("classification"),
@@ -206,7 +211,10 @@ jobs:
                   "rvol1h":cp.get("rvol1h"),
                   "rvol15m":((cp.get("fastPump15m") or {}).get("rvol15m")),
                   "rs1":cp.get("relativeStrength1hVsBTC"),
+                  "rs4":cp.get("relativeStrength4hVsBTC"),
                   "intrahourRS":cp.get("intrahourRelativeStrengthVsBTC"),
+                  "price1":cp.get("priceChange1hPct"),
+                  "price4":cp.get("priceChange4hPct"),
                   "bucketB":bool(cp.get("bucketB")),
                   "bucketC":bool(cp.get("bucketC")),
                   "classification":cp.get("classification"),
@@ -230,7 +238,12 @@ jobs:
           def final_buy_ok(row):
               price=num(row.get("price"))
               entry_max=num(row.get("entryMax"))
-              if price is None or entry_max is None or price > entry_max:
+              stop=num(row.get("stop"))
+              if price is None or entry_max is None or stop is None or price > entry_max:
+                  return False
+
+              stop_dist=((price-stop)/price*100.0) if price>0 else 99
+              if stop_dist < 1.0 or stop_dist > 4.5:
                   return False
 
               classification=str(row.get("classification") or "").upper()
@@ -238,27 +251,62 @@ jobs:
               if "CHURN" in classification or "DISTRIBUTION" in classification or classification=="NO SETUP" or effort=="POOR":
                   return False
 
-              # WHALES never bypasses CABAL quality: it can only strengthen an already valid setup.
+              # BUY NOW requires alpha, not merely participation in a rising market.
+              # WHALES can strengthen a valid CABAL setup but never bypass these gates.
               reason=str(row.get("reason") or "").upper()
               score=num(row.get("stageScore")) or 0
               rvol1=num(row.get("rvol1h")) or 0
-              rvol15=num(row.get("rvol15m"))
+              rvol15=num(row.get("rvol15m")) or 0
               rs1=num(row.get("rs1")) or 0
+              rs4=num(row.get("rs4")) or 0
               irs=num(row.get("intrahourRS")) or 0
+              p1=num(row.get("price1")) or 0
+              p4=num(row.get("price4")) or 0
               b=bool(row.get("bucketB"))
               c=bool(row.get("bucketC"))
 
+              if not (b and c):
+                  return False
+              if rs1 < 0.30 or irs < 0.20:
+                  return False
+              if p1 < 0.15 or p4 < -0.50:
+                  return False
+
               if reason=="WHALES + CABAL":
-                  return score>=20 and b and c and ((rvol15 is not None and rvol15>=5 and irs>=0.30) or (rvol1>=5 and rs1>=0.25))
+                  return score>=45 and rvol1>=5 and (rvol15>=5 or rs4>=0)
               if reason=="PRE_ACCUM_TRIGGER":
-                  return score>=55 and rvol1>=5 and b and c and (rs1>=0.25 or irs>=0.25)
+                  return score>=65 and rvol1>=7 and rs4>=-0.10
               if reason=="FAST_PUMP_15M":
-                  return score>=20 and rvol15 is not None and rvol15>=5 and irs>=0.30 and b and c
+                  return score>=35 and rvol15>=7 and irs>=0.40 and rs4>=-0.10
               if reason=="ABC_EARLY_STRUCTURE":
-                  return score>=50 and b and c and rs1>0
+                  return score>=65 and rvol1>=5 and rs4>=0
               if reason=="SECOND_LEG_TRIGGER":
-                  return score>=50 and b and c and irs>=0.20
+                  return score>=65 and rvol1>=5 and rs4>=0
               return False
+
+          def edge_score(row):
+              score=num(row.get("stageScore")) or 0
+              rvol1=max(0.0,num(row.get("rvol1h")) or 0)
+              rvol15=max(0.0,num(row.get("rvol15m")) or 0)
+              rs1=num(row.get("rs1")) or 0
+              rs4=num(row.get("rs4")) or 0
+              irs=num(row.get("intrahourRS")) or 0
+              p1=num(row.get("price1")) or 0
+              price=num(row.get("price")) or 0
+              stop=num(row.get("stop")) or 0
+              stop_dist=((price-stop)/price*100.0) if price>0 else 5
+              e=0.0
+              e += min(30.0,max(0.0,rs1)*18.0)
+              e += min(25.0,max(0.0,irs)*16.0)
+              e += min(12.0,max(0.0,rs4)*6.0)
+              e += min(10.0,math.log1p(rvol1)*2.8)
+              e += min(8.0,math.log1p(rvol15)*2.0)
+              e += min(8.0,max(0.0,p1)*2.0)
+              e += min(10.0,score/12.0)
+              if row.get("lane")=="WHALES":
+                  e += 8.0
+              e -= max(0.0,stop_dist-2.0)*2.5
+              return round(e,4)
 
           qualified_now={}
           for key,row in candidates.items():
@@ -274,16 +322,30 @@ jobs:
                   if key not in qualified_now:
                       seen.pop(key,None)
 
+          # Cross-sectional competition: only the strongest CURRENT leader can become BUY NOW.
+          # Non-leaders are discarded for this scan; they are never queued for later delivery.
+          ranked_now=[]
+          for key,row in qualified_now.items():
+              row["edgeScore"]=edge_score(row)
+              ranked_now.append(row)
+          ranked_now.sort(key=lambda x:(x["edgeScore"], x["rank"], num(x.get("stageScore")) or 0), reverse=True)
+
+          leaders=ranked_now[:MAX_ASSETS_PER_PUSH]
+          runner_edge=ranked_now[MAX_ASSETS_PER_PUSH]["edgeScore"] if len(ranked_now)>MAX_ASSETS_PER_PUSH else None
+
           new_rows=[]
-          if healthy and not first_run:
-              for key,row in qualified_now.items():
+          if healthy and not first_run and leaders:
+              for row in leaders:
+                  key=row["key"]
                   if int(seen.get(key,0)) < REQUIRED_FRESH_SCANS:
+                      continue
+                  if row["edgeScore"] < MIN_EDGE_SCORE:
+                      continue
+                  if runner_edge is not None and (row["edgeScore"]-runner_edge) < MIN_EDGE_MARGIN and row["edgeScore"] < 80:
                       continue
                   if hours_since(last_alert.get(key)) < COOLDOWN_HOURS:
                       continue
                   new_rows.append(row)
-
-          new_rows.sort(key=lambda x:(x["rank"], num(x.get("stageScore")) or 0, x["asset"]), reverse=True)
 
           alert_payload=None
 
@@ -298,7 +360,9 @@ jobs:
                   parts=[
                       f'{icon} {r["asset"]}',
                       f'PLATAFORMA: {r["venue"]}',
-                      f'SCORE: {fmt(r.get("stageScore"))}'
+                      f'EDGE: {fmt(r.get("edgeScore"))}',
+                      f'SCORE CABAL: {fmt(r.get("stageScore"))}',
+                      f'CONFIRMACIONES: {int(seen.get(r["key"],0))}/{REQUIRED_FRESH_SCANS}'
                   ]
                   if num(r.get("price")) is not None:
                       parts.append(f'PRECIO AHORA: {fmt(r["price"])}')
@@ -310,9 +374,6 @@ jobs:
                       parts.append(f'WHALES: {r["wallets"]} wallets relevantes')
                   cards.append("\n".join(parts))
 
-              if len(new_rows)>MAX_ASSETS_PER_PUSH:
-                  cards.append(f'+{len(new_rows)-MAX_ASSETS_PER_PUSH} señales adicionales filtradas en esta ronda.')
-
               alert_payload={
                   "title":"🟢 CABAL — COMPRAR AHORA",
                   "priority":"high",
@@ -320,8 +381,8 @@ jobs:
               }
 
               system_last=now_iso
-              # Mark only assets actually included in the push. Others remain pending and
-              # must still be active + quality-valid after the global cooldown.
+              # Only the winning leader is alerted. Other candidates are deliberately
+              # discarded for this scan and are NOT queued for later pushes.
               for r in selected:
                   last_alert[r["key"]]=now_iso
 
@@ -331,7 +392,7 @@ jobs:
                   last_alert[key]=now_iso
 
           state={
-              "schemaVersion":"1.1",
+              "schemaVersion":"1.2",
               "generatedAt":now_iso,
               "seeded":True,
               "active":sorted(active),
@@ -361,6 +422,8 @@ jobs:
               "healthy":healthy,
               "activeSignals":len(active),
               "qualifiedNow":len(qualified_now),
+              "leader":(leaders[0]["asset"] if leaders else None),
+              "leaderEdge":(leaders[0]["edgeScore"] if leaders else None),
               "newAlerts":len(new_rows),
               "willNotify":bool(alert_payload)
           },ensure_ascii=False))
