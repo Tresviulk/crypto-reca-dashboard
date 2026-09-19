@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CABAL v1.6 PUMP RADAR + PILOT ENTRY. Manual SPOT only; never auto-trades."""
+"""CABAL v1.6.2 PUMP RADAR + PILOT ENTRY. Manual SPOT only; never auto-trades."""
 import importlib.util, json, math, os, statistics, time
 from urllib.parse import urlencode
 
@@ -135,10 +135,21 @@ def result(asset,m,b,venue,btc,pre_lane=False):
     sec=bool(r.get('secondLegTrigger') and r.get('effortVsResult')!='POOR' and irs>=0)
     rv15=f((ft or {}).get('rvol15m')); score=f(r.get('stageAScore'))
     fastq=bool(trg and rv15>=2.0 and irs>=.2 and r.get('bucketB') and (r.get('bucketC') or score>=35))
+
+    # v1.6.2 EXECUTION SAFETY:
+    # 1h PRE-ACCUM / ABC / SECOND-LEG states remain discovery signals only.
+    # A real PILOT_ENTRY_WINDOW now requires a CURRENT completed-15m trigger.
+    # This prevents a stale 1h trigger from authorizing a late/chased BUY.
+    fresh15=bool(ft and ft.get('trigger'))
+    pre_exec=bool(pre and fresh15)
+    old_exec=bool(old and fresh15)
+    sec_exec=bool(sec and fresh15)
+
     stop=f(ft.get('invalidation15m')) if fastq and ft else f(r.get('invalidation')); sd=pct(px,stop) if px>stop>0 else 999
-    loc=bool(px>stop>0 and sd<=5 and (not no or px<no) and (head is None or head>=.5) and intra<5 and f(r.get('priceChange24hPct'))<25); pilot=bool(loc and (fastq or pre or old or sec))
+    loc=bool(px>stop>0 and sd<=5 and (not no or px<no) and (head is None or head>=.5) and intra<5 and f(r.get('priceChange24hPct'))<25)
+    pilot=bool(loc and (fastq or pre_exec or old_exec or sec_exec))
     sig='NO_CHASE' if no and px>=no else ('PILOT_ENTRY_WINDOW' if pilot else ('WAIT_CONFIRMATION' if base in {'PRE-ACCUMULATION TRIGGER','PRE-MOVE','EARLY STARTER','SECOND-LEG TRIGGER'} or fw else r.get('executionSignal','OBSERVE')))
-    r.update({'fastPumpQualifiedForPilot':fastq,'pilotEntryEligible':pilot,'pilotReason':'FAST_PUMP_15M' if pilot and fastq else ('PRE_ACCUM_TRIGGER' if pilot and pre else ('ABC_EARLY_STRUCTURE' if pilot and old else ('SECOND_LEG_TRIGGER' if pilot and sec else None))),'pilotSizePctOfPlannedPosition':25 if pilot and old else (20 if pilot else 0),'pilotEntryMax':min(no*.995 if no else px*1.005,px*1.005) if pilot else None,'confirmationAddTrigger':max([x for x in [px,f(r.get('preAccumTriggerLevel')),f((ft or {}).get('baseHigh4h15m'))] if x>0]) if pilot else None,'protectiveStopReference':stop if pilot else None,'pilotStopDistancePct':round(sd,4) if pilot else None,'requiresProtectiveStop':pilot,'protectionState':'UNARMED' if pilot else None,'executionSignal':sig,'whalesRequiredForPilot':False,'whalesPolicy':'BONUS_NOT_VETO_UNLESS_VERIFIED_NEGATIVE_DISTRIBUTION'})
+    r.update({'entryConfirmation15m':fresh15,'entryConfirmation15mSource':(ft or {}).get('source'),'fastPumpQualifiedForPilot':fastq,'pilotEntryEligible':pilot,'pilotReason':'FAST_PUMP_15M' if pilot and fastq else ('PRE_ACCUM_TRIGGER' if pilot and pre_exec else ('ABC_EARLY_STRUCTURE' if pilot and old_exec else ('SECOND_LEG_TRIGGER' if pilot and sec_exec else None))),'pilotSizePctOfPlannedPosition':25 if pilot and old_exec else (20 if pilot else 0),'pilotEntryMax':min(no*.995 if no else px*1.005,px*1.005) if pilot else None,'confirmationAddTrigger':max([x for x in [px,f(r.get('preAccumTriggerLevel')),f((ft or {}).get('baseHigh4h15m'))] if x>0]) if pilot else None,'protectiveStopReference':stop if pilot else None,'pilotStopDistancePct':round(sd,4) if pilot else None,'requiresProtectiveStop':pilot,'protectionState':'UNARMED' if pilot else None,'executionSignal':sig,'whalesRequiredForPilot':False,'whalesPolicy':'BONUS_NOT_VETO_UNLESS_VERIFIED_NEGATIVE_DISTRIBUTION'})
     return r
 mod.result_from_bars=result
 mod.main()
@@ -151,5 +162,5 @@ rows=[]; seen=set()
 for x in (d.get('preAccumCandidates') or [])+(d.get('candidates') or []):
     if x.get('asset') and x['asset'] not in seen: seen.add(x['asset']); rows.append(x)
 pump=sorted([x for x in rows if x.get('fastPumpWatch') or x.get('fastPumpTrigger')],key=lambda x:(bool(x.get('fastPumpTrigger')),bool(x.get('pilotEntryEligible')),f(x.get('intrahourMovePct')),f(x.get('stageAScore'))),reverse=True); pilots=sorted([x for x in rows if x.get('pilotEntryEligible') and x.get('executionSignal')=='PILOT_ENTRY_WINDOW'],key=lambda x:(f(x.get('stageAScore')),f(x.get('intrahourMovePct'))),reverse=True)
-d['pumpRadar']=pump[:40]; d['pilotEntries']=pilots[:20]; d['pumpRadarStats']={'fast15Attempts':S['fast15Attempts'],'fast15Success':S['fast15Success'],'fast15SuccessRatio':round(S['fast15Success']/S['fast15Attempts'],4) if S['fast15Attempts'] else 1.0,'fastPumpWatchCount':sum(bool(x.get('fastPumpWatch')) for x in pump),'fastPumpTriggerCount':sum(bool(x.get('fastPumpTrigger')) for x in pump),'pilotEntryCount':len(pilots),'exchangeSyntheticAdded':S['synthetic'],'coinGeckoPages':S['cgPages'],'preAccumLimit':mod.PREACCUM_LIMIT,'preAccumSub2mReserve':mod.PREACCUM_SUB2M_RESERVE}; d['executionEngine']={'version':'CABAL_PUMP_PILOT_V1.6.1','manualOnly':True,'autoTrade':False,'pilotMaxPctOfPlannedPosition':25,'whalesRole':'CONFIRMATION_PRIORITY_NOT_MANDATORY_VETO','protectiveStopRequired':True,'fastLayer':'LIVE_INTRAHOUR_PLUS_SELECTIVE_COMPLETED_15M'}; d['method']='v1.6.1: FAST_PUMP pilot requires confirmed 15m RVOL + positive intrahour RS + supporting B/C structure; exchange-native PRE universe always merged; max-60 deep-lite / 40 sub-2M reserve; live intrahour + selective completed-15m PUMP RADAR; PILOT_ENTRY_WINDOW 20-25% max with structural stop/no-chase; WHALES additive, not mandatory; manual SPOT only.'
+d['pumpRadar']=pump[:40]; d['pilotEntries']=pilots[:20]; d['pumpRadarStats']={'fast15Attempts':S['fast15Attempts'],'fast15Success':S['fast15Success'],'fast15SuccessRatio':round(S['fast15Success']/S['fast15Attempts'],4) if S['fast15Attempts'] else 1.0,'fastPumpWatchCount':sum(bool(x.get('fastPumpWatch')) for x in pump),'fastPumpTriggerCount':sum(bool(x.get('fastPumpTrigger')) for x in pump),'pilotEntryCount':len(pilots),'exchangeSyntheticAdded':S['synthetic'],'coinGeckoPages':S['cgPages'],'preAccumLimit':mod.PREACCUM_LIMIT,'preAccumSub2mReserve':mod.PREACCUM_SUB2M_RESERVE}; d['executionEngine']={'version':'CABAL_PUMP_PILOT_V1.6.2','manualOnly':True,'autoTrade':False,'pilotMaxPctOfPlannedPosition':25,'whalesRole':'CONFIRMATION_PRIORITY_NOT_MANDATORY_VETO','protectiveStopRequired':True,'fastLayer':'LIVE_INTRAHOUR_PLUS_SELECTIVE_COMPLETED_15M','fresh15mRequiredForBuy':True}; d['method']='v1.6.2: PRE-ACCUM/ABC/SECOND-LEG remain discovery until a CURRENT completed-15m trigger confirms execution; FAST_PUMP keeps its stronger 15m RVOL + RS gate; exchange-native PRE universe always merged; max-60 deep-lite / 40 sub-2M reserve; PILOT_ENTRY_WINDOW 20-25% max with structural stop/no-chase; WHALES additive, never bypasses fresh 15m execution confirmation; manual SPOT only.'
 tmp=out+'.v16.tmp'; json.dump(d,open(tmp,'w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(tmp,out); print(json.dumps({'schemaVersion':'1.6','preAccumOperational':d['preAccumOperational'],'mainMachineOperational':d['mainMachineOperational'],'sourceMode':d['sourceMode'],'pumpRadarStats':d['pumpRadarStats'],'pilotEntries':[x.get('asset') for x in d['pilotEntries'][:10]]},indent=2))
