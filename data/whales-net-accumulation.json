@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.1",
   "module": "whalesNetAccumulationLedger",
-  "generatedAt": "2026-09-19T14:10:14.878Z",
+  "generatedAt": "2026-09-19T14:15:06.649Z",
   "status": "PASS",
   "retentionDays": 30,
   "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -10,10 +10,32 @@
     "base": "PASS",
     "arbitrum": "PASS",
     "solanaTradeFeed": "PASS",
-    "earlyEntryEngine": "PASS"
+    "earlyEntryEngine": "PARTIAL"
   },
-  "eventCount": 2695,
+  "eventCount": 2696,
   "events": [
+    {
+      "id": "solana:YWa4tCpqvc1FLtchnK9ysxBw1D6AVj1Hur9iZf1JPuo:T5mwXU2c7Ux2NvzkWg8kqgGsNoFgkq81UWir7dLGS2nv8vDLgqPxBHacsC1PfCkDVnivCqte9nSodcfnPnt4Frs:SELL:9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
+      "chain": "solana",
+      "source": "WHALES_EARLY_ONCHAIN_SWAP_CLASSIFIED",
+      "action": "SELL",
+      "walletLabel": "EARLY-B-YWa4tC",
+      "wallet": "YWa4tCpqvc1FLtchnK9ysxBw1D6AVj1Hur9iZf1JPuo",
+      "assetSymbol": "MONEKO",
+      "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
+      "tokenAmount": 5594716.239168,
+      "quoteAsset": "USDC",
+      "quoteAmount": 120.487148,
+      "txRef": "T5mwXU2c7Ux2NvzkWg8kqgGsNoFgkq81UWir7dLGS2nv8vDLgqPxBHacsC1PfCkDVnivCqte9nSodcfnPnt4Frs",
+      "eventTime": "2026-09-19T14:00:41.000Z",
+      "marketCapUsdAtTrade": 22540,
+      "priceUsdAtTrade": 0.00002253,
+      "confidence": 0.96,
+      "firstTouch": false,
+      "confirmation": "HIGH_CONFIDENCE_ONCHAIN_SWAP_BALANCE_DELTA",
+      "tokenDelta": -5594716.239168,
+      "quoteDelta": 120.487148
+    },
     {
       "id": "solana:CxkTr4gHHsYfbpiLpNR12mehfruXoPqG7YxrqwDPpZrg:2iSthVzd4FTKzBzBFFw8SdeiAD3G4BA9MLUeD4YbpbFhqxAGi55zCUQFZq9S4xAp2ukgumqi3a8YyCWXDzozKFSB:BUY:CWLWH4i4fFR3Vf4Fydjq2eEfgGpeJ6RiWFqK5uVNpump",
       "chain": "solana",
@@ -59402,18 +59424,18 @@
         "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
         "assetSymbol": "MONEKO",
         "buyCount": 1,
-        "sellCount": 0,
+        "sellCount": 1,
         "tokenBought": 2374583.394898,
-        "tokenSold": 0,
-        "netTokenFlow": 2374583.394898,
+        "tokenSold": 5594716.239168,
+        "netTokenFlow": -3220132.84427,
         "quoteSpent": 50,
-        "quoteReceived": 0,
+        "quoteReceived": 120.487148,
         "wallets": [
           "EARLY-B-YWa4tC"
         ],
-        "latestEventAt": "2026-09-19T11:15:00.000Z",
+        "latestEventAt": "2026-09-19T14:00:41.000Z",
         "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
+        "direction": "NET_DISTRIBUTION"
       },
       {
         "chain": "solana",
@@ -60166,6 +60188,24 @@
       },
       {
         "chain": "solana",
+        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
+        "assetSymbol": "MONEKO",
+        "buyCount": 2,
+        "sellCount": 2,
+        "tokenBought": 5594716.239168,
+        "tokenSold": 9729663.558992,
+        "netTokenFlow": -4134947.319824,
+        "quoteSpent": 100,
+        "quoteReceived": 187.950948,
+        "wallets": [
+          "EARLY-B-YWa4tC"
+        ],
+        "latestEventAt": "2026-09-19T14:00:41.000Z",
+        "walletCount": 1,
+        "direction": "NET_DISTRIBUTION"
+      },
+      {
+        "chain": "solana",
         "assetKey": "CWLWH4i4fFR3Vf4Fydjq2eEfgGpeJ6RiWFqK5uVNpump",
         "assetSymbol": "LIGN",
         "buyCount": 1,
@@ -60287,24 +60327,6 @@
           "EARLY-B-9egnKd"
         ],
         "latestEventAt": "2026-09-19T06:18:45.000Z",
-        "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
-      },
-      {
-        "chain": "solana",
-        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
-        "assetSymbol": "MONEKO",
-        "buyCount": 2,
-        "sellCount": 1,
-        "tokenBought": 5594716.239168,
-        "tokenSold": 4134947.319824,
-        "netTokenFlow": 1459768.919344,
-        "quoteSpent": 100,
-        "quoteReceived": 67.4638,
-        "wallets": [
-          "EARLY-B-YWa4tC"
-        ],
-        "latestEventAt": "2026-09-19T11:15:00.000Z",
         "walletCount": 1,
         "direction": "NET_ACCUMULATION"
       },
@@ -64350,6 +64372,24 @@
       },
       {
         "chain": "solana",
+        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
+        "assetSymbol": "MONEKO",
+        "buyCount": 2,
+        "sellCount": 2,
+        "tokenBought": 5594716.239168,
+        "tokenSold": 9729663.558992,
+        "netTokenFlow": -4134947.319824,
+        "quoteSpent": 100,
+        "quoteReceived": 187.950948,
+        "wallets": [
+          "EARLY-B-YWa4tC"
+        ],
+        "latestEventAt": "2026-09-19T14:00:41.000Z",
+        "walletCount": 1,
+        "direction": "NET_DISTRIBUTION"
+      },
+      {
+        "chain": "solana",
         "assetKey": "CWLWH4i4fFR3Vf4Fydjq2eEfgGpeJ6RiWFqK5uVNpump",
         "assetSymbol": "LIGN",
         "buyCount": 1,
@@ -64795,24 +64835,6 @@
           "EARLY-B-9egnKd"
         ],
         "latestEventAt": "2026-09-19T06:18:45.000Z",
-        "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
-      },
-      {
-        "chain": "solana",
-        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
-        "assetSymbol": "MONEKO",
-        "buyCount": 2,
-        "sellCount": 1,
-        "tokenBought": 5594716.239168,
-        "tokenSold": 4134947.319824,
-        "netTokenFlow": 1459768.919344,
-        "quoteSpent": 100,
-        "quoteReceived": 67.4638,
-        "wallets": [
-          "EARLY-B-YWa4tC"
-        ],
-        "latestEventAt": "2026-09-19T11:15:00.000Z",
         "walletCount": 1,
         "direction": "NET_ACCUMULATION"
       },
@@ -75090,6 +75112,24 @@
       },
       {
         "chain": "solana",
+        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
+        "assetSymbol": "MONEKO",
+        "buyCount": 2,
+        "sellCount": 2,
+        "tokenBought": 5594716.239168,
+        "tokenSold": 9729663.558992,
+        "netTokenFlow": -4134947.319824,
+        "quoteSpent": 100,
+        "quoteReceived": 187.950948,
+        "wallets": [
+          "EARLY-B-YWa4tC"
+        ],
+        "latestEventAt": "2026-09-19T14:00:41.000Z",
+        "walletCount": 1,
+        "direction": "NET_DISTRIBUTION"
+      },
+      {
+        "chain": "solana",
         "assetKey": "CWLWH4i4fFR3Vf4Fydjq2eEfgGpeJ6RiWFqK5uVNpump",
         "assetSymbol": "LIGN",
         "buyCount": 1,
@@ -75699,24 +75739,6 @@
         "latestEventAt": "2026-09-14T17:44:27.000Z",
         "walletCount": 1,
         "direction": "NET_DISTRIBUTION"
-      },
-      {
-        "chain": "solana",
-        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
-        "assetSymbol": "MONEKO",
-        "buyCount": 2,
-        "sellCount": 1,
-        "tokenBought": 5594716.239168,
-        "tokenSold": 4134947.319824,
-        "netTokenFlow": 1459768.919344,
-        "quoteSpent": 100,
-        "quoteReceived": 67.4638,
-        "wallets": [
-          "EARLY-B-YWa4tC"
-        ],
-        "latestEventAt": "2026-09-19T11:15:00.000Z",
-        "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
       },
       {
         "chain": "solana",
@@ -89376,6 +89398,24 @@
       },
       {
         "chain": "solana",
+        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
+        "assetSymbol": "MONEKO",
+        "buyCount": 2,
+        "sellCount": 2,
+        "tokenBought": 5594716.239168,
+        "tokenSold": 9729663.558992,
+        "netTokenFlow": -4134947.319824,
+        "quoteSpent": 100,
+        "quoteReceived": 187.950948,
+        "wallets": [
+          "EARLY-B-YWa4tC"
+        ],
+        "latestEventAt": "2026-09-19T14:00:41.000Z",
+        "walletCount": 1,
+        "direction": "NET_DISTRIBUTION"
+      },
+      {
+        "chain": "solana",
         "assetKey": "CWLWH4i4fFR3Vf4Fydjq2eEfgGpeJ6RiWFqK5uVNpump",
         "assetSymbol": "LIGN",
         "buyCount": 1,
@@ -89985,24 +90025,6 @@
         "latestEventAt": "2026-09-14T17:44:27.000Z",
         "walletCount": 1,
         "direction": "NET_DISTRIBUTION"
-      },
-      {
-        "chain": "solana",
-        "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
-        "assetSymbol": "MONEKO",
-        "buyCount": 2,
-        "sellCount": 1,
-        "tokenBought": 5594716.239168,
-        "tokenSold": 4134947.319824,
-        "netTokenFlow": 1459768.919344,
-        "quoteSpent": 100,
-        "quoteReceived": 67.4638,
-        "wallets": [
-          "EARLY-B-YWa4tC"
-        ],
-        "latestEventAt": "2026-09-19T11:15:00.000Z",
-        "walletCount": 1,
-        "direction": "NET_ACCUMULATION"
       },
       {
         "chain": "solana",
