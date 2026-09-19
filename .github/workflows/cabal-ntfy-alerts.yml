@@ -41,10 +41,13 @@ jobs:
           STATE_PATH = "data/ntfy-alert-state.json"
           COOLDOWN_HOURS = 12
           GLOBAL_COOLDOWN_MINUTES = 20
-          REQUIRED_FRESH_SCANS = 3
+          REQUIRED_FRESH_SCANS = 2
           MAX_ASSETS_PER_PUSH = 1
           MIN_EDGE_SCORE = 58.0
           MIN_EDGE_MARGIN = 0.0
+          MAX_MACHINE_AGE_MINUTES = 10
+          ALERT_VALIDITY_MINUTES = 10
+          CANCEL_WINDOW_MINUTES = 20
 
           now = datetime.now(timezone.utc)
           now_iso = now.isoformat().replace("+00:00","Z")
@@ -106,6 +109,7 @@ jobs:
               "lastAlertAt":{},
               "systemLastAlertAt":None,
               "qualifiedSeenCount":{},
+              "lastCancelAt":{},
               "lastCabalGeneratedAt":None
           }
           first_run = not os.path.exists(STATE_PATH)
@@ -123,7 +127,7 @@ jobs:
               and cabal.get("preAccumOperational") is True
               and cabal.get("mainMachineOperational") is True
               and coverage.get("preAccum")=="PASS"
-              and age_min <= 30
+              and age_min <= MAX_MACHINE_AGE_MINUTES
           )
 
           candidates={}
@@ -172,7 +176,9 @@ jobs:
                   "bucketC":bool(p.get("bucketC")),
                   "classification":p.get("classification"),
                   "effort":p.get("effortVsResult"),
-                  "price24":p.get("priceChange24hPct")
+                  "price24":p.get("priceChange24hPct"),
+                  "noChase":p.get("noChase"),
+                  "entryConfirmation15m":p.get("entryConfirmation15m") is True
               }
 
           for p in (whales.get("buyCandidates") or []):
@@ -220,7 +226,9 @@ jobs:
                   "bucketC":bool(cp.get("bucketC")),
                   "classification":cp.get("classification"),
                   "effort":cp.get("effortVsResult"),
-                  "price24":cp.get("priceChange24hPct")
+                  "price24":cp.get("priceChange24hPct"),
+                  "noChase":cp.get("noChase"),
+                  "entryConfirmation15m":cp.get("entryConfirmation15m") is True
               }
 
           # If the same asset exists in WHALES and CABAL, keep only WHALES+CABAL.
@@ -231,6 +239,7 @@ jobs:
 
           active=set(candidates)
           last_alert=dict(prev.get("lastAlertAt") or {})
+          last_cancel=dict(prev.get("lastCancelAt") or {})
           seen=dict(prev.get("qualifiedSeenCount") or {})
           current_scan_id=str(cabal.get("generatedAt") or "")
           previous_scan_id=str(prev.get("lastCabalGeneratedAt") or "")
@@ -241,6 +250,15 @@ jobs:
               entry_max=num(row.get("entryMax"))
               stop=num(row.get("stop"))
               if price is None or entry_max is None or stop is None or price > entry_max:
+                  return False
+
+              # Execution must be confirmed by the CURRENT completed-15m lane.
+              # A stale 1h PRE-ACCUM trigger is discovery context, never enough for BUY NOW.
+              if row.get("entryConfirmation15m") is not True:
+                  return False
+
+              no_chase=num(row.get("noChase"))
+              if no_chase is not None and price >= no_chase:
                   return False
 
               stop_dist=((price-stop)/price*100.0) if price>0 else 99
@@ -345,12 +363,36 @@ jobs:
           leaders=confirmed_ranked[:MAX_ASSETS_PER_PUSH]
           new_rows=leaders if healthy and not first_run else []
 
+          # A prior BUY alert is explicitly revoked if the setup disappears or fails
+          # the fresh execution gates within the cancellation window. This is NOT a sell signal.
+          cancel_rows=[]
+          for key,ts in last_alert.items():
+              age=minutes_since(ts)
+              if age < 0 or age > CANCEL_WINDOW_MINUTES:
+                  continue
+              row=candidates.get(key)
+              if row is None or not final_buy_ok(row):
+                  if minutes_since(last_cancel.get(key)) > CANCEL_WINDOW_MINUTES:
+                      cancel_rows.append({"key":key,"asset":key.split(":",1)[-1]})
+
           alert_payload=None
 
-          # NTFY is purchase-opportunity-only. If CABAL is unhealthy, remain silent.
           system_last=prev.get("systemLastAlertAt")
           system_ready=minutes_since(system_last) >= GLOBAL_COOLDOWN_MINUTES
-          if healthy and new_rows and system_ready:
+
+          if cancel_rows and not first_run:
+              c=cancel_rows[0]
+              alert_payload={
+                  "title":"🔴 CABAL — CANCELAR ALERTA DE COMPRA",
+                  "priority":"high",
+                  "asset":c["asset"],
+                  "kind":"CANCEL",
+                  "message":f'{c["asset"]}\nLa señal COMPRAR AHORA anterior ya NO es válida.\nACCIÓN: NO COMPRAR. No es una orden de venta si ya ejecutaste.'
+              }
+              last_cancel[c["key"]]=now_iso
+
+          # BUY NOW requires a healthy, recent machine state and current execution confirmation.
+          elif healthy and new_rows and system_ready:
               selected=new_rows[:MAX_ASSETS_PER_PUSH]
               cards=[]
               for r in selected:
@@ -375,7 +417,9 @@ jobs:
               alert_payload={
                   "title":"🟢 CABAL — COMPRAR AHORA",
                   "priority":"high",
-                  "message":"\n\n".join(cards) + "\n\nACCIÓN: COMPRAR SPOT AHORA mientras el precio siga <= COMPRA MÁX. Tú decides el importe. No se ejecuta ninguna orden automáticamente."
+                  "asset":selected[0]["asset"],
+                  "kind":"BUY",
+                  "message":"\n\n".join(cards) + f"\n\nACCIÓN: COMPRAR SPOT AHORA SOLO si el precio sigue <= COMPRA MÁX. Ventana máxima: {ALERT_VALIDITY_MINUTES} min. Si el precio supera COMPRA MÁX. o llega una cancelación, NO EJECUTAR. Tú decides el importe. No se ejecuta ninguna orden automáticamente."
               }
 
               system_last=now_iso
@@ -397,6 +441,7 @@ jobs:
               "lastAlertAt":last_alert,
               "systemLastAlertAt":system_last,
               "qualifiedSeenCount":seen,
+              "lastCancelAt":last_cancel,
               "lastCabalGeneratedAt":current_scan_id,
               "health":{
                   "healthy":healthy,
@@ -434,6 +479,41 @@ jobs:
           if [ "$(cat /tmp/ntfy-payload.json)" = "null" ]; then
             echo "No notification this run."
             exit 0
+          fi
+
+          # Defense-in-depth: immediately before a BUY push, re-read origin/main and
+          # suppress the notification if the newest machine state has already revoked it.
+          kind=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("kind",""))')
+          if [ "$kind" = "BUY" ]; then
+            git fetch origin main
+            python - <<'PY'
+          import json, subprocess, sys
+          from datetime import datetime, timezone
+          p=json.load(open("/tmp/ntfy-payload.json",encoding="utf-8"))
+          asset=str(p.get("asset") or "").upper()
+          raw=subprocess.check_output(["git","show","origin/main:data/cabal-machine.json"],text=True)
+          d=json.loads(raw)
+          try:
+              t=datetime.fromisoformat(str(d.get("generatedAt")).replace("Z","+00:00"))
+              age=(datetime.now(timezone.utc)-t).total_seconds()/60
+          except Exception:
+              sys.exit("latest CABAL timestamp invalid")
+          if age>10:
+              sys.exit("latest CABAL state too old for BUY")
+          row=next((x for x in (d.get("pilotEntries") or []) if str(x.get("asset") or "").upper()==asset),None)
+          if not row:
+              sys.exit("BUY revoked: asset no longer in pilotEntries")
+          fp=row.get("fastPump15m") or {}
+          if row.get("executionSignal")!="PILOT_ENTRY_WINDOW" or row.get("pilotEntryEligible") is not True or row.get("entryConfirmation15m") is not True or fp.get("trigger") is not True:
+              sys.exit("BUY revoked: fresh 15m execution confirmation absent")
+          try:
+              price=float(row.get("price")); mx=float(row.get("pilotEntryMax")); nc=float(row.get("noChase"))
+          except Exception:
+              sys.exit("BUY revoked: execution levels incomplete")
+          if price>mx or price>=nc:
+              sys.exit("BUY revoked: current price outside execution window")
+          print("FINAL BUY REVALIDATION PASS",asset,"ageMin",round(age,2),"price",price,"max",mx)
+          PY
           fi
 
           title=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["title"])')
