@@ -15,12 +15,12 @@ WHALES_PATH=os.environ.get("CABAL_WHALES_PATH","data/whales-early-entry-state.js
 
 BUY_COOLDOWN_HOURS=12
 WATCH_COOLDOWN_HOURS=6
-WATCH_GLOBAL_COOLDOWN_MINUTES=15
+WATCH_GLOBAL_COOLDOWN_MINUTES=20
 CANCEL_WINDOW_MINUTES=20
 MAX_MACHINE_AGE_MINUTES=10
 ALERT_VALIDITY_MINUTES=10
 MAX_BUYS_PER_PUSH=3
-MAX_WATCH_PER_PUSH=5
+MAX_WATCH_PER_PUSH=2
 
 def num(v):
     try:
@@ -124,11 +124,9 @@ def watch_priority(r):
     return (core,fast,momentum,num(r.get("qualityScore")) or 0)
 
 def urgent_watch(r):
-    p1=num(r.get("priceChange1hPct")) or 0
-    p6=num(r.get("priceChange6hPct")) or 0
-    p24=num(r.get("priceChange24hPct")) or 0
-    q=num(r.get("qualityScore")) or 0
-    return bool(r.get("isCoreAsset") or p6>=8 or p1>=3 or p24>=12 or q>=70)
+    # Only CORE can bypass the global WATCH throttle.
+    # Non-core fast movers wait for the normal cadence; otherwise NTFY becomes noise.
+    return bool(r.get("isCoreAsset") and r.get("notifyWatchEligible") is True)
 
 def build():
     now=datetime.now(timezone.utc)
@@ -164,7 +162,9 @@ def build():
 
     watches=[
         dict(x) for x in (cabal.get("watchCandidates") or [])
-        if x.get("decisionTier")=="WATCH" and x.get("watchEligible") is True
+        if x.get("decisionTier")=="WATCH"
+        and x.get("watchEligible") is True
+        and x.get("notifyWatchEligible") is True
     ]
     watches.sort(key=watch_priority,reverse=True)
 
@@ -243,7 +243,7 @@ def build():
             last_watch[f'CABAL:{str(r.get("asset") or "").upper()}']=now_iso
         prev["systemLastWatchAt"]=now_iso
         payload={
-            "title":"🟡 CABAL v2 — VIGILAR",
+            "title":"🟡 CABAL v2.1 — PRE-BUY WATCH",
             "priority":"default","kind":"WATCH","buyAssets":[],
             "message":"\n\n".join(watch_card(r) for r in ready_watch)
         }
