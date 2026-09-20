@@ -117,8 +117,11 @@ def watch_priority(r):
     p1=num(r.get("priceChange1hPct")) or 0
     p6=num(r.get("priceChange6hPct")) or 0
     p24=num(r.get("priceChange24hPct")) or 0
+    momentum=max(p1,p6,p24)
     fast=1 if (p6>=8 or p1>=3 or p24>=10) else 0
-    return (core,fast,num(r.get("qualityScore")) or 0,max(p1,p6,p24))
+    # Urgency first: CORE, then strongest active mover, then model quality.
+    # This prevents a KMNO-like +15% move from being hidden behind quieter high-score WATCHes.
+    return (core,fast,momentum,num(r.get("qualityScore")) or 0)
 
 def urgent_watch(r):
     p1=num(r.get("priceChange1hPct")) or 0
