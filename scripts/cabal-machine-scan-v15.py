@@ -380,22 +380,42 @@ def main():
     main_res.sort(key=lambda x:x['stageAScore'],reverse=True)
     stage=[x for x in main_res if x['bucketA'] or x['bucketB'] or x['bucketC'] or x['bucketE'] or x.get('preAccumWatch') or x.get('asset') in CORE_ALWAYS_SCAN]
     retained=select_retained(stage)
-    # Execution candidates are independent from Stage-A top-30 retention.
-    # A fresh 15m WATCH/TRIGGER or PILOT must never disappear merely because
-    # another asset has a higher general Stage-A score.
+    # v2: execution visibility is independent from Stage-A top-30 retention.
+    # The canonical decision engine marks every full-universe row as BUY_NOW/WATCH/NONE.
     execution_candidates=[
         x for x in main_res
-        if x.get('fastPumpWatch') or x.get('fastPumpTrigger')
-        or x.get('pilotEntryEligible')
-        or x.get('executionSignal')=='PILOT_ENTRY_WINDOW'
+        if x.get('decisionTier') in {'BUY_NOW','WATCH'}
     ]
     execution_candidates.sort(
         key=lambda x:(
-            bool(x.get('pilotEntryEligible')),
-            bool(x.get('fastPumpTrigger')),
-            f(x.get('intrahourMovePct')) if 'f' in globals() else float(x.get('intrahourMovePct') or 0),
+            1 if x.get('decisionTier')=='BUY_NOW' else 0,
+            float(x.get('qualityScore') or 0),
             float(x.get('stageAScore') or 0)
         ),
+        reverse=True
+    )
+    buy_candidates=[x for x in execution_candidates if x.get('decisionTier')=='BUY_NOW']
+    watch_candidates=[x for x in execution_candidates if x.get('decisionTier')=='WATCH']
+    missed_movers=[
+        {
+            'asset':x.get('asset'),
+            'price':x.get('price'),
+            'priceChange6hPct':x.get('priceChange6hPct'),
+            'priceChange24hPct':x.get('priceChange24hPct'),
+            'decisionTier':x.get('decisionTier'),
+            'decisionReason':x.get('decisionReason'),
+            'rejectReasons':x.get('rejectReasons') or [],
+            'qualityScore':x.get('qualityScore')
+        }
+        for x in main_res
+        if x.get('decisionTier')=='NONE'
+        and (
+            float(x.get('priceChange6hPct') or 0)>=8
+            or float(x.get('priceChange24hPct') or 0)>=12
+        )
+    ]
+    missed_movers.sort(
+        key=lambda x:max(float(x.get('priceChange6hPct') or 0),float(x.get('priceChange24hPct') or 0)),
         reverse=True
     )
     core_candidates=[x for x in main_res if x.get('asset') in CORE_ALWAYS_SCAN]
@@ -407,9 +427,9 @@ def main():
     main_pass=src['coinGecko']=='PASS' and venue_ok and btc is not None and main_count>=20 and main_ratio>=.90 and not core_missing
     pre_pass=src['coinGecko']=='PASS' and venue_ok and btc is not None and broad_count>=50 and sub_count>0 and pre_ratio>=.80 and len(pre_short)>0
     lifecycle=merge_lifecycle(pre_res,now); sub_short=sum(1 for m in pre_short if float(m.get('effectiveTurnover') or 0)<MAIN_MIN_TURNOVER)
-    coverage={'bucketA':'PASS' if main_pass else 'FAIL','bucketB':'PASS' if main_pass else 'FAIL','bucketC':'PASS' if main_pass else 'FAIL','bucketD':'EXTERNAL_STAGE0_REQUIRED','bucketE':'PASS' if main_pass else 'FAIL','preAccum':'PASS' if pre_pass else 'FAIL','broadUniverseCount':broad_count,'preAccum250kTo2mUniverseCount':sub_count,'mainEligibleUniverseCount':main_count,'mainScannedCount':len(main_res),'mainScanSuccessRatio':round(main_ratio,4),'preAccumShortlistCount':len(pre_short),'preAccumSub2mShortlistCount':sub_short,'preAccumDeepLiteCompleted':len(pre_res),'preAccumDeepLiteSuccessRatio':round(pre_ratio,4),'coreRequiredAssets':sorted(CORE_ALWAYS_SCAN),'coreScannedAssets':sorted(core_present),'coreMissingAssets':core_missing,'executionPoolCount':len(execution_candidates),'venueCoverage':{'Bybit':src['bybitSpot'],'KuCoin':src['kucoinSpot'],'GateFallback':src['gateSpot']}}
-    retention={'limit':RETENTION_LIMIT,'stageAEligible':len(stage),'stageARetained':len(retained),'executionIndependentCount':len(execution_candidates),'top30DoesNotGateExecution':True,'preAccumIndependentLimit':PREACCUM_LIMIT,'preAccumIndependentEligible':len(pre_short),'preAccumIndependentRetained':len(pre_res),'sub2mReserveRequired':PREACCUM_SUB2M_RESERVE,'sub2mReserveFilled':sub_short,'top30DoesNotGatePreAccum':True}
-    out={'schemaVersion':SCHEMA,'module':'cabalMachineDiscovery','ok':bool(main_pass and pre_pass),'generatedAt':now,'sources':src,'coverage':coverage,'retention':retention,'candidateCountStageA':len(stage),'deepValidatedCount':len(retained),'btcReference':btc,'coreCandidates':core_candidates,'executionCandidates':execution_candidates,'preAccumCandidates':pre_res,'preAccumLifecycle':lifecycle,'candidates':retained,'failures':(pre_fails+main_fails)[:40],'errors':errors,'method':'v1.5: CoinGecko broad market metadata + preferred Bybit/KuCoin spot venue coverage + Gate fallback; independent >=250k PRE-STAGE-A universe; explicit 250k-2M coverage; max-10 PRE-ACCUM deep-lite with >=6 sub-2M reserve when available; separate preAccumCandidates output bypasses Stage-A top-30 retention; main CABAL >=2M/15M-3B lane preserved; completed 1h OHLCV; no auto-trading.'}
+    coverage={'bucketA':'PASS' if main_pass else 'FAIL','bucketB':'PASS' if main_pass else 'FAIL','bucketC':'PASS' if main_pass else 'FAIL','bucketD':'EXTERNAL_STAGE0_REQUIRED','bucketE':'PASS' if main_pass else 'FAIL','preAccum':'PASS' if pre_pass else 'FAIL','broadUniverseCount':broad_count,'preAccum250kTo2mUniverseCount':sub_count,'mainEligibleUniverseCount':main_count,'mainScannedCount':len(main_res),'mainScanSuccessRatio':round(main_ratio,4),'executionUniverseCount':main_count,'executionVisibleCount':len(execution_candidates),'buyCandidateCount':len(buy_candidates),'watchCandidateCount':len(watch_candidates),'preAccumShortlistCount':len(pre_short),'preAccumSub2mShortlistCount':sub_short,'preAccumDeepLiteCompleted':len(pre_res),'preAccumDeepLiteSuccessRatio':round(pre_ratio,4),'coreRequiredAssets':sorted(CORE_ALWAYS_SCAN),'coreScannedAssets':sorted(core_present),'coreMissingAssets':core_missing,'executionPoolCount':len(execution_candidates),'venueCoverage':{'Bybit':src['bybitSpot'],'KuCoin':src['kucoinSpot'],'GateFallback':src['gateSpot']}}
+    retention={'limit':RETENTION_LIMIT,'stageAEligible':len(stage),'stageARetained':len(retained),'executionIndependentCount':len(execution_candidates),'buyCandidateCount':len(buy_candidates),'watchCandidateCount':len(watch_candidates),'top30DoesNotGateExecution':True,'preAccumIndependentLimit':PREACCUM_LIMIT,'preAccumIndependentEligible':len(pre_short),'preAccumIndependentRetained':len(pre_res),'sub2mReserveRequired':PREACCUM_SUB2M_RESERVE,'sub2mReserveFilled':sub_short,'top30DoesNotGatePreAccum':True}
+    out={'schemaVersion':SCHEMA,'module':'cabalMachineDiscovery','ok':bool(main_pass and pre_pass),'generatedAt':now,'sources':src,'coverage':coverage,'retention':retention,'candidateCountStageA':len(stage),'deepValidatedCount':len(retained),'btcReference':btc,'coreCandidates':core_candidates,'executionCandidates':execution_candidates,'buyCandidates':buy_candidates,'watchCandidates':watch_candidates,'missedMoverAudit':missed_movers[:50],'preAccumCandidates':pre_res,'preAccumLifecycle':lifecycle,'candidates':retained,'failures':(pre_fails+main_fails)[:40],'errors':errors,'method':'v1.5: CoinGecko broad market metadata + preferred Bybit/KuCoin spot venue coverage + Gate fallback; independent >=250k PRE-STAGE-A universe; explicit 250k-2M coverage; max-10 PRE-ACCUM deep-lite with >=6 sub-2M reserve when available; separate preAccumCandidates output bypasses Stage-A top-30 retention; main CABAL >=2M/15M-3B lane preserved; completed 1h OHLCV; no auto-trading.'}
     os.makedirs(os.path.dirname(OUT) or '.',exist_ok=True); tmp=OUT+'.tmp'; json.dump(out,open(tmp,'w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(tmp,OUT)
     print(json.dumps({'ok':out['ok'],'generatedAt':now,'broad':broad_count,'sub2mBand':sub_count,'main':main_count,'mainScanned':len(main_res),'preShort':len(pre_short),'preSub2m':sub_short,'preDone':len(pre_res),'preTriggers':sum(1 for x in pre_res if x.get('preAccumTrigger')),'preWatches':sum(1 for x in pre_res if x.get('preAccumWatch')),'sources':src,'errors':errors},indent=2))
 
