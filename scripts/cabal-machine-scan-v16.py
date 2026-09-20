@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CABAL v1.6.6 PUMP RADAR + PILOT ENTRY. Manual SPOT only; never auto-trades."""
+"""CABAL v2.0 — full-universe discovery + canonical WATCH/BUY engine. Manual SPOT only."""
 import importlib.util, json, math, os, statistics, time
 from urllib.parse import urlencode
 from cabal_decision_v2 import evaluate, tail_exchange_inclusion
@@ -255,13 +255,50 @@ def result(asset,m,b,venue,btc,pre_lane=False):
 mod.result_from_bars=result
 mod.main()
 
-out=mod.OUT; d=json.load(open(out,encoding='utf-8')); d['schemaVersion']='1.6'; complete=S['cgPages']>=4; d['sourceMode']='COINGECKO_PLUS_EXCHANGE_NATIVE' if complete else ('PARTIAL_CG_PLUS_EXCHANGE_NATIVE' if S['cgPages'] else 'EXCHANGE_NATIVE_FALLBACK'); d['sources']['coinGecko']='PASS' if complete else (f'PARTIAL_{S["cgPages"]}_PAGES_EXCHANGE_ENRICHED' if S['cgPages'] else 'FALLBACK_EXCHANGE_UNIVERSE')
+out=mod.OUT; d=json.load(open(out,encoding='utf-8')); d['schemaVersion']='2.0'; complete=S['cgPages']>=4; d['sourceMode']='COINGECKO_PLUS_EXCHANGE_NATIVE' if complete else ('PARTIAL_CG_PLUS_EXCHANGE_NATIVE' if S['cgPages'] else 'EXCHANGE_NATIVE_FALLBACK'); d['sources']['coinGecko']='PASS' if complete else (f'PARTIAL_{S["cgPages"]}_PAGES_EXCHANGE_ENRICHED' if S['cgPages'] else 'FALLBACK_EXCHANGE_UNIVERSE')
 vc=d.get('coverage',{}).get('venueCoverage') or {}; d['preAccumOperational']=bool(d.get('coverage',{}).get('preAccum')=='PASS' and (vc.get('KuCoin')=='PASS' or vc.get('Bybit')=='PASS') and vc.get('GateFallback')=='PASS'); d['mainMachineOperational']=bool(complete and all(d.get('coverage',{}).get(k)=='PASS' for k in ('bucketA','bucketB','bucketC','bucketE')))
 if not complete:
     for k in ('bucketA','bucketB','bucketC','bucketE'): d['coverage'][k]='FAIL_METADATA_PARTIAL'
 rows=[]; seen=set()
-for x in (d.get('preAccumCandidates') or [])+(d.get('candidates') or [])+(d.get('executionCandidates') or []):
-    if x.get('asset') and x['asset'] not in seen: seen.add(x['asset']); rows.append(x)
-pump=sorted([x for x in rows if x.get('fastPumpWatch') or x.get('fastPumpTrigger')],key=lambda x:(bool(x.get('fastPumpTrigger')),bool(x.get('pilotEntryEligible')),f(x.get('intrahourMovePct')),f(x.get('stageAScore'))),reverse=True); pilots=sorted([x for x in rows if x.get('pilotEntryEligible') and x.get('executionSignal')=='PILOT_ENTRY_WINDOW'],key=lambda x:(f(x.get('stageAScore')),f(x.get('intrahourMovePct'))),reverse=True)
-d['pumpRadar']=pump[:40]; d['pilotEntries']=pilots[:20]; d['pumpRadarStats']={'fast15Attempts':S['fast15Attempts'],'fast15Success':S['fast15Success'],'fast15SuccessRatio':round(S['fast15Success']/S['fast15Attempts'],4) if S['fast15Attempts'] else 1.0,'fastPumpWatchCount':sum(bool(x.get('fastPumpWatch')) for x in pump),'fastPumpTriggerCount':sum(bool(x.get('fastPumpTrigger')) for x in pump),'pilotEntryCount':len(pilots),'exchangeSyntheticAdded':S['synthetic'],'tailMomentumReserveCount':S['tailMomentum'],'coinGeckoPages':S['cgPages'],'preAccumLimit':mod.PREACCUM_LIMIT,'preAccumSub2mReserve':mod.PREACCUM_SUB2M_RESERVE}; d['executionEngine']={'version':'CABAL_PUMP_PILOT_V1.6.6','manualOnly':True,'autoTrade':False,'pilotMaxPctOfPlannedPosition':25,'whalesRole':'CONFIRMATION_PRIORITY_NOT_MANDATORY_VETO','protectiveStopRequired':True,'fastLayer':'LIVE_INTRAHOUR_PLUS_SELECTIVE_COMPLETED_15M','fresh15mRequiredForBuy':True,'wideBaseEarlyAcceleration':True,'deepTailMomentumReserve':True,'coreAlwaysScan':['AVAX','ETH','SOL'],'executionPoolIndependentOfTop30':True}; d['method']='v1.6.6: v1.6.5 plus independent EXECUTION POOL. Fresh 15m WATCH/TRIGGER/PILOT signals from the full main scan bypass Stage-A top-30 retention, preventing KMNO-type early execution signals from disappearing before pilotEntries/NTFY. CORE and deep-tail lanes remain active. All BUY NOW quality, no-chase and protective-stop gates remain unchanged; manual SPOT only.'
-tmp=out+'.v16.tmp'; json.dump(d,open(tmp,'w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(tmp,out); print(json.dumps({'schemaVersion':'1.6','preAccumOperational':d['preAccumOperational'],'mainMachineOperational':d['mainMachineOperational'],'sourceMode':d['sourceMode'],'pumpRadarStats':d['pumpRadarStats'],'pilotEntries':[x.get('asset') for x in d['pilotEntries'][:10]]},indent=2))
+for x in (d.get('buyCandidates') or [])+(d.get('watchCandidates') or [])+(d.get('executionCandidates') or [])+(d.get('preAccumCandidates') or [])+(d.get('candidates') or []):
+    if x.get('asset') and x['asset'] not in seen:
+        seen.add(x['asset']); rows.append(x)
+pump=sorted(
+    [x for x in rows if x.get('decisionTier') in {'BUY_NOW','WATCH'}],
+    key=lambda x:(1 if x.get('decisionTier')=='BUY_NOW' else 0,f(x.get('qualityScore')),f(x.get('stageAScore'))),
+    reverse=True
+)
+buys=sorted(d.get('buyCandidates') or [],key=lambda x:(f(x.get('qualityScore')),f(x.get('stageAScore'))),reverse=True)
+watches=sorted(d.get('watchCandidates') or [],key=lambda x:(f(x.get('qualityScore')),f(x.get('stageAScore'))),reverse=True)
+d['pumpRadar']=pump[:80]
+# Backward-compatible field; in v2 it mirrors canonical BUY_NOW only.
+d['pilotEntries']=buys[:30]
+d['decisionRadar']={'buyNow':[x.get('asset') for x in buys[:30]],'watch':[x.get('asset') for x in watches[:50]]}
+d['pumpRadarStats']={
+    'fast15Attempts':S['fast15Attempts'],
+    'fast15Success':S['fast15Success'],
+    'fast15SuccessRatio':round(S['fast15Success']/S['fast15Attempts'],4) if S['fast15Attempts'] else 1.0,
+    'buyNowCount':len(buys),
+    'watchCount':len(watches),
+    'exchangeSyntheticAdded':S['synthetic'],
+    'tailMomentumReserveCount':S['tailMomentum'],
+    'coinGeckoPages':S['cgPages'],
+    'preAccumLimit':mod.PREACCUM_LIMIT,
+    'preAccumSub2mReserve':mod.PREACCUM_SUB2M_RESERVE
+}
+d['executionEngine']={
+    'version':'CABAL_V2.0',
+    'decisionEngine':'CANONICAL_V2',
+    'manualOnly':True,
+    'autoTrade':False,
+    'protectiveStopRequiredForBuy':True,
+    'fullExecutionUniverse':True,
+    'watchBeforeBuy':True,
+    'fresh15mRequiredForBuy':True,
+    'deepTailMomentumReserve':True,
+    'coreAlwaysScan':['AVAX','ETH','SOL'],
+    'executionPoolIndependentOfTop30':True,
+    'ntfyReScoresBuy':False
+}
+d['method']='CABAL v2.0: every supported broad spot asset reaches execution analysis; Stage-A/top-30 never gates execution. One canonical engine emits WATCH or BUY_NOW. CORE assets are mandatory, low-rank exchange-native momentum has a guarded reserve, BUY requires fresh 15m confirmation plus stop/no-chase safety, and NTFY relays/revalidates rather than re-scoring. Missed movers are recorded with reject reasons. Manual SPOT only.'
+tmp=out+'.v16.tmp'; json.dump(d,open(tmp,'w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(tmp,out); print(json.dumps({'schemaVersion':'2.0','preAccumOperational':d['preAccumOperational'],'mainMachineOperational':d['mainMachineOperational'],'sourceMode':d['sourceMode'],'pumpRadarStats':d['pumpRadarStats'],'buyNow':[x.get('asset') for x in d.get('buyCandidates',[])[:10]],'watch':[x.get('asset') for x in d.get('watchCandidates',[])[:10]]},indent=2))
