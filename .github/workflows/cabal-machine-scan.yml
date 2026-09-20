@@ -93,7 +93,8 @@ jobs:
           core_req=set(c.get('coreRequiredAssets') or [])
           core_scanned=set(c.get('coreScannedAssets') or [])
           core_missing=set(c.get('coreMissingAssets') or [])
-          if not {'AVAX','ETH','SOL'}.issubset(core_req): raise SystemExit(f'CORE contract incomplete: {sorted(core_req)}')
+          required_core={'BTC','ETH','SOL','XRP','AVAX','HBAR','ONDO'}
+          if not required_core.issubset(core_req): raise SystemExit(f'CORE contract incomplete: {sorted(core_req)}')
           if core_missing or not core_req.issubset(core_scanned): raise SystemExit(f'CORE coverage gap: {sorted(core_missing or (core_req-core_scanned))}')
           for x in d.get('buyCandidates',[]):
               if x.get('decisionTier')!='BUY_NOW' or x.get('buyNowEligible') is not True:
