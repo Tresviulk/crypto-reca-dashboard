@@ -205,6 +205,35 @@ def evaluate(row):
     q=_quality_score(row)
     required=1 if (buy and (wide_buy or core_buy or q>=65)) else (2 if buy else 1)
 
+    # NOTIFICATION WATCH is intentionally much stricter than internal WATCH.
+    # Internal WATCH can be broad for model awareness; user-facing NTFY must be
+    # early, current and plausibly convertible into BUY on the next leg.
+    early_limits=(
+        p1 < (4.5 if core else 3.5)
+        and p6 < (10.0 if core else 8.0)
+        and p24 < (15.0 if core else 12.0)
+    )
+    positive_now=(
+        (asset=="BTC" and intra>=0.20 and p1>=0.20)
+        or
+        (asset!="BTC" and rs1>=0.20 and irs>=0.10 and p1>=0.20)
+    )
+    useful_location=(
+        (headroom is None or headroom>=1.0)
+        and stop_dist is not None and 1.0<=stop_dist<=5.0
+    )
+    enough_activity=(fast_watch or rv15>=1.25 or r1>=1.50)
+    quality_floor=(q>=20 if core else q>=38)
+    notify_watch=bool(
+        watch
+        and early_limits
+        and positive_now
+        and useful_location
+        and enough_activity
+        and quality_floor
+        and not reject
+    )
+
     # Scanner may have produced no pilotEntryMax for WATCH; BUY always gets a tight max.
     entry_max=n(row.get("pilotEntryMax"),None)
     if buy and entry_max is None and price is not None:
@@ -215,6 +244,7 @@ def evaluate(row):
         "decisionReason":reason,
         "buyNowEligible":buy,
         "watchEligible":watch,
+        "notifyWatchEligible":notify_watch,
         "qualityScore":q,
         "requiredFreshScans":required,
         "decisionEntryMax":entry_max,
