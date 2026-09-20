@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""CABAL v1.6.3 PUMP RADAR + PILOT ENTRY. Manual SPOT only; never auto-trades."""
+"""CABAL v1.6.4 PUMP RADAR + PILOT ENTRY. Manual SPOT only; never auto-trades."""
 import importlib.util, json, math, os, statistics, time
 from urllib.parse import urlencode
 
 HERE=os.path.dirname(__file__); BASE=os.path.join(HERE,'cabal-machine-scan-v15.py')
 spec=importlib.util.spec_from_file_location('cabal_v15',BASE); mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-mod.SCHEMA='1.6'; mod.UA='CABAL-Discovery-Guard/1.6'; mod.PREACCUM_LIMIT=60; mod.PREACCUM_SUB2M_RESERVE=40
-S={'cgPages':0,'tickers':{'kucoin':{},'bybit':{},'gate':{}},'synthetic':0,'fast15Attempts':0,'fast15Success':0}
+mod.SCHEMA='1.6'; mod.UA='CABAL-Discovery-Guard/1.6.4'; mod.PREACCUM_LIMIT=60; mod.PREACCUM_SUB2M_RESERVE=40; mod.MAX_BROAD=1800
+S={'cgPages':0,'tickers':{'kucoin':{},'bybit':{},'gate':{}},'synthetic':0,'tailMomentum':0,'fast15Attempts':0,'fast15Success':0}
 
 def f(x,d=0.0):
     try:
@@ -49,21 +49,57 @@ def market_universe():
             if not isinstance(part,list) or not part: break
             rows+=part; S['cgPages']=page; time.sleep(.55)
         except: break
-    ku={}; by={}
+    ku={}; by={}; gate={}
     try: ku=ku_pairs()
     except: pass
     try: by=by_pairs()
     except: pass
-    known={str(r.get('symbol') or '').upper() for r in rows}; synth=[]
-    for a in sorted(set(ku)|set(by)):
-        s=a.lower()
-        if a in known or not s or s in mod.STABLES or s.startswith(mod.WRAPPED) or s.endswith(mod.LEVERAGED_SUFFIXES): continue
-        ds=[d[a] for d in (ku,by) if a in d]; turn=max([f(x.get('turnover')) for x in ds] or [0])
-        if turn<mod.PRE_MIN_TURNOVER: continue
-        lasts=[f(x.get('last'),None) for x in ds if x.get('last')]; ch=[f(x.get('change24hPct')) for x in ds]
-        synth.append({'id':'exchange:'+s,'symbol':s,'name':a,'market_cap':0,'total_volume':turn,'current_price':lasts[0] if lasts else None,'price_change_percentage_1h_in_currency':0,'price_change_percentage_24h_in_currency':max(ch,key=abs) if ch else 0,'price_change_percentage_7d_in_currency':0})
-    S['synthetic']=len(synth); return rows+synth
+    try: gate=gate_pairs()
+    except: pass
+    known={str(r.get('symbol') or '').upper() for r in rows}; synth=[]; tail_count=0
+    for a in sorted(set(ku)|set(by)|set(gate)):
+        sym=a.lower()
+        if a in known or not sym or sym in mod.STABLES or sym.startswith(mod.WRAPPED) or sym.endswith(mod.LEVERAGED_SUFFIXES): continue
+        ds=[d[a] for d in (ku,by,gate) if a in d]
+        turn=max([f(x.get('turnover')) for x in ds] or [0])
+        lasts=[f(x.get('last'),None) for x in ds if x.get('last')]
+        ch=[f(x.get('change24hPct')) for x in ds]
+        p24=max(ch,key=abs) if ch else 0
+        # Deep-tail momentum reserve: catches low-rank microcaps before they leave
+        # the early window. It expands DISCOVERY only; BUY NOW still requires all
+        # 15m/RS/no-chase/stop quality gates downstream.
+        tail=bool(turn>=75000 and p24>=6 and p24<25)
+        if turn<mod.PRE_MIN_TURNOVER and not tail: continue
+        item={'id':'exchange:'+sym,'symbol':sym,'name':a,'market_cap':0,'total_volume':turn,'current_price':lasts[0] if lasts else None,'price_change_percentage_1h_in_currency':0,'price_change_percentage_24h_in_currency':p24,'price_change_percentage_7d_in_currency':0}
+        if tail:
+            item['_tailMomentumReserve']=True
+            tail_count+=1
+        synth.append(item)
+    S['synthetic']=len(synth); S['tailMomentum']=tail_count; return rows+synth
 mod.fetch_coingecko=market_universe
+
+# Reserve dedicated PRE slots for exchange-native microcaps already accelerating.
+# This prevents low-rank assets from being crowded out by larger-cap candidates.
+orig_pre_shortlist=mod.build_pre_shortlist
+def build_pre_shortlist_v164(broad):
+    base=orig_pre_shortlist(broad)
+    tail=sorted(
+        [m for m in broad if m.get('_tailMomentumReserve')],
+        key=lambda m:(f(m.get('price_change_percentage_24h_in_currency')),f(m.get('effectiveTurnover') or m.get('total_volume'))),
+        reverse=True
+    )
+    out=[]; seen=set()
+    for m in tail[:15]:
+        a=str(m.get('symbol') or '').upper()
+        if a and a not in seen:
+            out.append(m); seen.add(a)
+    for m in base:
+        if len(out)>=mod.PREACCUM_LIMIT: break
+        a=str(m.get('symbol') or '').upper()
+        if a and a not in seen:
+            out.append(m); seen.add(a)
+    return out[:mod.PREACCUM_LIMIT]
+mod.build_pre_shortlist=build_pre_shortlist_v164
 
 orig_metrics=mod.metrics_from_bars
 def metrics(b,m,btc):
@@ -224,5 +260,5 @@ rows=[]; seen=set()
 for x in (d.get('preAccumCandidates') or [])+(d.get('candidates') or []):
     if x.get('asset') and x['asset'] not in seen: seen.add(x['asset']); rows.append(x)
 pump=sorted([x for x in rows if x.get('fastPumpWatch') or x.get('fastPumpTrigger')],key=lambda x:(bool(x.get('fastPumpTrigger')),bool(x.get('pilotEntryEligible')),f(x.get('intrahourMovePct')),f(x.get('stageAScore'))),reverse=True); pilots=sorted([x for x in rows if x.get('pilotEntryEligible') and x.get('executionSignal')=='PILOT_ENTRY_WINDOW'],key=lambda x:(f(x.get('stageAScore')),f(x.get('intrahourMovePct'))),reverse=True)
-d['pumpRadar']=pump[:40]; d['pilotEntries']=pilots[:20]; d['pumpRadarStats']={'fast15Attempts':S['fast15Attempts'],'fast15Success':S['fast15Success'],'fast15SuccessRatio':round(S['fast15Success']/S['fast15Attempts'],4) if S['fast15Attempts'] else 1.0,'fastPumpWatchCount':sum(bool(x.get('fastPumpWatch')) for x in pump),'fastPumpTriggerCount':sum(bool(x.get('fastPumpTrigger')) for x in pump),'pilotEntryCount':len(pilots),'exchangeSyntheticAdded':S['synthetic'],'coinGeckoPages':S['cgPages'],'preAccumLimit':mod.PREACCUM_LIMIT,'preAccumSub2mReserve':mod.PREACCUM_SUB2M_RESERVE}; d['executionEngine']={'version':'CABAL_PUMP_PILOT_V1.6.3','manualOnly':True,'autoTrade':False,'pilotMaxPctOfPlannedPosition':25,'whalesRole':'CONFIRMATION_PRIORITY_NOT_MANDATORY_VETO','protectiveStopRequired':True,'fastLayer':'LIVE_INTRAHOUR_PLUS_SELECTIVE_COMPLETED_15M','fresh15mRequiredForBuy':True,'wideBaseEarlyAcceleration':True}; d['method']='v1.6.3: PRE-ACCUM/ABC/SECOND-LEG require CURRENT completed-15m confirmation; FAST_PUMP keeps RVOL + RS gates; WIDE_BASE_ACCEL_15M permits 10-18% bases only with exceptional early volume/RS and a recent structural stop <=4.5%; exchange-native PRE universe remains merged; PILOT_ENTRY_WINDOW 20-25% max with stop/no-chase; WHALES additive, never bypasses execution confirmation; manual SPOT only.'
+d['pumpRadar']=pump[:40]; d['pilotEntries']=pilots[:20]; d['pumpRadarStats']={'fast15Attempts':S['fast15Attempts'],'fast15Success':S['fast15Success'],'fast15SuccessRatio':round(S['fast15Success']/S['fast15Attempts'],4) if S['fast15Attempts'] else 1.0,'fastPumpWatchCount':sum(bool(x.get('fastPumpWatch')) for x in pump),'fastPumpTriggerCount':sum(bool(x.get('fastPumpTrigger')) for x in pump),'pilotEntryCount':len(pilots),'exchangeSyntheticAdded':S['synthetic'],'tailMomentumReserveCount':S['tailMomentum'],'coinGeckoPages':S['cgPages'],'preAccumLimit':mod.PREACCUM_LIMIT,'preAccumSub2mReserve':mod.PREACCUM_SUB2M_RESERVE}; d['executionEngine']={'version':'CABAL_PUMP_PILOT_V1.6.4','manualOnly':True,'autoTrade':False,'pilotMaxPctOfPlannedPosition':25,'whalesRole':'CONFIRMATION_PRIORITY_NOT_MANDATORY_VETO','protectiveStopRequired':True,'fastLayer':'LIVE_INTRAHOUR_PLUS_SELECTIVE_COMPLETED_15M','fresh15mRequiredForBuy':True,'wideBaseEarlyAcceleration':True,'deepTailMomentumReserve':True}; d['method']='v1.6.4: v1.6.3 execution safety plus DEEP-TAIL MOMENTUM RESERVE for exchange-native low-rank assets: KuCoin/Bybit/Gate assets outside CoinGecko top-1000 can enter discovery with >=75k venue turnover and +6% to <25% 24h acceleration; 15 dedicated PRE slots prevent crowd-out; all BUY NOW 15m/RS/no-chase/stop quality gates remain unchanged; manual SPOT only.'
 tmp=out+'.v16.tmp'; json.dump(d,open(tmp,'w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(tmp,out); print(json.dumps({'schemaVersion':'1.6','preAccumOperational':d['preAccumOperational'],'mainMachineOperational':d['mainMachineOperational'],'sourceMode':d['sourceMode'],'pumpRadarStats':d['pumpRadarStats'],'pilotEntries':[x.get('asset') for x in d['pilotEntries'][:10]]},indent=2))
