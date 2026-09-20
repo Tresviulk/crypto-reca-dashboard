@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-20T14:00:33.406Z",
+  "generatedAt": "2026-09-20T14:10:11.037Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -74,13 +74,13 @@
       "withdrawals": 0
     },
     "earlyEntry": {
-      "status": "PASS",
-      "generatedAt": "2026-09-20T13:54:43.931Z",
+      "status": "PARTIAL",
+      "generatedAt": "2026-09-20T14:08:55.334Z",
       "cohortSize": 21,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
       "newOnchainSwapBuys": 2,
-      "newOnchainSwapSells": 3
+      "newOnchainSwapSells": 0
     }
   },
   "health": {
@@ -177,12 +177,12 @@
       "generatedAt": "2026-09-16T08:09:04.791Z"
     },
     "earlyEntry": {
-      "status": "PASS",
-      "generatedAt": "2026-09-20T13:54:43.931Z",
-      "ageMinutes": 5.8,
+      "status": "PARTIAL",
+      "generatedAt": "2026-09-20T14:08:55.334Z",
+      "ageMinutes": 1.3,
       "cohortSize": 21,
       "failedWallets": 0,
-      "txFailures": 0
+      "txFailures": 1
     }
   },
   "coverage": {
@@ -6414,7 +6414,7 @@
   "netAccumulation": {
     "schemaVersion": "1.1",
     "module": "whalesNetAccumulationLedger",
-    "generatedAt": "2026-09-20T14:00:33.348Z",
+    "generatedAt": "2026-09-20T14:10:10.989Z",
     "status": "PASS",
     "retentionDays": 30,
     "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -6423,10 +6423,54 @@
       "base": "PASS",
       "arbitrum": "PASS",
       "solanaTradeFeed": "PASS",
-      "earlyEntryEngine": "PASS"
+      "earlyEntryEngine": "PARTIAL"
     },
-    "eventCount": 2951,
+    "eventCount": 2953,
     "events": [
+      {
+        "id": "solana:78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n:5pNqgspoKHPgcKnpb2x3XX9bT7HfsCqdVPnxH6SBkNcE6ytsAyChdZ7oGZtikVg93o6qouUuK7sJbda9LckK9Tke:BUY:9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
+        "chain": "solana",
+        "source": "WHALES_EARLY_ONCHAIN_SWAP_CLASSIFIED",
+        "action": "BUY",
+        "walletLabel": "EARLY-B-78AJPh",
+        "wallet": "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n",
+        "assetSymbol": "NTDA",
+        "assetKey": "9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
+        "tokenAmount": 51.098111,
+        "quoteAsset": "SOL",
+        "quoteAmount": 0.00336729,
+        "txRef": "5pNqgspoKHPgcKnpb2x3XX9bT7HfsCqdVPnxH6SBkNcE6ytsAyChdZ7oGZtikVg93o6qouUuK7sJbda9LckK9Tke",
+        "eventTime": "2026-09-20T14:05:29.000Z",
+        "marketCapUsdAtTrade": 7115231,
+        "priceUsdAtTrade": 0.007117,
+        "confidence": 0.9,
+        "firstTouch": false,
+        "confirmation": "HIGH_CONFIDENCE_ONCHAIN_SWAP_BALANCE_DELTA",
+        "tokenDelta": 51.098111,
+        "quoteDelta": -0.00336729
+      },
+      {
+        "id": "solana:78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n:EjS2yXuig7iRRjBgyDyHXkfGWKnydkh3NM4P9rfj6Yifq1n4CU15bsWRnbq4Yn7kLRGNbQLJ7LH4mRRg75xVr4c:BUY:9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
+        "chain": "solana",
+        "source": "WHALES_EARLY_ONCHAIN_SWAP_CLASSIFIED",
+        "action": "BUY",
+        "walletLabel": "EARLY-B-78AJPh",
+        "wallet": "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n",
+        "assetSymbol": "NTDA",
+        "assetKey": "9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
+        "tokenAmount": 69.964024,
+        "quoteAsset": "SOL",
+        "quoteAmount": 0.0045851,
+        "txRef": "EjS2yXuig7iRRjBgyDyHXkfGWKnydkh3NM4P9rfj6Yifq1n4CU15bsWRnbq4Yn7kLRGNbQLJ7LH4mRRg75xVr4c",
+        "eventTime": "2026-09-20T13:54:58.000Z",
+        "marketCapUsdAtTrade": 7115231,
+        "priceUsdAtTrade": 0.007117,
+        "confidence": 0.9,
+        "firstTouch": false,
+        "confirmation": "HIGH_CONFIDENCE_ONCHAIN_SWAP_BALANCE_DELTA",
+        "tokenDelta": 69.964024,
+        "quoteDelta": -0.0045851
+      },
       {
         "id": "solana:YWa4tCpqvc1FLtchnK9ysxBw1D6AVj1Hur9iZf1JPuo:49JNLTJqCh3AUGDd5mFD51FGyHGuzTLgdbTutsF8xYk3a9RpFzenZgsiVNK3Bom8KqdKx6NpxcQF8DbiAntYzBvg:SELL:7NF6QhwDrTB8rs4t7n7evyy8FFx8DgjCxkJbTSaKpump",
         "chain": "solana",
@@ -71501,12 +71545,12 @@
           "chain": "solana",
           "assetKey": "C2FqE2MheUAAKYWNYGvKJD9iSGUJPfQLNKaTJ8ePpump",
           "assetSymbol": "WOTF",
-          "buyCount": 3,
+          "buyCount": 2,
           "sellCount": 1,
-          "tokenBought": 3375.72322,
+          "tokenBought": 3245.410175,
           "tokenSold": 2141666.21816,
-          "netTokenFlow": -2138290.49494,
-          "quoteSpent": 0.19437247,
+          "netTokenFlow": -2138420.807985,
+          "quoteSpent": 0.18691611,
           "quoteReceived": 0.12496812,
           "wallets": [
             "EARLY-B-78AJPh"
@@ -71537,17 +71581,17 @@
           "chain": "solana",
           "assetKey": "9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
           "assetSymbol": "NTDA",
-          "buyCount": 12,
+          "buyCount": 14,
           "sellCount": 0,
-          "tokenBought": 1068.845825,
+          "tokenBought": 1189.90796,
           "tokenSold": 0,
-          "netTokenFlow": 1068.845825,
-          "quoteSpent": 0.06432973,
+          "netTokenFlow": 1189.90796,
+          "quoteSpent": 0.07228212,
           "quoteReceived": 0,
           "wallets": [
             "EARLY-B-78AJPh"
           ],
-          "latestEventAt": "2026-09-20T13:32:17.000Z",
+          "latestEventAt": "2026-09-20T14:05:29.000Z",
           "walletCount": 1,
           "direction": "NET_ACCUMULATION"
         },
@@ -72296,24 +72340,6 @@
         },
         {
           "chain": "solana",
-          "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
-          "assetSymbol": "MONEKO",
-          "buyCount": 1,
-          "sellCount": 2,
-          "tokenBought": 7205177.920063,
-          "tokenSold": 12799894.159231,
-          "netTokenFlow": -5594716.239168,
-          "quoteSpent": 200,
-          "quoteReceived": 297.194151,
-          "wallets": [
-            "EARLY-B-YWa4tC"
-          ],
-          "latestEventAt": "2026-09-20T13:39:32.000Z",
-          "walletCount": 1,
-          "direction": "NET_DISTRIBUTION"
-        },
-        {
-          "chain": "solana",
           "assetKey": "Cp6AVzuSJ8pDCkYGBxAX3p9Dk77pHSsd35yHh19GJC3i",
           "assetSymbol": "INCOGINU",
           "buyCount": 1,
@@ -72532,17 +72558,17 @@
           "chain": "solana",
           "assetKey": "9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
           "assetSymbol": "NTDA",
-          "buyCount": 12,
+          "buyCount": 14,
           "sellCount": 0,
-          "tokenBought": 1068.845825,
+          "tokenBought": 1189.90796,
           "tokenSold": 0,
-          "netTokenFlow": 1068.845825,
-          "quoteSpent": 0.06432973,
+          "netTokenFlow": 1189.90796,
+          "quoteSpent": 0.07228212,
           "quoteReceived": 0,
           "wallets": [
             "EARLY-B-78AJPh"
           ],
-          "latestEventAt": "2026-09-20T13:32:17.000Z",
+          "latestEventAt": "2026-09-20T14:05:29.000Z",
           "walletCount": 1,
           "direction": "NET_ACCUMULATION"
         },
@@ -72741,6 +72767,24 @@
             "EARLY-B-95Te6i"
           ],
           "latestEventAt": "2026-09-20T13:40:01.000Z",
+          "walletCount": 1,
+          "direction": "FLAT"
+        },
+        {
+          "chain": "solana",
+          "assetKey": "9NR6u9J7KvfyZdi2n9VnEjv5JgV3BRE4WLvXWQiRJ4dk",
+          "assetSymbol": "MONEKO",
+          "buyCount": 1,
+          "sellCount": 1,
+          "tokenBought": 7205177.920063,
+          "tokenSold": 7205177.920063,
+          "netTokenFlow": 0,
+          "quoteSpent": 200,
+          "quoteReceived": 176.707003,
+          "wallets": [
+            "EARLY-B-YWa4tC"
+          ],
+          "latestEventAt": "2026-09-20T13:39:32.000Z",
           "walletCount": 1,
           "direction": "FLAT"
         },
@@ -76339,17 +76383,17 @@
           "chain": "solana",
           "assetKey": "9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
           "assetSymbol": "NTDA",
-          "buyCount": 12,
+          "buyCount": 14,
           "sellCount": 0,
-          "tokenBought": 1068.845825,
+          "tokenBought": 1189.90796,
           "tokenSold": 0,
-          "netTokenFlow": 1068.845825,
-          "quoteSpent": 0.06432973,
+          "netTokenFlow": 1189.90796,
+          "quoteSpent": 0.07228212,
           "quoteReceived": 0,
           "wallets": [
             "EARLY-B-78AJPh"
           ],
-          "latestEventAt": "2026-09-20T13:32:17.000Z",
+          "latestEventAt": "2026-09-20T14:05:29.000Z",
           "walletCount": 1,
           "direction": "NET_ACCUMULATION"
         },
@@ -87448,17 +87492,17 @@
           "chain": "solana",
           "assetKey": "9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
           "assetSymbol": "NTDA",
-          "buyCount": 12,
+          "buyCount": 14,
           "sellCount": 0,
-          "tokenBought": 1068.845825,
+          "tokenBought": 1189.90796,
           "tokenSold": 0,
-          "netTokenFlow": 1068.845825,
-          "quoteSpent": 0.06432973,
+          "netTokenFlow": 1189.90796,
+          "quoteSpent": 0.07228212,
           "quoteReceived": 0,
           "wallets": [
             "EARLY-B-78AJPh"
           ],
-          "latestEventAt": "2026-09-20T13:32:17.000Z",
+          "latestEventAt": "2026-09-20T14:05:29.000Z",
           "walletCount": 1,
           "direction": "NET_ACCUMULATION"
         },
@@ -103003,17 +103047,17 @@
           "chain": "solana",
           "assetKey": "9dLg22TsRMWeiJ44QAteav1Jq67QLyYZVQvYDF9kpump",
           "assetSymbol": "NTDA",
-          "buyCount": 12,
+          "buyCount": 14,
           "sellCount": 0,
-          "tokenBought": 1068.845825,
+          "tokenBought": 1189.90796,
           "tokenSold": 0,
-          "netTokenFlow": 1068.845825,
-          "quoteSpent": 0.06432973,
+          "netTokenFlow": 1189.90796,
+          "quoteSpent": 0.07228212,
           "quoteReceived": 0,
           "wallets": [
             "EARLY-B-78AJPh"
           ],
-          "latestEventAt": "2026-09-20T13:32:17.000Z",
+          "latestEventAt": "2026-09-20T14:05:29.000Z",
           "walletCount": 1,
           "direction": "NET_ACCUMULATION"
         },
@@ -114270,8 +114314,8 @@
     "rule": "TOKEN_FLOW_CONTEXT_ONLY is never promoted to BUY/SELL without trade-level evidence. Net accumulation uses confirmed classifications only. CEX labels are context signals and never proof of sale/purchase."
   },
   "earlyEntry": {
-    "status": "PASS",
-    "generatedAt": "2026-09-20T13:54:43.931Z",
+    "status": "PARTIAL",
+    "generatedAt": "2026-09-20T14:08:55.334Z",
     "scheduleTargetMinutes": 5,
     "cohort": {
       "total": 21,
@@ -114280,11 +114324,11 @@
       "dynamicTierB": 12
     },
     "scan": {
-      "newEventCount": 10,
+      "newEventCount": 5,
       "newOnchainSwapBuys": 2,
-      "newOnchainSwapSells": 3,
-      "newContextOnly": 5,
-      "retainedEventCount": 2014,
+      "newOnchainSwapSells": 0,
+      "newContextOnly": 3,
+      "retainedEventCount": 2017,
       "activeMintCount6h": 25,
       "signalCount": 25,
       "buyCandidateCount": 0,
@@ -114307,18 +114351,25 @@
       ],
       "providerStats": {
         "https://solana-rpc.publicnode.com": {
-          "calls": 35,
+          "calls": 37,
           "successes": 35,
-          "failures": 0,
+          "failures": 2,
           "recoveredFallbacks": 0,
-          "lastError": null
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+        },
+        "https://api.mainnet-beta.solana.com": {
+          "calls": 2,
+          "successes": 0,
+          "failures": 2,
+          "recoveredFallbacks": 0,
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
         }
       },
       "failedWallets": 0,
-      "txFailures": 0,
+      "txFailures": 1,
       "fallbackRecoveries": 0,
-      "walletsPass": 21,
-      "walletsPartial": 0,
+      "walletsPass": 20,
+      "walletsPartial": 1,
       "walletsError": 0
     },
     "dataGaps": [
