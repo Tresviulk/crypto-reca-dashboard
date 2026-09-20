@@ -15,7 +15,7 @@ WHALES_PATH=os.environ.get("CABAL_WHALES_PATH","data/whales-early-entry-state.js
 
 BUY_COOLDOWN_HOURS=12
 WATCH_COOLDOWN_HOURS=6
-WATCH_GLOBAL_COOLDOWN_MINUTES=20
+WATCH_GLOBAL_COOLDOWN_MINUTES=10
 CANCEL_WINDOW_MINUTES=20
 MAX_MACHINE_AGE_MINUTES=10
 ALERT_VALIDITY_MINUTES=10
@@ -72,7 +72,7 @@ def machine_healthy(cabal,now):
     ),age,ratio
 
 def execution_valid(row):
-    if row.get("decisionTier")!="BUY_NOW" or row.get("buyNowEligible") is not True:
+    if row.get("decisionTier")!="BUY_NOW" or row.get("buyNowEligible") is not True or row.get("notifyBuyEligible") is not True:
         return False
     price=num(row.get("price"))
     entry=num(row.get("decisionEntryMax") or row.get("pilotEntryMax"))
@@ -88,8 +88,9 @@ def execution_valid(row):
     return True
 
 def buy_card(r,seen):
+    lane=r.get("signalLane") or "SCALP"
     parts=[
-        f'🚨 {r.get("asset")}',
+        f'🚨 {r.get("asset")} — {lane}',
         f'PLATAFORMA: {r.get("executionVenue") or r.get("venue") or "n/a"}',
         f'CALIDAD: {fmt(r.get("qualityScore"))}/100',
         f'MOTIVO: {r.get("decisionReason") or "CONFIRMED"}',
@@ -98,18 +99,25 @@ def buy_card(r,seen):
         f'COMPRA MÁX.: {fmt(r.get("decisionEntryMax") or r.get("pilotEntryMax"))}',
         f'STOP: {fmt(r.get("decisionStop") or r.get("protectiveStopReference"))}',
     ]
+    if r.get("scalpBuyEligible"):
+        parts += [
+            f'OBJETIVO SCALP +2%: {fmt(r.get("scalpTarget2Pct"))}',
+            f'OBJETIVO SCALP +3%: {fmt(r.get("scalpTarget3Pct"))}',
+        ]
+    if r.get("runnerBuyEligible"):
+        parts.append("RUNNER: estructura compatible con recorrido mayor; puedes igualmente asegurar +2/+3%.")
     if r.get("_whaleConfirmed"): parts.append("WHALES: CONFIRMACIÓN POSITIVA")
     return "\n".join(parts)
 
 def watch_card(r):
     return "\n".join([
-        f'⚡ {r.get("asset")}',
+        f'🚀 {r.get("asset")} — RUNNER TEMPRANO',
         f'PLATAFORMA: {r.get("executionVenue") or r.get("venue") or "n/a"}',
         f'CALIDAD: {fmt(r.get("qualityScore"))}/100',
-        f'MOTIVO: {r.get("decisionReason") or "EARLY WATCH"}',
         f'PRECIO: {fmt(r.get("price"))}',
         f'1H / 6H / 24H: {fmt(r.get("priceChange1hPct"))}% / {fmt(r.get("priceChange6hPct"))}% / {fmt(r.get("priceChange24hPct"))}%',
-        "ACCIÓN: VIGILAR. NO ES ORDEN DE COMPRA."
+        f'RS 1H / 4H vs BTC: {fmt(r.get("relativeStrength1hVsBTC"))}% / {fmt(r.get("relativeStrength4hVsBTC"))}%',
+        "ACCIÓN: RUNNER CANDIDATE. NO COMPRAR AÚN; CABAL espera confirmación de entrada."
     ])
 
 def watch_priority(r):
@@ -124,9 +132,8 @@ def watch_priority(r):
     return (core,fast,momentum,num(r.get("qualityScore")) or 0)
 
 def urgent_watch(r):
-    # Only CORE can bypass the global WATCH throttle.
-    # Non-core fast movers wait for the normal cadence; otherwise NTFY becomes noise.
-    return bool(r.get("isCoreAsset") and r.get("notifyWatchEligible") is True)
+    # RUNNER alerts are globally throttled to avoid notification floods.
+    return False
 
 def build():
     now=datetime.now(timezone.utc)
@@ -163,7 +170,7 @@ def build():
     watches=[
         dict(x) for x in (cabal.get("watchCandidates") or [])
         if x.get("decisionTier")=="WATCH"
-        and x.get("watchEligible") is True
+        and x.get("runnerCandidateEligible") is True
         and x.get("notifyWatchEligible") is True
     ]
     watches.sort(key=watch_priority,reverse=True)
@@ -223,8 +230,16 @@ def build():
             names=", ".join(k.split(":",1)[-1] for k in cancels)
             prefix=f'🔴 CANCELAR ALERTA PREVIA: {names}\nNO COMPRAR esas señales.\n\n'
             for k in cancels: last_cancel[k]=now_iso
+        has_runner=any(r.get("runnerBuyEligible") for r in ready_buy)
+        has_scalp=any(r.get("scalpBuyEligible") for r in ready_buy)
+        if has_runner and has_scalp:
+            title="🟢🚀 CABAL — SCALP / RUNNER BUY"
+        elif has_runner:
+            title="🚀 CABAL RUNNER — COMPRAR AHORA"
+        else:
+            title="🟢 CABAL SCALP — COMPRAR AHORA"
         payload={
-            "title":"🟢 CABAL v2 — COMPRAR AHORA",
+            "title":title,
             "priority":"high",
             "kind":"BUY",
             "buyAssets":[str(r.get("asset") or "").upper() for r in ready_buy],
@@ -243,8 +258,8 @@ def build():
             last_watch[f'CABAL:{str(r.get("asset") or "").upper()}']=now_iso
         prev["systemLastWatchAt"]=now_iso
         payload={
-            "title":"🟡 CABAL v2.1 — PRE-BUY WATCH",
-            "priority":"default","kind":"WATCH","buyAssets":[],
+            "title":"🚀 CABAL RUNNER — CANDIDATO TEMPRANO",
+            "priority":"default","kind":"RUNNER","buyAssets":[],
             "message":"\n\n".join(watch_card(r) for r in ready_watch)
         }
 
@@ -265,7 +280,7 @@ def build():
         json.dump(state,f,ensure_ascii=False,indent=2)
     with open(PAYLOAD_PATH,"w",encoding="utf-8") as f:
         json.dump(payload,f,ensure_ascii=False)
-    print(json.dumps({"healthy":healthy,"buyNow":len(buys),"watch":len(watches),"readyBuy":[r.get("asset") for r in ready_buy],"readyWatch":[r.get("asset") for r in ready_watch],"cancels":cancels,"willNotify":bool(payload)},ensure_ascii=False))
+    print(json.dumps({"healthy":healthy,"userBuySignals":len(buys),"runnerCandidates":len(watches),"readyBuy":[{"asset":r.get("asset"),"lane":r.get("signalLane")} for r in ready_buy],"readyRunner":[r.get("asset") for r in ready_watch],"cancels":cancels,"willNotify":bool(payload)},ensure_ascii=False))
 
 def revalidate(latest_path):
     payload=load(PAYLOAD_PATH,None)
