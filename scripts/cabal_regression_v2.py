@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic CABAL v2 regression suite built from real failure/success archetypes."""
-from cabal_decision_v2 import evaluate, tail_exchange_inclusion
+from cabal_decision_v2 import evaluate, tail_exchange_inclusion, CORE_ASSETS
 
 def base(asset):
     return {
@@ -115,5 +115,22 @@ expect("AVAX",avax,"WATCH")
 assert tail_exchange_inclusion(120_000,8.0) is True
 assert tail_exchange_inclusion(50_000,8.0) is False
 assert tail_exchange_inclusion(120_000,30.0) is False
+
+
+
+# CORE contract must never silently shrink.
+assert CORE_ASSETS=={"BTC","ETH","SOL","XRP","AVAX","HBAR","ONDO"}
+
+# BTC is its own benchmark: absolute momentum/volume can confirm CORE BUY without RS-vs-BTC.
+btc=base("BTC")
+btc.update({
+    "price":81000,"noChase":83000,"protectiveStopReference":79000,
+    "priceChange1hPct":0.9,"priceChange4hPct":1.8,"priceChange24hPct":4.0,
+    "rvol1h":1.7,"relativeStrength1hVsBTC":0.0,"relativeStrength4hVsBTC":0.0,
+    "intrahourMovePct":0.7,"intrahourRelativeStrengthVsBTC":0.0,"stageAScore":35,
+    "fastPumpTrigger":False,"entryConfirmation15m":False,
+    "fastPump15m":{"rvol15m":1.8,"trigger":False,"watch":True,"baseHigh4h15m":80900,"invalidation15m":79000}
+})
+expect("BTC",btc,"BUY_NOW")
 
 print("CABAL v2 regression: PASS")
