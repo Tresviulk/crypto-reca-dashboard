@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.3",
   "module": "positions",
-  "updatedAt": "2026-09-20T09:47:14+02:00",
+  "updatedAt": "2026-09-20T10:02:47+02:00",
   "source": "USER_CONFIRMED_EXCHANGE_EVIDENCE",
   "positions": [
     {
@@ -258,8 +258,8 @@
       "pair": "HYPE-USDC",
       "engine": "USER_CONFIRMED_FILL",
       "setup": null,
-      "status": "OPEN",
-      "protection": "UNPROTECTED",
+      "status": "CLOSED",
+      "protection": "EXITED",
       "qty": 7.557,
       "entry": 79.25,
       "subtotal": 598.89,
@@ -271,7 +271,29 @@
       "orderType": "MARKET",
       "timeInForce": "IOC",
       "openedEuropeMadrid": "2026-09-12 10:38:50",
-      "note": "User-supplied Coinbase Advanced order-details screenshot confirms 100% MARKET BUY execution. TP/SL displayed as none; position is open and unprotected."
+      "note": "HYPE fully closed by confirmed Coinbase Advanced MARKET SELL. User screenshot confirms 7.557 HYPE sold in 3 executions at 90.92 USDC average; gross proceeds 687.08 USDC, fee 1.09 USDC, net proceeds 685.98 USDC.",
+      "closedEuropeMadrid": "2026-09-20 10:02:47",
+      "exitOrder": {
+        "orderId": "32295f43-ae8c-4e78-b1b2-a3229ca95f9b",
+        "side": "SELL",
+        "type": "MARKET",
+        "timeInForce": "IOC",
+        "status": "FILLED_100_PERCENT",
+        "executedQty": 7.557,
+        "averageFillPrice": 90.92,
+        "exitSubtotal": 687.08,
+        "exitFee": 1.09,
+        "exitTotal": 685.98,
+        "executionCount": 3,
+        "lastFilledEuropeMadrid": "2026-09-20 10:02:47",
+        "portfolio": "PRINCIPAL"
+      },
+      "realizedPnl": {
+        "netPnl": 86.13,
+        "pctOnCost": 14.35858964741185,
+        "currency": "USDC",
+        "calculation": "685.98 - 599.85"
+      }
     },
     {
       "id": "sent-20260906",
@@ -854,6 +876,24 @@
       "realizedNetPnl": "+3.251 USDT",
       "status": "FILLED 100% — POSITION CLOSED",
       "executionCount": 2
+    },
+    {
+      "dateEuropeMadrid": "2026-09-20 10:02:47",
+      "asset": "HYPE-USDC",
+      "side": "SELL",
+      "engine": "POSITION EXIT",
+      "venue": "COINBASE",
+      "orderId": "32295f43-ae8c-4e78-b1b2-a3229ca95f9b",
+      "orderType": "MARKET",
+      "timeInForce": "IOC",
+      "qty": "7.557 HYPE",
+      "price": "90.92 USDC avg.",
+      "subtotal": "687.08 USDC",
+      "fee": "1.09 USDC",
+      "total": "685.98 USDC",
+      "realizedNetPnl": "+86.13 USDC",
+      "status": "FILLED 100% — POSITION CLOSED",
+      "executionCount": 3
     }
   ],
   "journal": [
@@ -988,6 +1028,12 @@
       "type": "CONFIRMED_FULL_EXIT",
       "asset": "AGLD-USDT",
       "note": "AGLD fully closed by KuCoin market sell. Net realized P&L +3.251 USDT (+0.83%)."
+    },
+    {
+      "timestampEuropeMadrid": "2026-09-20 10:02:47",
+      "type": "CONFIRMED_FULL_EXIT",
+      "asset": "HYPE-USDC",
+      "note": "HYPE fully closed by Coinbase market sell. Net realized P&L +86.13 USDC (14.36%)."
     }
   ]
 }
