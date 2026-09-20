@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.3",
   "module": "positions",
-  "updatedAt": "2026-09-20T11:00:40+02:00",
+  "updatedAt": "2026-09-20T15:52:38+02:00",
   "source": "USER_CONFIRMED_EXCHANGE_EVIDENCE",
   "positions": [
     {
@@ -545,8 +545,8 @@
       "venue": "KUCOIN",
       "engine": "CABAL",
       "setup": "FAST_PUMP_15M",
-      "status": "OPEN",
-      "protection": "UNPROTECTED",
+      "status": "CLOSED",
+      "protection": "EXITED",
       "qty": 14.39,
       "entry": 27.952,
       "displayedAvgPrice": 27.952,
@@ -580,7 +580,27 @@
         "note": "Execution occurred inside CABAL buy window and below COMPRA MÁX."
       },
       "recommendedStop": 27.009528,
-      "note": "VVV bought on KuCoin by confirmed MARKET order. Screenshot confirms 14.39 VVV across 3 fills, displayed average 27.952 USDT, quote volume 402.234 USDT and 0.804 USDT fee. Total cost 403.038 USDT. No protective stop order confirmed yet."
+      "note": "VVV fully closed by confirmed KuCoin MARKET SELL. User screenshot confirms 14.39 VVV sold at 28.51 USDT average; gross proceeds 410.258 USDT, fee 0.82 USDT, net proceeds 409.438 USDT. Realized P&L +6.400 USDT (+1.59%).",
+      "closedEuropeMadrid": "2026-09-20 15:52:38",
+      "exitOrder": {
+        "side": "SELL",
+        "type": "MARKET",
+        "timeInForce": "GTC",
+        "status": "FILLED_100_PERCENT",
+        "executedQty": 14.39,
+        "averageFillPrice": 28.51,
+        "exitSubtotal": 410.258,
+        "exitFee": 0.82,
+        "exitTotal": 409.438,
+        "executionCount": 1,
+        "lastFilledEuropeMadrid": "2026-09-20 15:52:38"
+      },
+      "realizedPnl": {
+        "netPnl": 6.400000000000034,
+        "pctOnCost": 1.5879395987475213,
+        "currency": "USDT",
+        "calculation": "409.438 - 403.03799999999995"
+      }
     }
   ],
   "ledger": [
@@ -954,6 +974,23 @@
       "total": "403.038 USDT",
       "status": "FILLED 100% — POSITION OPEN",
       "executionCount": 3
+    },
+    {
+      "dateEuropeMadrid": "2026-09-20 15:52:38",
+      "asset": "VVV-USDT",
+      "side": "SELL",
+      "engine": "POSITION EXIT",
+      "venue": "KUCOIN",
+      "orderType": "MARKET",
+      "timeInForce": "GTC",
+      "qty": "14.39 VVV",
+      "price": "28.51 USDT avg.",
+      "subtotal": "410.258 USDT",
+      "fee": "0.82 USDT",
+      "total": "409.438 USDT",
+      "realizedNetPnl": "+6.400 USDT",
+      "status": "FILLED 100% — POSITION CLOSED",
+      "executionCount": 1
     }
   ],
   "journal": [
@@ -1100,6 +1137,12 @@
       "type": "CONFIRMED_ENTRY",
       "asset": "VVV-USDT",
       "note": "VVV opened on KuCoin from CABAL FAST_PUMP_15M alert. Execution inside buy window; no protective stop order confirmed yet."
+    },
+    {
+      "timestampEuropeMadrid": "2026-09-20 15:52:38",
+      "type": "CONFIRMED_FULL_EXIT",
+      "asset": "VVV-USDT",
+      "note": "VVV fully closed by KuCoin market sell. Net realized P&L +6.400 USDT (1.59%)."
     }
   ]
 }
