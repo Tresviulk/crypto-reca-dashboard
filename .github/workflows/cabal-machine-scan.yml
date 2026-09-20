@@ -18,7 +18,8 @@ permissions:
 
 concurrency:
   group: cabal-v2-machine-discovery
-  cancel-in-progress: false
+  # A stale scan is useless for an early-entry system. Always favor the newest cycle.
+  cancel-in-progress: true
 
 jobs:
   scan:
