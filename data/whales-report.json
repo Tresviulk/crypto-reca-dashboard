@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-09-20T01:09:47.479Z",
+  "generatedAt": "2026-09-20T01:19:36.495Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -75,12 +75,12 @@
     },
     "earlyEntry": {
       "status": "PARTIAL",
-      "generatedAt": "2026-09-20T01:02:01.186Z",
+      "generatedAt": "2026-09-20T01:17:42.268Z",
       "cohortSize": 20,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
-      "newOnchainSwapBuys": 6,
-      "newOnchainSwapSells": 2
+      "newOnchainSwapBuys": 0,
+      "newOnchainSwapSells": 0
     }
   },
   "health": {
@@ -178,11 +178,11 @@
     },
     "earlyEntry": {
       "status": "PARTIAL",
-      "generatedAt": "2026-09-20T01:02:01.186Z",
-      "ageMinutes": 7.8,
+      "generatedAt": "2026-09-20T01:17:42.268Z",
+      "ageMinutes": 1.9,
       "cohortSize": 20,
       "failedWallets": 0,
-      "txFailures": 14
+      "txFailures": 5
     }
   },
   "coverage": {
@@ -4536,26 +4536,6 @@
     },
     {
       "source": "WHALES_EARLY_ENTRY",
-      "asset": "ZCASHCAT",
-      "mint": "GH8d1NUnv2YRb6xUxn1LRm8B5p2uTqQFeyV1VWs8pump",
-      "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
-      "action": "WATCH_RISK_REJECT",
-      "reason": "Net shark accumulation exists, but verified liquidity is below the $50,000 minimum for an actionable early-entry review.",
-      "pair": "ZCASHCAT/SOL or ZCASHCAT/USDC (DEX-dependent)",
-      "dex": "pumpfun",
-      "priceUsd": 0.00002887,
-      "liquidityUsd": null,
-      "marketCapUsd": 28870.95,
-      "uniqueBuyWalletCount": 2,
-      "tierAPriorityBuyCount": 1,
-      "firstTouchBuyCount": 2,
-      "avgConfidence": 0.9,
-      "firstBuyAt": "2026-09-19T20:32:21.000Z",
-      "minutesSinceFirstBuy": 269.7,
-      "cabal": null
-    },
-    {
-      "source": "WHALES_EARLY_ENTRY",
       "asset": "MAGATARD",
       "mint": "FpVVf6c2BgnnmGCnLS4fGomv4TbH2rnuUFKEKX6Vpump",
       "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
@@ -4571,7 +4551,27 @@
       "firstTouchBuyCount": 1,
       "avgConfidence": 0.9,
       "firstBuyAt": "2026-09-19T21:53:07.000Z",
-      "minutesSinceFirstBuy": 188.9,
+      "minutesSinceFirstBuy": 204.6,
+      "cabal": null
+    },
+    {
+      "source": "WHALES_EARLY_ENTRY",
+      "asset": "ZCASHCAT",
+      "mint": "GH8d1NUnv2YRb6xUxn1LRm8B5p2uTqQFeyV1VWs8pump",
+      "status": "SHARK_BUY_LATE",
+      "action": "DO_NOT_CHASE",
+      "reason": "Net shark accumulation exists, but price acceleration already exceeds the early-entry no-chase threshold.",
+      "pair": "ZCASHCAT/SOL or ZCASHCAT/USDC (DEX-dependent)",
+      "dex": "pumpfun",
+      "priceUsd": 0.0000296,
+      "liquidityUsd": null,
+      "marketCapUsd": 29605.99,
+      "uniqueBuyWalletCount": 2,
+      "tierAPriorityBuyCount": 1,
+      "firstTouchBuyCount": 2,
+      "avgConfidence": 0.9,
+      "firstBuyAt": "2026-09-19T20:32:21.000Z",
+      "minutesSinceFirstBuy": 285.4,
       "cabal": null
     }
   ],
@@ -6454,7 +6454,7 @@
   "netAccumulation": {
     "schemaVersion": "1.1",
     "module": "whalesNetAccumulationLedger",
-    "generatedAt": "2026-09-20T01:09:47.425Z",
+    "generatedAt": "2026-09-20T01:19:36.431Z",
     "status": "PASS",
     "retentionDays": 30,
     "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -68959,6 +68959,24 @@
         },
         {
           "chain": "solana",
+          "assetKey": "5rhWUGdKrzEpo9HS48P7fMj3KTMNmg1Srzqj9Z7npump",
+          "assetSymbol": "PAIDSHROOM",
+          "buyCount": 0,
+          "sellCount": 1,
+          "tokenBought": 0,
+          "tokenSold": 30000000,
+          "netTokenFlow": -30000000,
+          "quoteSpent": 0,
+          "quoteReceived": 23.53123099,
+          "wallets": [
+            "EARLY-A-wae8YM"
+          ],
+          "latestEventAt": "2026-09-19T19:23:28.000Z",
+          "walletCount": 1,
+          "direction": "NET_DISTRIBUTION"
+        },
+        {
+          "chain": "solana",
           "assetKey": "DGy6LjrWBU1gTmz4apMfhqxMGXjREAPiUnZFSZwCpump",
           "assetSymbol": "SOLANAPAY",
           "buyCount": 3,
@@ -68990,24 +69008,6 @@
             "EARLY-A-4YrqTr"
           ],
           "latestEventAt": "2026-09-20T00:10:02.000Z",
-          "walletCount": 1,
-          "direction": "NET_DISTRIBUTION"
-        },
-        {
-          "chain": "solana",
-          "assetKey": "J1iU4MYbu85wBMTLQdFzP6hUQZaN1ZdsCE2phPgSpump",
-          "assetSymbol": "SPEPE",
-          "buyCount": 1,
-          "sellCount": 1,
-          "tokenBought": 330503.151039,
-          "tokenSold": 1228085.857341,
-          "netTokenFlow": -897582.706302,
-          "quoteSpent": 50.002833,
-          "quoteReceived": 169.537766,
-          "wallets": [
-            "EARLY-A-4YrqTr"
-          ],
-          "latestEventAt": "2026-09-19T19:10:22.000Z",
           "walletCount": 1,
           "direction": "NET_DISTRIBUTION"
         },
@@ -69278,24 +69278,6 @@
             "EARLY-A-wae8YM"
           ],
           "latestEventAt": "2026-09-19T19:37:08.000Z",
-          "walletCount": 1,
-          "direction": "FLAT"
-        },
-        {
-          "chain": "solana",
-          "assetKey": "5rhWUGdKrzEpo9HS48P7fMj3KTMNmg1Srzqj9Z7npump",
-          "assetSymbol": "PAIDSHROOM",
-          "buyCount": 1,
-          "sellCount": 2,
-          "tokenBought": 141717173.243594,
-          "tokenSold": 141717173.243594,
-          "netTokenFlow": 0,
-          "quoteSpent": 187.00300728,
-          "quoteReceived": 229.80327832,
-          "wallets": [
-            "EARLY-A-wae8YM"
-          ],
-          "latestEventAt": "2026-09-19T19:23:28.000Z",
           "walletCount": 1,
           "direction": "FLAT"
         }
@@ -70185,24 +70167,6 @@
             "EARLY-B-J9gw2c"
           ],
           "latestEventAt": "2026-09-19T02:20:33.000Z",
-          "walletCount": 1,
-          "direction": "NET_ACCUMULATION"
-        },
-        {
-          "chain": "solana",
-          "assetKey": "HpYrWHH5Bf7Vx1xpnARa1sN5vEJVvxE72c9tWCBfvq78",
-          "assetSymbol": "FOMO",
-          "buyCount": 1,
-          "sellCount": 0,
-          "tokenBought": 72857.994905,
-          "tokenSold": 0,
-          "netTokenFlow": 72857.994905,
-          "quoteSpent": 50,
-          "quoteReceived": 0,
-          "wallets": [
-            "EARLY-B-J9gw2c"
-          ],
-          "latestEventAt": "2026-09-19T01:13:23.000Z",
           "walletCount": 1,
           "direction": "NET_ACCUMULATION"
         },
@@ -71789,24 +71753,6 @@
           "latestEventAt": "2026-09-19T01:44:05.000Z",
           "walletCount": 1,
           "direction": "FLAT"
-        },
-        {
-          "chain": "solana",
-          "assetKey": "A3N4eqVn1e44nYpaYAtvuvfjCg6MLpz1vMKS67vspump",
-          "assetSymbol": "INU",
-          "buyCount": 2,
-          "sellCount": 1,
-          "tokenBought": 628196.507827,
-          "tokenSold": 628196.507827,
-          "netTokenFlow": 0,
-          "quoteSpent": 0.60153944,
-          "quoteReceived": 0.01291945,
-          "wallets": [
-            "EARLY-B-FJp5gB"
-          ],
-          "latestEventAt": "2026-09-19T01:13:13.000Z",
-          "walletCount": 1,
-          "direction": "NET_DISTRIBUTION"
         }
       ],
       "72h": [
@@ -112480,7 +112426,7 @@
   },
   "earlyEntry": {
     "status": "PARTIAL",
-    "generatedAt": "2026-09-20T01:02:01.186Z",
+    "generatedAt": "2026-09-20T01:17:42.268Z",
     "scheduleTargetMinutes": 5,
     "cohort": {
       "total": 20,
@@ -112489,21 +112435,21 @@
       "dynamicTierB": 10
     },
     "scan": {
-      "newEventCount": 8,
-      "newOnchainSwapBuys": 6,
-      "newOnchainSwapSells": 2,
-      "newContextOnly": 0,
-      "retainedEventCount": 2187,
-      "activeMintCount6h": 25,
-      "signalCount": 25,
+      "newEventCount": 1,
+      "newOnchainSwapBuys": 0,
+      "newOnchainSwapSells": 0,
+      "newContextOnly": 1,
+      "retainedEventCount": 2184,
+      "activeMintCount6h": 22,
+      "signalCount": 22,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
       "netAccumulationSignalCount": 1,
-      "netDistributionSignalCount": 5,
-      "roundTripFlatCount": 9,
-      "rawNetAccumulationSignalCount": 6,
+      "netDistributionSignalCount": 4,
+      "roundTripFlatCount": 8,
+      "rawNetAccumulationSignalCount": 5,
       "microProbeCount": 1,
-      "scoutPositionCount": 4
+      "scoutPositionCount": 3
     },
     "buyCandidates": [],
     "earlyWatches": [],
@@ -112512,6 +112458,112 @@
         "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
         "action": "WATCH_RISK_REJECT",
         "reason": "Net shark accumulation exists, but verified liquidity is below the $50,000 minimum for an actionable early-entry review.",
+        "mint": "FpVVf6c2BgnnmGCnLS4fGomv4TbH2rnuUFKEKX6Vpump",
+        "symbol": "MAGATARD",
+        "name": "Magatard",
+        "pair": "MAGATARD/SOL or MAGATARD/USDC (DEX-dependent)",
+        "dex": "pumpswap",
+        "pairAddress": "BianhM2oV848t7tSHN6Hnu3Dw36DyK6vgMHjstEeftHD",
+        "pairUrl": "https://dexscreener.com/solana/bianhm2ov848t7tshn6hnu3dw36dyk6vgmhjsteefthd",
+        "priceUsd": 0.000001995,
+        "liquidityUsd": 2011.79,
+        "marketCapUsd": 1995,
+        "fdvUsd": 1995,
+        "volume24hUsd": 74191.7,
+        "priceChange5mPct": null,
+        "priceChange1hPct": null,
+        "priceChange6hPct": -95.66,
+        "priceChange24hPct": -95.66,
+        "pairCreatedAt": "2026-09-19T21:53:07.000Z",
+        "buyCount": 1,
+        "sellCount": 3,
+        "tokenBought": 141717173.243594,
+        "tokenSold": 141717173.243594,
+        "netTokenFlow": 0,
+        "uniqueBuyWalletCount": 1,
+        "uniqueSellWalletCount": 0,
+        "uniqueBuyWallets": [
+          "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN"
+        ],
+        "uniqueSellWallets": [],
+        "flatRoundTripWallets": [],
+        "netAccumulatingWalletCount": 1,
+        "tierAPriorityBuyCount": 1,
+        "firstTouchBuyCount": 1,
+        "avgConfidence": 0.9,
+        "whaleScore": 0.95,
+        "firstBuyAt": "2026-09-19T21:53:07.000Z",
+        "latestBuyAt": "2026-09-19T21:53:07.000Z",
+        "minutesSinceFirstBuy": 204.6,
+        "noChase": false,
+        "liquidityHealthy": false,
+        "marketCapHealthy": true,
+        "marketHealthy": false,
+        "cabal": null,
+        "cabalValidatedForEntry": false,
+        "buyEvidence": [
+          {
+            "walletLabel": "EARLY-A-wae8YM",
+            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
+            "walletSource": "DISCOVERY_TIER_A",
+            "walletTier": "TIER_A",
+            "alphaScore": 90.16,
+            "firstTouch": true,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 187.00300728,
+            "tokenAmount": 141717173.243594,
+            "signature": "391d1wVdenHTM7fdBhy69rPUjzDBvpZzsCr4sLQKCSHwik8qeapei38UKnnduaBB4rHZfgXUcYXFeEoGt8RnDjrJ",
+            "eventTime": "2026-09-19T21:53:07.000Z"
+          }
+        ],
+        "sellEvidence": [
+          {
+            "walletLabel": "EARLY-A-wae8YM",
+            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
+            "walletSource": "DISCOVERY_TIER_A",
+            "walletTier": "TIER_A",
+            "alphaScore": 90.16,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 9.15966764,
+            "tokenAmount": 2217173.24359399,
+            "signature": "21b3wpMp2FXaTN81uWJaNyd4pvd1UScxqbC4NTuj7cg77ZBp8UQj3284XrBRmUoG5BC6FX4U82gJp8HUwuiSJnpo",
+            "eventTime": "2026-09-19T21:54:26.000Z"
+          },
+          {
+            "walletLabel": "EARLY-A-wae8YM",
+            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
+            "walletSource": "DISCOVERY_TIER_A",
+            "walletTier": "TIER_A",
+            "alphaScore": 90.16,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 213.03020796,
+            "tokenAmount": 119500000,
+            "signature": "2ocyUPWVtBNKhdvYdG9v25p5gbf6NKEDS2eLSBgpygePjeyYPq15dCPL2h2NqvpbSxwd8W3CBP7y1TqA3YVb5T2Z",
+            "eventTime": "2026-09-19T22:00:24.000Z"
+          },
+          {
+            "walletLabel": "EARLY-A-wae8YM",
+            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
+            "walletSource": "DISCOVERY_TIER_A",
+            "walletTier": "TIER_A",
+            "alphaScore": 90.16,
+            "confidence": 0.9,
+            "quoteAsset": "SOL",
+            "quoteAmount": 16.81325665,
+            "tokenAmount": 20000000,
+            "signature": "639MgiXwrSxLMqw2SuHV7DEDChgbfRVvE2GzJqtbmyfa8gLww5fmN3yJonDDCgNfXsC5dhYZXYhzKfyFTh4tKEFb",
+            "eventTime": "2026-09-19T22:05:56.000Z"
+          }
+        ],
+        "dataQuality": "PASS"
+      },
+      {
+        "status": "SHARK_BUY_LATE",
+        "action": "DO_NOT_CHASE",
+        "reason": "Net shark accumulation exists, but price acceleration already exceeds the early-entry no-chase threshold.",
         "mint": "GH8d1NUnv2YRb6xUxn1LRm8B5p2uTqQFeyV1VWs8pump",
         "symbol": "ZCASHCAT",
         "name": "ZCASH CAT",
@@ -112519,15 +112571,15 @@
         "dex": "pumpfun",
         "pairAddress": "3eHhEtFmVkgihKxrhYqA2rfhofduiybPjxAaGsnzRZzh",
         "pairUrl": "https://dexscreener.com/solana/3ehhetfmvkgihkxrhyqa2rfhofduiybpjxaagsnzrzzh",
-        "priceUsd": 0.00002887,
+        "priceUsd": 0.0000296,
         "liquidityUsd": null,
-        "marketCapUsd": 28870.95,
-        "fdvUsd": 28870.95,
-        "volume24hUsd": 73507.59,
-        "priceChange5mPct": 0.68,
-        "priceChange1hPct": 1.56,
-        "priceChange6hPct": 777,
-        "priceChange24hPct": 777,
+        "marketCapUsd": 29605.99,
+        "fdvUsd": 29605.99,
+        "volume24hUsd": 76528.86,
+        "priceChange5mPct": 9.53,
+        "priceChange1hPct": 14.96,
+        "priceChange6hPct": 800,
+        "priceChange24hPct": 800,
         "pairCreatedAt": "2026-09-19T20:30:49.000Z",
         "buyCount": 2,
         "sellCount": 1,
@@ -112549,8 +112601,8 @@
         "whaleScore": 1.67,
         "firstBuyAt": "2026-09-19T20:32:21.000Z",
         "latestBuyAt": "2026-09-19T20:53:06.000Z",
-        "minutesSinceFirstBuy": 269.7,
-        "noChase": false,
+        "minutesSinceFirstBuy": 285.4,
+        "noChase": true,
         "liquidityHealthy": false,
         "marketCapHealthy": true,
         "marketHealthy": false,
@@ -112651,112 +112703,6 @@
             }
           ]
         }
-      },
-      {
-        "status": "WHALE_DISCOVERY_LOW_LIQUIDITY",
-        "action": "WATCH_RISK_REJECT",
-        "reason": "Net shark accumulation exists, but verified liquidity is below the $50,000 minimum for an actionable early-entry review.",
-        "mint": "FpVVf6c2BgnnmGCnLS4fGomv4TbH2rnuUFKEKX6Vpump",
-        "symbol": "MAGATARD",
-        "name": "Magatard",
-        "pair": "MAGATARD/SOL or MAGATARD/USDC (DEX-dependent)",
-        "dex": "pumpswap",
-        "pairAddress": "BianhM2oV848t7tSHN6Hnu3Dw36DyK6vgMHjstEeftHD",
-        "pairUrl": "https://dexscreener.com/solana/bianhm2ov848t7tshn6hnu3dw36dyk6vgmhjsteefthd",
-        "priceUsd": 0.000001995,
-        "liquidityUsd": 2011.79,
-        "marketCapUsd": 1995,
-        "fdvUsd": 1995,
-        "volume24hUsd": 74191.7,
-        "priceChange5mPct": null,
-        "priceChange1hPct": null,
-        "priceChange6hPct": -95.66,
-        "priceChange24hPct": -95.66,
-        "pairCreatedAt": "2026-09-19T21:53:07.000Z",
-        "buyCount": 1,
-        "sellCount": 3,
-        "tokenBought": 141717173.243594,
-        "tokenSold": 141717173.243594,
-        "netTokenFlow": 0,
-        "uniqueBuyWalletCount": 1,
-        "uniqueSellWalletCount": 0,
-        "uniqueBuyWallets": [
-          "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN"
-        ],
-        "uniqueSellWallets": [],
-        "flatRoundTripWallets": [],
-        "netAccumulatingWalletCount": 1,
-        "tierAPriorityBuyCount": 1,
-        "firstTouchBuyCount": 1,
-        "avgConfidence": 0.9,
-        "whaleScore": 0.95,
-        "firstBuyAt": "2026-09-19T21:53:07.000Z",
-        "latestBuyAt": "2026-09-19T21:53:07.000Z",
-        "minutesSinceFirstBuy": 188.9,
-        "noChase": false,
-        "liquidityHealthy": false,
-        "marketCapHealthy": true,
-        "marketHealthy": false,
-        "cabal": null,
-        "cabalValidatedForEntry": false,
-        "buyEvidence": [
-          {
-            "walletLabel": "EARLY-A-wae8YM",
-            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
-            "walletSource": "DISCOVERY_TIER_A",
-            "walletTier": "TIER_A",
-            "alphaScore": 90.16,
-            "firstTouch": true,
-            "confidence": 0.9,
-            "quoteAsset": "SOL",
-            "quoteAmount": 187.00300728,
-            "tokenAmount": 141717173.243594,
-            "signature": "391d1wVdenHTM7fdBhy69rPUjzDBvpZzsCr4sLQKCSHwik8qeapei38UKnnduaBB4rHZfgXUcYXFeEoGt8RnDjrJ",
-            "eventTime": "2026-09-19T21:53:07.000Z"
-          }
-        ],
-        "sellEvidence": [
-          {
-            "walletLabel": "EARLY-A-wae8YM",
-            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
-            "walletSource": "DISCOVERY_TIER_A",
-            "walletTier": "TIER_A",
-            "alphaScore": 90.16,
-            "confidence": 0.9,
-            "quoteAsset": "SOL",
-            "quoteAmount": 9.15966764,
-            "tokenAmount": 2217173.24359399,
-            "signature": "21b3wpMp2FXaTN81uWJaNyd4pvd1UScxqbC4NTuj7cg77ZBp8UQj3284XrBRmUoG5BC6FX4U82gJp8HUwuiSJnpo",
-            "eventTime": "2026-09-19T21:54:26.000Z"
-          },
-          {
-            "walletLabel": "EARLY-A-wae8YM",
-            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
-            "walletSource": "DISCOVERY_TIER_A",
-            "walletTier": "TIER_A",
-            "alphaScore": 90.16,
-            "confidence": 0.9,
-            "quoteAsset": "SOL",
-            "quoteAmount": 213.03020796,
-            "tokenAmount": 119500000,
-            "signature": "2ocyUPWVtBNKhdvYdG9v25p5gbf6NKEDS2eLSBgpygePjeyYPq15dCPL2h2NqvpbSxwd8W3CBP7y1TqA3YVb5T2Z",
-            "eventTime": "2026-09-19T22:00:24.000Z"
-          },
-          {
-            "walletLabel": "EARLY-A-wae8YM",
-            "wallet": "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
-            "walletSource": "DISCOVERY_TIER_A",
-            "walletTier": "TIER_A",
-            "alphaScore": 90.16,
-            "confidence": 0.9,
-            "quoteAsset": "SOL",
-            "quoteAmount": 16.81325665,
-            "tokenAmount": 20000000,
-            "signature": "639MgiXwrSxLMqw2SuHV7DEDChgbfRVvE2GzJqtbmyfa8gLww5fmN3yJonDDCgNfXsC5dhYZXYhzKfyFTh4tKEFb",
-            "eventTime": "2026-09-19T22:05:56.000Z"
-          }
-        ],
-        "dataQuality": "PASS"
       }
     ],
     "health": {
@@ -112767,22 +112713,22 @@
       ],
       "providerStats": {
         "https://solana-rpc.publicnode.com": {
-          "calls": 59,
-          "successes": 31,
-          "failures": 28,
+          "calls": 36,
+          "successes": 26,
+          "failures": 10,
           "recoveredFallbacks": 0,
           "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
         },
         "https://api.mainnet-beta.solana.com": {
-          "calls": 28,
+          "calls": 10,
           "successes": 0,
-          "failures": 28,
+          "failures": 10,
           "recoveredFallbacks": 0,
-          "lastError": "HTTP_429"
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
         }
       },
       "failedWallets": 0,
-      "txFailures": 14,
+      "txFailures": 5,
       "fallbackRecoveries": 0,
       "walletsPass": 18,
       "walletsPartial": 2,
