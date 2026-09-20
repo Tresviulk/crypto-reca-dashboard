@@ -1,15 +1,10 @@
 name: CABAL v2 NTFY Alerts
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
+  # Production notifications are emitted inside CABAL v2 Machine Discovery so
+  # scan -> decision -> push is one atomic 5-minute cycle. Keep this workflow
+  # only as a manual recovery/test relay to avoid duplicate scheduled pushes.
   workflow_dispatch:
-  push:
-    branches: ["main"]
-    paths:
-      - 'scripts/cabal_ntfy_v2.py'
-      - 'scripts/cabal_decision_v2.py'
-      - '.github/workflows/cabal-ntfy-alerts.yml'
 
 permissions:
   contents: write
