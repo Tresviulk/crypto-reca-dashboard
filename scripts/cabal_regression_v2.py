@@ -101,13 +101,13 @@ assert kmno_result["notifyWatchEligible"] is False
 runner=base("RUNNERX")
 runner.update({
     "price":1.0,"noChase":1.08,"protectiveStopReference":0.96,
-    "priceChange1hPct":1.2,"priceChange4hPct":2.0,"priceChange6hPct":3.2,"priceChange24hPct":5.0,
-    "rvol1h":3.2,"relativeStrength1hVsBTC":1.1,"relativeStrength4hVsBTC":1.6,
-    "intrahourMovePct":0.4,"intrahourRelativeStrengthVsBTC":0.35,"stageAScore":65,
-    "bucketB":True,"bucketC":False,"preAccumWatch":True,"preAccumVolumeBuild6h":1.5,
+    "priceChange1hPct":1.6,"priceChange4hPct":3.0,"priceChange6hPct":4.2,"priceChange24hPct":6.0,
+    "rvol1h":5.0,"relativeStrength1hVsBTC":1.8,"relativeStrength4hVsBTC":2.5,
+    "intrahourMovePct":0.7,"intrahourRelativeStrengthVsBTC":0.8,"stageAScore":75,
+    "bucketB":True,"bucketC":False,"preAccumWatch":True,"preAccumVolumeBuild6h":1.8,
     "preAccumBaseRange12hPct":8.0,
     "entryConfirmation15m":False,"fastPumpTrigger":False,
-    "fastPump15m":{"rvol15m":1.9,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.96}
+    "fastPump15m":{"rvol15m":3.0,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.96}
 })
 runner_result=expect("RUNNERX",runner,"WATCH")
 assert runner_result["runnerCandidateEligible"] is True
