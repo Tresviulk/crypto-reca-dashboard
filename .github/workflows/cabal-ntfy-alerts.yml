@@ -41,9 +41,11 @@ jobs:
           STATE_PATH = "data/ntfy-alert-state.json"
           COOLDOWN_HOURS = 12
           GLOBAL_COOLDOWN_MINUTES = 5
-          REQUIRED_FRESH_SCANS = 2
+          REQUIRED_FRESH_SCANS_STANDARD = 2
+          REQUIRED_FRESH_SCANS_FAST = 1
           MAX_ASSETS_PER_PUSH = 1
-          MIN_EDGE_SCORE = 58.0
+          MIN_EDGE_SCORE_STANDARD = 58.0
+          MIN_EDGE_SCORE_FAST = 38.0
           MIN_EDGE_MARGIN = 0.0
           MAX_MACHINE_AGE_MINUTES = 10
           ALERT_VALIDITY_MINUTES = 10
@@ -284,23 +286,27 @@ jobs:
               b=bool(row.get("bucketB"))
               c=bool(row.get("bucketC"))
 
-              if not (b and c):
+              # Structural rules differ by lane. FAST_PUMP is already confirmed by
+              # a fresh completed-15m trigger, so do not force slow-lane persistence
+              # or extreme RVOL thresholds that make the alert arrive after the move.
+              if not b:
                   return False
-              if rs1 < 0.30 or irs < 0.20:
+              if rs1 < 0.20 or irs < 0.20:
                   return False
-              if p1 < 0.15 or p4 < -0.50:
+              if p1 < 0.10 or p4 < -0.50:
                   return False
 
               if reason=="WHALES + CABAL":
-                  return score>=45 and rvol1>=5 and (rvol15>=5 or rs4>=0)
+                  return c and score>=45 and rvol1>=5 and (rvol15>=4 or rs4>=0)
               if reason=="PRE_ACCUM_TRIGGER":
-                  return score>=65 and rvol1>=7 and rs4>=-0.10
+                  return c and score>=65 and rvol1>=7 and rs4>=-0.10
               if reason=="FAST_PUMP_15M":
-                  return score>=35 and rvol15>=7 and irs>=0.40 and rs4>=-0.10
+                  structure_ok = c or score>=75
+                  return structure_ok and score>=35 and rvol15>=3 and irs>=0.40 and rs4>=0
               if reason=="ABC_EARLY_STRUCTURE":
-                  return score>=65 and rvol1>=5 and rs4>=0
+                  return c and score>=65 and rvol1>=5 and rs4>=0
               if reason=="SECOND_LEG_TRIGGER":
-                  return score>=65 and rvol1>=5 and rs4>=0
+                  return c and score>=65 and rvol1>=5 and rs4>=0
               return False
 
           def edge_score(row):
@@ -349,12 +355,18 @@ jobs:
               ranked_now.append(row)
           ranked_now.sort(key=lambda x:(x["edgeScore"], x["rank"], num(x.get("stageScore")) or 0), reverse=True)
 
+          def required_scans(row):
+              return REQUIRED_FRESH_SCANS_FAST if str(row.get("reason") or "").upper()=="FAST_PUMP_15M" else REQUIRED_FRESH_SCANS_STANDARD
+
+          def min_edge(row):
+              return MIN_EDGE_SCORE_FAST if str(row.get("reason") or "").upper()=="FAST_PUMP_15M" else MIN_EDGE_SCORE_STANDARD
+
           confirmed_ranked=[]
           for row in ranked_now:
               key=row["key"]
-              if int(seen.get(key,0)) < REQUIRED_FRESH_SCANS:
+              if int(seen.get(key,0)) < required_scans(row):
                   continue
-              if row["edgeScore"] < MIN_EDGE_SCORE:
+              if row["edgeScore"] < min_edge(row):
                   continue
               if hours_since(last_alert.get(key)) < COOLDOWN_HOURS:
                   continue
@@ -402,7 +414,7 @@ jobs:
                       f'PLATAFORMA: {r["venue"]}',
                       f'EDGE: {fmt(r.get("edgeScore"))}',
                       f'SCORE CABAL: {fmt(r.get("stageScore"))}',
-                      f'CONFIRMACIONES: {int(seen.get(r["key"],0))}/{REQUIRED_FRESH_SCANS}'
+                      f'CONFIRMACIONES: {int(seen.get(r["key"],0))}/{required_scans(r)}'
                   ]
                   if num(r.get("price")) is not None:
                       parts.append(f'PRECIO AHORA: {fmt(r["price"])}')
@@ -434,7 +446,7 @@ jobs:
                   last_alert[key]=now_iso
 
           state={
-              "schemaVersion":"1.3",
+              "schemaVersion":"1.4",
               "generatedAt":now_iso,
               "seeded":True,
               "active":sorted(active),
