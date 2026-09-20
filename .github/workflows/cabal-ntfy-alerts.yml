@@ -1,6 +1,4 @@
-name: CABAL NTFY Alerts
-# Manual audit trigger 2026-09-18
-# Fresh-state verification trigger 2026-09-18
+name: CABAL v2 NTFY Alerts
 
 on:
   schedule:
@@ -9,13 +7,15 @@ on:
   push:
     branches: ["main"]
     paths:
+      - 'scripts/cabal_ntfy_v2.py'
+      - 'scripts/cabal_decision_v2.py'
       - '.github/workflows/cabal-ntfy-alerts.yml'
 
 permissions:
   contents: write
 
 concurrency:
-  group: cabal-ntfy-alerts
+  group: cabal-ntfy-alerts-v2
   cancel-in-progress: true
 
 jobs:
@@ -29,514 +29,28 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Build single-channel alert
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build CABAL v2 notification
+        run: python scripts/cabal_ntfy_v2.py
+
+      - name: Revalidate BUY against newest machine state
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json, os, math
-          from datetime import datetime, timezone
+          kind=$(python -c 'import json; p=json.load(open("/tmp/ntfy-payload.json")); print((p or {}).get("kind",""))')
+          if [ "$kind" != "BUY" ]; then
+            echo "No BUY revalidation required."
+            exit 0
+          fi
+          git fetch origin main
+          git show origin/main:data/cabal-machine.json > /tmp/latest-cabal-machine.json
+          python scripts/cabal_ntfy_v2.py revalidate /tmp/latest-cabal-machine.json
 
-          NTFY_TOPIC = "cabal-jr-7k29m4xq81"
-          STATE_PATH = "data/ntfy-alert-state.json"
-          COOLDOWN_HOURS = 12
-          GLOBAL_COOLDOWN_MINUTES = 5
-          REQUIRED_FRESH_SCANS_STANDARD = 2
-          REQUIRED_FRESH_SCANS_FAST = 1
-          MAX_ASSETS_PER_PUSH = 1
-          MIN_EDGE_SCORE_STANDARD = 58.0
-          MIN_EDGE_SCORE_FAST = 48.0
-          MIN_EDGE_SCORE_WIDE = 65.0
-          MIN_EDGE_MARGIN = 0.0
-          MIN_NO_CHASE_HEADROOM_PCT = 1.0
-          MAX_MACHINE_AGE_MINUTES = 10
-          ALERT_VALIDITY_MINUTES = 10
-          CANCEL_WINDOW_MINUTES = 20
-
-          now = datetime.now(timezone.utc)
-          now_iso = now.isoformat().replace("+00:00","Z")
-
-          def num(v):
-              try:
-                  x=float(v)
-                  return x if math.isfinite(x) else None
-              except:
-                  return None
-
-          def fmt(v):
-              x=num(v)
-              if x is None:
-                  return "n/a"
-              if abs(x) >= 1000:
-                  return f"{x:,.2f}".replace(",","")
-              if abs(x) >= 1:
-                  return f"{x:.6f}".rstrip("0").rstrip(".")
-              if abs(x) >= 0.01:
-                  return f"{x:.6f}".rstrip("0").rstrip(".")
-              return f"{x:.10f}".rstrip("0").rstrip(".")
-
-          def parse_time(s):
-              if not s:
-                  return None
-              try:
-                  return datetime.fromisoformat(str(s).replace("Z","+00:00"))
-              except:
-                  return None
-
-          def hours_since(s):
-              t=parse_time(s)
-              if not t:
-                  return 1e9
-              return (now-t).total_seconds()/3600.0
-
-          def minutes_since(s):
-              t=parse_time(s)
-              if not t:
-                  return 1e9
-              return (now-t).total_seconds()/60.0
-
-          if not os.path.exists("data/cabal-machine.json"):
-              raise SystemExit("Missing data/cabal-machine.json")
-
-          cabal=json.load(open("data/cabal-machine.json",encoding="utf-8"))
-          whales={}
-          if os.path.exists("data/whales-early-entry-state.json"):
-              try:
-                  with open("data/whales-early-entry-state.json",encoding="utf-8") as f:
-                      whales=json.load(f)
-              except Exception as e:
-                  whales={"_parse_error":str(e)}
-
-          prev={
-              "schemaVersion":"1.0",
-              "active":[],
-              "lastAlertAt":{},
-              "systemLastAlertAt":None,
-              "qualifiedSeenCount":{},
-              "lastCancelAt":{},
-              "lastCabalGeneratedAt":None
-          }
-          first_run = not os.path.exists(STATE_PATH)
-          if not first_run:
-              try:
-                  prev.update(json.load(open(STATE_PATH,encoding="utf-8")))
-              except Exception:
-                  first_run=True
-
-          generated=parse_time(cabal.get("generatedAt"))
-          age_min=((now-generated).total_seconds()/60.0) if generated else 1e9
-          coverage=cabal.get("coverage") or {}
-          healthy=(
-              cabal.get("ok") is True
-              and cabal.get("preAccumOperational") is True
-              and cabal.get("mainMachineOperational") is True
-              and coverage.get("preAccum")=="PASS"
-              and age_min <= MAX_MACHINE_AGE_MINUTES
-          )
-
-          candidates={}
-          cabal_by_asset={}
-
-          for p in (cabal.get("pilotEntries") or []):
-              asset=str(p.get("asset") or p.get("base") or "").upper().strip()
-              if not asset:
-                  continue
-              cabal_by_asset[asset]=p
-              if p.get("executionSignal")!="PILOT_ENTRY_WINDOW":
-                  continue
-              if p.get("pilotEntryEligible") is not True:
-                  continue
-              if p.get("requiresProtectiveStop") is not True:
-                  continue
-              if num(p.get("pilotEntryMax")) is None or num(p.get("protectiveStopReference")) is None:
-                  continue
-              urgency=str(p.get("decisionUrgency") or "").upper()
-              if urgency not in {"HIGH","IMMEDIATE"}:
-                  continue
-              key=f"CABAL:{asset}"
-              rank=80 if urgency=="IMMEDIATE" else 60
-              if str(p.get("pilotReason") or "").upper()=="FAST_PUMP_15M":
-                  rank+=15
-              if str(p.get("pilotReason") or "").upper()=="WIDE_BASE_ACCEL_15M":
-                  rank+=20
-              candidates[key]={
-                  "key":key,
-                  "asset":asset,
-                  "lane":"CABAL",
-                  "rank":rank,
-                  "urgency":urgency,
-                  "venue":p.get("venue") or "n/a",
-                  "price":p.get("price"),
-                  "entryMax":p.get("pilotEntryMax"),
-                  "stop":p.get("protectiveStopReference"),
-                  "reason":p.get("pilotReason") or p.get("classification") or "PILOT_ENTRY_WINDOW",
-                  "stageScore":p.get("stageAScore"),
-                  "rvol1h":p.get("rvol1h"),
-                  "rvol15m":((p.get("fastPump15m") or {}).get("rvol15m")),
-                  "rs1":p.get("relativeStrength1hVsBTC"),
-                  "rs4":p.get("relativeStrength4hVsBTC"),
-                  "intrahourRS":p.get("intrahourRelativeStrengthVsBTC"),
-                  "price1":p.get("priceChange1hPct"),
-                  "price4":p.get("priceChange4hPct"),
-                  "bucketB":bool(p.get("bucketB")),
-                  "bucketC":bool(p.get("bucketC")),
-                  "classification":p.get("classification"),
-                  "effort":p.get("effortVsResult"),
-                  "price24":p.get("priceChange24hPct"),
-                  "noChase":p.get("noChase"),
-                  "entryConfirmation15m":p.get("entryConfirmation15m") is True
-              }
-
-          for p in (whales.get("buyCandidates") or []):
-              if p.get("cabalValidatedForEntry") is not True:
-                  continue
-              if p.get("marketHealthy") is not True:
-                  continue
-              if p.get("noChase") is True:
-                  continue
-              if (num(p.get("netTokenFlow")) or 0) <= 0:
-                  continue
-              sizing=p.get("positionSizing") or {}
-              if (num(sizing.get("meaningfulWalletCount")) or 0) < 1:
-                  continue
-              asset=str(
-                  p.get("asset") or p.get("symbol") or p.get("tokenSymbol")
-                  or p.get("base") or ""
-              ).upper().strip()
-              if not asset or len(asset)>20:
-                  continue
-
-              cp=cabal_by_asset.get(asset,{})
-              key=f"WHALES:{asset}"
-              candidates[key]={
-                  "key":key,
-                  "asset":asset,
-                  "lane":"WHALES",
-                  "rank":100,
-                  "urgency":"HIGH",
-                  "venue":cp.get("venue") or p.get("venue") or "n/a",
-                  "price":cp.get("price") or p.get("price") or p.get("currentPrice"),
-                  "entryMax":cp.get("pilotEntryMax") or p.get("pilotEntryMax"),
-                  "stop":cp.get("protectiveStopReference") or p.get("protectiveStopReference"),
-                  "reason":"WHALES + CABAL",
-                  "wallets":int(num(sizing.get("meaningfulWalletCount")) or 0),
-                  "stageScore":cp.get("stageAScore"),
-                  "rvol1h":cp.get("rvol1h"),
-                  "rvol15m":((cp.get("fastPump15m") or {}).get("rvol15m")),
-                  "rs1":cp.get("relativeStrength1hVsBTC"),
-                  "rs4":cp.get("relativeStrength4hVsBTC"),
-                  "intrahourRS":cp.get("intrahourRelativeStrengthVsBTC"),
-                  "price1":cp.get("priceChange1hPct"),
-                  "price4":cp.get("priceChange4hPct"),
-                  "bucketB":bool(cp.get("bucketB")),
-                  "bucketC":bool(cp.get("bucketC")),
-                  "classification":cp.get("classification"),
-                  "effort":cp.get("effortVsResult"),
-                  "price24":cp.get("priceChange24hPct"),
-                  "noChase":cp.get("noChase"),
-                  "entryConfirmation15m":cp.get("entryConfirmation15m") is True
-              }
-
-          # If the same asset exists in WHALES and CABAL, keep only WHALES+CABAL.
-          whale_assets={x["asset"] for x in candidates.values() if x["lane"]=="WHALES"}
-          for key in list(candidates):
-              if candidates[key]["lane"]=="CABAL" and candidates[key]["asset"] in whale_assets:
-                  del candidates[key]
-
-          active=set(candidates)
-          last_alert=dict(prev.get("lastAlertAt") or {})
-          last_cancel=dict(prev.get("lastCancelAt") or {})
-          seen=dict(prev.get("qualifiedSeenCount") or {})
-          current_scan_id=str(cabal.get("generatedAt") or "")
-          previous_scan_id=str(prev.get("lastCabalGeneratedAt") or "")
-          is_new_cabal_scan=bool(current_scan_id and current_scan_id != previous_scan_id)
-
-          def final_buy_ok(row):
-              price=num(row.get("price"))
-              entry_max=num(row.get("entryMax"))
-              stop=num(row.get("stop"))
-              if price is None or entry_max is None or stop is None or price > entry_max:
-                  return False
-
-              # Execution must be confirmed by the CURRENT completed-15m lane.
-              # A stale 1h PRE-ACCUM trigger is discovery context, never enough for BUY NOW.
-              if row.get("entryConfirmation15m") is not True:
-                  return False
-
-              no_chase=num(row.get("noChase"))
-              if no_chase is not None:
-                  if price >= no_chase:
-                      return False
-                  headroom=((no_chase-price)/price*100.0) if price>0 else -99
-                  if headroom < MIN_NO_CHASE_HEADROOM_PCT:
-                      return False
-
-              stop_dist=((price-stop)/price*100.0) if price>0 else 99
-              if stop_dist < 1.0 or stop_dist > 4.5:
-                  return False
-
-              classification=str(row.get("classification") or "").upper()
-              effort=str(row.get("effort") or "").upper()
-              if "CHURN" in classification or "DISTRIBUTION" in classification or classification=="NO SETUP" or effort=="POOR":
-                  return False
-
-              # BUY NOW requires alpha, not merely participation in a rising market.
-              # WHALES can strengthen a valid CABAL setup but never bypass these gates.
-              reason=str(row.get("reason") or "").upper()
-              score=num(row.get("stageScore")) or 0
-              rvol1=num(row.get("rvol1h")) or 0
-              rvol15=num(row.get("rvol15m")) or 0
-              rs1=num(row.get("rs1")) or 0
-              rs4=num(row.get("rs4")) or 0
-              irs=num(row.get("intrahourRS")) or 0
-              p1=num(row.get("price1")) or 0
-              p4=num(row.get("price4")) or 0
-              b=bool(row.get("bucketB"))
-              c=bool(row.get("bucketC"))
-
-              # Structural rules differ by lane. FAST_PUMP is already confirmed by
-              # a fresh completed-15m trigger, so do not force slow-lane persistence
-              # or extreme RVOL thresholds that make the alert arrive after the move.
-              if not b:
-                  return False
-              if rs1 < 0.20 or irs < 0.20:
-                  return False
-              if p1 < 0.10 or p4 < -0.50:
-                  return False
-
-              if reason=="WHALES + CABAL":
-                  return c and score>=45 and rvol1>=5 and (rvol15>=4 or rs4>=0)
-              if reason=="PRE_ACCUM_TRIGGER":
-                  return c and score>=65 and rvol1>=7 and rs4>=-0.10
-              if reason=="FAST_PUMP_15M":
-                  # BUY NOW only for genuinely strong fast continuation.
-                  # "Elite" can alert on one fresh scan; ordinary fast setups must
-                  # be stronger and persist. Weak/flat momentum stays WATCH.
-                  elite = (
-                      c and score>=70 and rvol15>=4.5
-                      and rs1>=0.60 and irs>=0.80 and p1>=0.50 and rs4>=0.20
-                  )
-                  standard = (
-                      c and score>=50 and rvol15>=5.5
-                      and rs1>=0.40 and irs>=0.55 and p1>=0.30 and rs4>=0.10
-                  )
-                  return elite or standard
-              if reason=="WIDE_BASE_ACCEL_15M":
-                  early_class = classification in {
-                      "EARLY-MOVE","PRE-MOVE","PRE-ACCUMULATION WATCH",
-                      "PRE-ACCUMULATION TRIGGER","EARLY STARTER"
-                  }
-                  p24=num(row.get("price24")) or 0
-                  return (
-                      early_class and score>=80 and rvol1>=8 and rvol15>=3
-                      and rs1>=1.0 and rs4>=2.0 and irs>=0.60
-                      and p1>=0.50 and p24<18 and b
-                  )
-              if reason=="ABC_EARLY_STRUCTURE":
-                  return c and score>=65 and rvol1>=5 and rs4>=0
-              if reason=="SECOND_LEG_TRIGGER":
-                  return c and score>=65 and rvol1>=5 and rs4>=0
-              return False
-
-          def edge_score(row):
-              score=num(row.get("stageScore")) or 0
-              rvol1=max(0.0,num(row.get("rvol1h")) or 0)
-              rvol15=max(0.0,num(row.get("rvol15m")) or 0)
-              rs1=num(row.get("rs1")) or 0
-              rs4=num(row.get("rs4")) or 0
-              irs=num(row.get("intrahourRS")) or 0
-              p1=num(row.get("price1")) or 0
-              price=num(row.get("price")) or 0
-              stop=num(row.get("stop")) or 0
-              stop_dist=((price-stop)/price*100.0) if price>0 else 5
-              e=0.0
-              e += min(30.0,max(0.0,rs1)*18.0)
-              e += min(25.0,max(0.0,irs)*16.0)
-              e += min(12.0,max(0.0,rs4)*6.0)
-              e += min(10.0,math.log1p(rvol1)*2.8)
-              e += min(8.0,math.log1p(rvol15)*2.0)
-              e += min(8.0,max(0.0,p1)*2.0)
-              e += min(10.0,score/12.0)
-              if row.get("lane")=="WHALES":
-                  e += 8.0
-              e -= max(0.0,stop_dist-2.0)*2.5
-              return round(e,4)
-
-          qualified_now={}
-          for key,row in candidates.items():
-              if final_buy_ok(row):
-                  qualified_now[key]=row
-                  if is_new_cabal_scan:
-                      seen[key]=min(int(seen.get(key,0))+1,99)
-              elif is_new_cabal_scan:
-                  seen.pop(key,None)
-
-          if is_new_cabal_scan:
-              for key in list(seen):
-                  if key not in qualified_now:
-                      seen.pop(key,None)
-
-          # Cross-sectional competition: only a CONFIRMED current leader can become BUY NOW.
-          # Non-leaders are discarded for this scan; they are never queued for later delivery.
-          ranked_now=[]
-          for key,row in qualified_now.items():
-              row["edgeScore"]=edge_score(row)
-              ranked_now.append(row)
-          ranked_now.sort(key=lambda x:(x["edgeScore"], x["rank"], num(x.get("stageScore")) or 0), reverse=True)
-
-          def fast_elite(row):
-              if str(row.get("reason") or "").upper()!="FAST_PUMP_15M":
-                  return False
-              return (
-                  bool(row.get("bucketC"))
-                  and (num(row.get("stageScore")) or 0)>=70
-                  and (num(row.get("rvol15m")) or 0)>=4.5
-                  and (num(row.get("rs1")) or 0)>=0.60
-                  and (num(row.get("intrahourRS")) or 0)>=0.80
-                  and (num(row.get("price1")) or 0)>=0.50
-                  and (num(row.get("rs4")) or 0)>=0.20
-              )
-
-          def required_scans(row):
-              reason=str(row.get("reason") or "").upper()
-              if reason=="FAST_PUMP_15M":
-                  return REQUIRED_FRESH_SCANS_FAST if fast_elite(row) else REQUIRED_FRESH_SCANS_STANDARD
-              if reason=="WIDE_BASE_ACCEL_15M":
-                  return 1
-              return REQUIRED_FRESH_SCANS_STANDARD
-
-          def min_edge(row):
-              reason=str(row.get("reason") or "").upper()
-              if reason=="FAST_PUMP_15M":
-                  return MIN_EDGE_SCORE_FAST
-              if reason=="WIDE_BASE_ACCEL_15M":
-                  return MIN_EDGE_SCORE_WIDE
-              return MIN_EDGE_SCORE_STANDARD
-
-          confirmed_ranked=[]
-          for row in ranked_now:
-              key=row["key"]
-              if int(seen.get(key,0)) < required_scans(row):
-                  continue
-              if row["edgeScore"] < min_edge(row):
-                  continue
-              if hours_since(last_alert.get(key)) < COOLDOWN_HOURS:
-                  continue
-              confirmed_ranked.append(row)
-
-          leaders=confirmed_ranked[:MAX_ASSETS_PER_PUSH]
-          new_rows=leaders if healthy and not first_run else []
-
-          # A prior BUY alert is explicitly revoked if the setup disappears or fails
-          # the fresh execution gates within the cancellation window. This is NOT a sell signal.
-          cancel_rows=[]
-          for key,ts in last_alert.items():
-              age=minutes_since(ts)
-              if age < 0 or age > CANCEL_WINDOW_MINUTES:
-                  continue
-              row=candidates.get(key)
-              if row is None or not final_buy_ok(row):
-                  if minutes_since(last_cancel.get(key)) > CANCEL_WINDOW_MINUTES:
-                      cancel_rows.append({"key":key,"asset":key.split(":",1)[-1]})
-
-          alert_payload=None
-
-          system_last=prev.get("systemLastAlertAt")
-          system_ready=minutes_since(system_last) >= GLOBAL_COOLDOWN_MINUTES
-
-          if cancel_rows and not first_run:
-              c=cancel_rows[0]
-              alert_payload={
-                  "title":"🔴 CABAL — CANCELAR ALERTA DE COMPRA",
-                  "priority":"high",
-                  "asset":c["asset"],
-                  "kind":"CANCEL",
-                  "message":f'{c["asset"]}\nLa señal COMPRAR AHORA anterior ya NO es válida.\nACCIÓN: NO COMPRAR. No es una orden de venta si ya ejecutaste.'
-              }
-              last_cancel[c["key"]]=now_iso
-
-          # BUY NOW requires a healthy, recent machine state and current execution confirmation.
-          elif healthy and new_rows and system_ready:
-              selected=new_rows[:MAX_ASSETS_PER_PUSH]
-              cards=[]
-              for r in selected:
-                  icon="🐋" if r["lane"]=="WHALES" else ("🚨" if r["urgency"]=="IMMEDIATE" else "⚡")
-                  parts=[
-                      f'{icon} {r["asset"]}',
-                      f'PLATAFORMA: {r["venue"]}',
-                      f'EDGE: {fmt(r.get("edgeScore"))}',
-                      f'SCORE CABAL: {fmt(r.get("stageScore"))}',
-                      f'CONFIRMACIONES: {int(seen.get(r["key"],0))}/{required_scans(r)}'
-                  ]
-                  if num(r.get("price")) is not None:
-                      parts.append(f'PRECIO AHORA: {fmt(r["price"])}')
-                  if num(r.get("entryMax")) is not None:
-                      parts.append(f'COMPRA MÁX.: {fmt(r["entryMax"])}')
-                  if num(r.get("stop")) is not None:
-                      parts.append(f'STOP: {fmt(r["stop"])}')
-                  if r["lane"]=="WHALES" and r.get("wallets"):
-                      parts.append(f'WHALES: {r["wallets"]} wallets relevantes')
-                  cards.append("\n".join(parts))
-
-              alert_payload={
-                  "title":"🟢 CABAL — COMPRAR AHORA",
-                  "priority":"high",
-                  "asset":selected[0]["asset"],
-                  "kind":"BUY",
-                  "message":"\n\n".join(cards) + f"\n\nACCIÓN: COMPRAR SPOT AHORA SOLO si el precio sigue <= COMPRA MÁX. Ventana máxima: {ALERT_VALIDITY_MINUTES} min. Si el precio supera COMPRA MÁX. o llega una cancelación, NO EJECUTAR. Tú decides el importe. No se ejecuta ninguna orden automáticamente."
-              }
-
-              system_last=now_iso
-              # Only the winning leader is alerted. Other candidates are deliberately
-              # discarded for this scan and are NOT queued for later pushes.
-              for r in selected:
-                  last_alert[r["key"]]=now_iso
-
-          # First run is seed-only: no notification for already-active signals.
-          if first_run:
-              for key in active:
-                  last_alert[key]=now_iso
-
-          state={
-              "schemaVersion":"1.6",
-              "generatedAt":now_iso,
-              "seeded":True,
-              "active":sorted(active),
-              "lastAlertAt":last_alert,
-              "systemLastAlertAt":system_last,
-              "qualifiedSeenCount":seen,
-              "lastCancelAt":last_cancel,
-              "lastCabalGeneratedAt":current_scan_id,
-              "health":{
-                  "healthy":healthy,
-                  "cabalGeneratedAt":cabal.get("generatedAt"),
-                  "ageMinutes":round(age_min,2) if age_min < 1e8 else None,
-                  "preAccumOperational":cabal.get("preAccumOperational"),
-                  "mainMachineOperational":cabal.get("mainMachineOperational"),
-                  "preAccumCoverage":coverage.get("preAccum"),
-                  "whalesStateParsed":("_parse_error" not in whales)
-              }
-          }
-
-          with open("/tmp/ntfy-alert-state.json","w",encoding="utf-8") as f:
-              json.dump(state,f,ensure_ascii=False,indent=2)
-
-          with open("/tmp/ntfy-payload.json","w",encoding="utf-8") as f:
-              json.dump(alert_payload,f,ensure_ascii=False)
-
-          print(json.dumps({
-              "firstRun":first_run,
-              "healthy":healthy,
-              "activeSignals":len(active),
-              "qualifiedNow":len(qualified_now),
-              "leader":(leaders[0]["asset"] if leaders else None),
-              "leaderEdge":(leaders[0]["edgeScore"] if leaders else None),
-              "newAlerts":len(new_rows),
-              "willNotify":bool(alert_payload)
-          },ensure_ascii=False))
-          PY
-
-      - name: Send at most one ntfy push
+      - name: Send ntfy push
         shell: bash
         run: |
           set -euo pipefail
@@ -544,78 +58,28 @@ jobs:
             echo "No notification this run."
             exit 0
           fi
-
-          # Defense-in-depth: immediately before a BUY push, re-read origin/main and
-          # suppress the notification if the newest machine state has already revoked it.
-          kind=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("kind",""))')
-          if [ "$kind" = "BUY" ]; then
-            git fetch origin main
-            python - <<'PY'
-          import json, subprocess, sys
-          from datetime import datetime, timezone
-          p=json.load(open("/tmp/ntfy-payload.json",encoding="utf-8"))
-          asset=str(p.get("asset") or "").upper()
-          raw=subprocess.check_output(["git","show","origin/main:data/cabal-machine.json"],text=True)
-          d=json.loads(raw)
-          try:
-              t=datetime.fromisoformat(str(d.get("generatedAt")).replace("Z","+00:00"))
-              age=(datetime.now(timezone.utc)-t).total_seconds()/60
-          except Exception:
-              sys.exit("latest CABAL timestamp invalid")
-          if age>10:
-              sys.exit("latest CABAL state too old for BUY")
-          row=next((x for x in (d.get("pilotEntries") or []) if str(x.get("asset") or "").upper()==asset),None)
-          if not row:
-              sys.exit("BUY revoked: asset no longer in pilotEntries")
-          fp=row.get("fastPump15m") or {}
-          if row.get("executionSignal")!="PILOT_ENTRY_WINDOW" or row.get("pilotEntryEligible") is not True or row.get("entryConfirmation15m") is not True or fp.get("trigger") is not True:
-              sys.exit("BUY revoked: fresh 15m execution confirmation absent")
-          try:
-              price=float(row.get("price")); mx=float(row.get("pilotEntryMax")); nc=float(row.get("noChase"))
-          except Exception:
-              sys.exit("BUY revoked: execution levels incomplete")
-          if price>mx or price>=nc:
-              sys.exit("BUY revoked: current price outside execution window")
-          print("FINAL BUY REVALIDATION PASS",asset,"ageMin",round(age,2),"price",price,"max",mx)
-          PY
-          fi
-
           title=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["title"])')
-          priority=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["priority"])')
+          priority=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("priority","default"))')
           message=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["message"])')
-
           curl -fsS \
             -H "Title: $title" \
             -H "Priority: $priority" \
-            --data-binary "$message" \
+            -H "Tags: chart_with_upwards_trend" \
+            -d "$message" \
             https://ntfy.sh/cabal-jr-7k29m4xq81
 
-      - name: Persist alert state without triggering other alerts
+      - name: Persist CABAL v2 alert state
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          cp /tmp/ntfy-alert-state.json /tmp/state.json
-
-          for attempt in 1 2 3 4; do
-            git fetch origin main
-            git reset --hard origin/main
-            cp /tmp/state.json data/ntfy-alert-state.json
-            git add data/ntfy-alert-state.json
-
-            if git diff --cached --quiet; then
-              echo "Alert state unchanged."
-              exit 0
-            fi
-
-            git commit -m 'cabal: refresh ntfy alert state [skip ci]'
-            if git push origin HEAD:main; then
-              echo "NTFY alert state persisted."
-              exit 0
-            fi
-            sleep $((attempt * 2))
-          done
-
-          echo "Could not persist ntfy alert state after retries." >&2
-          exit 1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          cp /tmp/ntfy-alert-state.json data/ntfy-alert-state.json
+          git add data/ntfy-alert-state.json
+          if git diff --cached --quiet; then
+            echo "No state change."
+            exit 0
+          fi
+          git commit -m "cabal: refresh ntfy v2 state [skip ci]"
+          git push origin HEAD:main
