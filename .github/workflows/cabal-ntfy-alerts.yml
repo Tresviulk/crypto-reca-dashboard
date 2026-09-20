@@ -46,6 +46,7 @@ jobs:
           MAX_ASSETS_PER_PUSH = 1
           MIN_EDGE_SCORE_STANDARD = 58.0
           MIN_EDGE_SCORE_FAST = 48.0
+          MIN_EDGE_SCORE_WIDE = 65.0
           MIN_EDGE_MARGIN = 0.0
           MIN_NO_CHASE_HEADROOM_PCT = 1.0
           MAX_MACHINE_AGE_MINUTES = 10
@@ -156,6 +157,8 @@ jobs:
               rank=80 if urgency=="IMMEDIATE" else 60
               if str(p.get("pilotReason") or "").upper()=="FAST_PUMP_15M":
                   rank+=15
+              if str(p.get("pilotReason") or "").upper()=="WIDE_BASE_ACCEL_15M":
+                  rank+=20
               candidates[key]={
                   "key":key,
                   "asset":asset,
@@ -318,6 +321,17 @@ jobs:
                       and rs1>=0.40 and irs>=0.55 and p1>=0.30 and rs4>=0.10
                   )
                   return elite or standard
+              if reason=="WIDE_BASE_ACCEL_15M":
+                  early_class = classification in {
+                      "EARLY-MOVE","PRE-MOVE","PRE-ACCUMULATION WATCH",
+                      "PRE-ACCUMULATION TRIGGER","EARLY STARTER"
+                  }
+                  p24=num(row.get("price24")) or 0
+                  return (
+                      early_class and score>=80 and rvol1>=8 and rvol15>=3
+                      and rs1>=1.0 and rs4>=2.0 and irs>=0.60
+                      and p1>=0.50 and p24<18 and b
+                  )
               if reason=="ABC_EARLY_STRUCTURE":
                   return c and score>=65 and rvol1>=5 and rs4>=0
               if reason=="SECOND_LEG_TRIGGER":
@@ -384,12 +398,20 @@ jobs:
               )
 
           def required_scans(row):
-              if str(row.get("reason") or "").upper()=="FAST_PUMP_15M":
+              reason=str(row.get("reason") or "").upper()
+              if reason=="FAST_PUMP_15M":
                   return REQUIRED_FRESH_SCANS_FAST if fast_elite(row) else REQUIRED_FRESH_SCANS_STANDARD
+              if reason=="WIDE_BASE_ACCEL_15M":
+                  return 1
               return REQUIRED_FRESH_SCANS_STANDARD
 
           def min_edge(row):
-              return MIN_EDGE_SCORE_FAST if str(row.get("reason") or "").upper()=="FAST_PUMP_15M" else MIN_EDGE_SCORE_STANDARD
+              reason=str(row.get("reason") or "").upper()
+              if reason=="FAST_PUMP_15M":
+                  return MIN_EDGE_SCORE_FAST
+              if reason=="WIDE_BASE_ACCEL_15M":
+                  return MIN_EDGE_SCORE_WIDE
+              return MIN_EDGE_SCORE_STANDARD
 
           confirmed_ranked=[]
           for row in ranked_now:
@@ -476,7 +498,7 @@ jobs:
                   last_alert[key]=now_iso
 
           state={
-              "schemaVersion":"1.5",
+              "schemaVersion":"1.6",
               "generatedAt":now_iso,
               "seeded":True,
               "active":sorted(active),
