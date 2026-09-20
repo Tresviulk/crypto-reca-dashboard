@@ -205,34 +205,86 @@ def evaluate(row):
     q=_quality_score(row)
     required=1 if (buy and (wide_buy or core_buy or q>=65)) else (2 if buy else 1)
 
-    # NOTIFICATION WATCH is intentionally much stricter than internal WATCH.
-    # Internal WATCH can be broad for model awareness; user-facing NTFY must be
-    # early, current and plausibly convertible into BUY on the next leg.
-    early_limits=(
-        p1 < (4.5 if core else 3.5)
-        and p6 < (10.0 if core else 8.0)
-        and p24 < (15.0 if core else 12.0)
+    # USER-FACING CABAL has two separate lanes:
+    # SCALP = immediate, executable +2%/+3% objective.
+    # RUNNER = early expansion candidate / confirmed runner with room for a larger move.
+    # Generic WATCH stays internal and is NEVER pushed to the user.
+    vol_build=n(row.get("preAccumVolumeBuild6h"))
+    base12=n(row.get("preAccumBaseRange12hPct"))
+    pre_watch=b(row.get("preAccumWatch"))
+    pre_trigger=b(row.get("preAccumTrigger"))
+
+    scalp_buy=bool(
+        buy
+        and p24 < 12.0
+        and p1 < 4.0
+        and stop_dist is not None and 1.0 <= stop_dist <= 3.8
+        and (headroom is None or headroom >= 3.0)
+        and (rv15 >= 1.5 or r1 >= 2.0)
+        and (
+            asset=="BTC"
+            or (rs1>=0.30 and irs>=0.20)
+        )
     )
-    positive_now=(
-        (asset=="BTC" and intra>=0.20 and p1>=0.20)
+
+    runner_early_limits=(
+        p1 >= 0.25 and p1 < 3.5
+        and p6 < 8.0
+        and p24 < 12.0
+    )
+    runner_structure=(
+        bb
+        and effort!="POOR"
+        and "CHURN" not in cls and "DISTRIBUTION" not in cls
+        and (
+            pre_watch or pre_trigger or wide_watch
+            or score>=55
+        )
+    )
+    runner_flow=(
+        (asset=="BTC" and (r1>=2.0 or rv15>=1.8))
         or
-        (asset!="BTC" and rs1>=0.20 and irs>=0.10 and p1>=0.20)
+        (
+            asset!="BTC"
+            and rs1>=0.65 and rs4>=0.80
+            and (r1>=2.5 or rv15>=1.8 or vol_build>=1.35)
+        )
     )
-    useful_location=(
-        (headroom is None or headroom>=1.0)
-        and stop_dist is not None and 1.0<=stop_dist<=5.0
+    runner_location=(
+        (headroom is None or headroom>=4.0)
+        and stop_dist is not None and 1.0<=stop_dist<=6.0
+        and (base12<=16.0 or wide_watch or pre_watch or pre_trigger)
     )
-    enough_activity=(fast_watch or rv15>=1.25 or r1>=1.50)
-    quality_floor=(q>=20 if core else q>=38)
-    notify_watch=bool(
-        watch
-        and early_limits
-        and positive_now
-        and useful_location
-        and enough_activity
-        and quality_floor
+    runner_candidate=bool(
+        not buy
+        and runner_early_limits
+        and runner_structure
+        and runner_flow
+        and runner_location
+        and q>=48
         and not reject
     )
+
+    runner_buy=bool(
+        buy
+        and p24<14.0
+        and p1<4.5
+        and (headroom is None or headroom>=3.5)
+        and stop_dist is not None and 1.0<=stop_dist<=4.5
+        and (
+            wide_buy
+            or pre_buy
+            or pre_trigger
+            or (
+                score>=70
+                and rs4>=1.5
+                and (r1>=4.0 or rv15>=3.0 or vol_build>=1.5)
+            )
+        )
+    )
+
+    notify_buy=bool(scalp_buy or runner_buy)
+    notify_watch=bool(runner_candidate)
 
     # Scanner may have produced no pilotEntryMax for WATCH; BUY always gets a tight max.
     entry_max=n(row.get("pilotEntryMax"),None)
@@ -245,6 +297,13 @@ def evaluate(row):
         "buyNowEligible":buy,
         "watchEligible":watch,
         "notifyWatchEligible":notify_watch,
+        "notifyBuyEligible":notify_buy,
+        "scalpBuyEligible":scalp_buy,
+        "runnerBuyEligible":runner_buy,
+        "runnerCandidateEligible":runner_candidate,
+        "scalpTarget2Pct":round(price*1.02,12) if price is not None else None,
+        "scalpTarget3Pct":round(price*1.03,12) if price is not None else None,
+        "signalLane":("SCALP+RUNNER" if scalp_buy and runner_buy else ("RUNNER" if runner_buy or runner_candidate else ("SCALP" if scalp_buy else "INTERNAL"))),
         "qualityScore":q,
         "requiredFreshScans":required,
         "decisionEntryMax":entry_max,
