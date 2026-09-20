@@ -112,25 +112,50 @@ jobs:
           print('CABAL v2 COVERAGE PASS', d['generatedAt'], 'execution=',scanned,'/',universe,'buy=',len(d.get('buyCandidates',[])),'watch=',len(d.get('watchCandidates',[])),'missedAudit=',len(d.get('missedMoverAudit',[])))
           PY
 
-      - name: Persist machine state
+      - name: Build CABAL v2 alert from this exact scan
+        run: python scripts/cabal_ntfy_v2.py
+
+      - name: Revalidate BUY against this fresh machine state
+        run: python scripts/cabal_ntfy_v2.py revalidate data/cabal-machine.json
+
+      - name: Send CABAL v2 notification immediately
         shell: bash
         run: |
           set -euo pipefail
-          # Preserve the freshly generated state, then fast-forward to the newest
-          # main before writing it. This avoids rebase conflicts with WHALES/NTFY
-          # commits that land while the 2-3 minute full-universe scan is running.
+          if [ "$(cat /tmp/ntfy-payload.json)" = "null" ]; then
+            echo "No notification this scan."
+            exit 0
+          fi
+          title=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["title"])')
+          priority=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("priority","default"))')
+          message=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["message"])')
+          curl -fsS \
+            -H "Title: $title" \
+            -H "Priority: $priority" \
+            -H "Tags: chart_with_upwards_trend" \
+            -d "$message" \
+            https://ntfy.sh/cabal-jr-7k29m4xq81
+
+      - name: Persist machine and alert state atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The freshly generated machine state and the alert state belong to the
+          # same scan. Persist them together after fast-forwarding to newest main.
           cp data/cabal-machine.json /tmp/cabal-machine-v2.json
+          test -f /tmp/ntfy-alert-state.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin main
           git reset --hard origin/main
           cp /tmp/cabal-machine-v2.json data/cabal-machine.json
-          git add data/cabal-machine.json
+          cp /tmp/ntfy-alert-state.json data/ntfy-alert-state.json
+          git add data/cabal-machine.json data/ntfy-alert-state.json
           if git diff --cached --quiet; then
-            echo 'No CABAL machine state change.'
+            echo 'No CABAL state change.'
             exit 0
           fi
-          git commit -m 'cabal-machine: refresh v2 decision state [skip ci]'
+          git commit -m 'cabal: refresh v2 machine + alert state [skip ci]'
           git push origin HEAD:main
 
       - name: Verify persisted CABAL v2 payload
