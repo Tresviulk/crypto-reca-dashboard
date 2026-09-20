@@ -26,7 +26,7 @@ PREACCUM_SUB2M_RESERVE=6
 MAIN_MIN_TURNOVER=2_000_000
 PRE_MIN_TURNOVER=250_000
 MAX_BROAD=1200
-CORE_ALWAYS_SCAN={'AVAX','ETH','SOL'}
+CORE_ALWAYS_SCAN={'BTC','ETH','SOL','XRP','AVAX','HBAR','ONDO'}
 
 STABLES={'usdt','usdc','dai','fdusd','tusd','usde','usds','pyusd','usdd','frax','crvusd','gho','usd1','usdp','gusd','usdt0','usd0','usdb'}
 WRAPPED=('wbtc','weth','wsteth','steth','cbeth','reth','weeth','ezeth','solvbtc','wavax','wsol','wmatic')
