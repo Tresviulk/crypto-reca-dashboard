@@ -272,9 +272,33 @@ mod.result_from_bars=result
 mod.main()
 
 out=mod.OUT; d=json.load(open(out,encoding='utf-8')); d['schemaVersion']='2.0'; complete=S['cgPages']>=4; d['sourceMode']='COINGECKO_PLUS_EXCHANGE_NATIVE' if complete else ('PARTIAL_CG_PLUS_EXCHANGE_NATIVE' if S['cgPages'] else 'EXCHANGE_NATIVE_FALLBACK'); d['sources']['coinGecko']='PASS' if complete else (f'PARTIAL_{S["cgPages"]}_PAGES_EXCHANGE_ENRICHED' if S['cgPages'] else 'FALLBACK_EXCHANGE_UNIVERSE')
-vc=d.get('coverage',{}).get('venueCoverage') or {}; d['preAccumOperational']=bool(d.get('coverage',{}).get('preAccum')=='PASS' and (vc.get('KuCoin')=='PASS' or vc.get('Bybit')=='PASS') and vc.get('GateFallback')=='PASS'); d['mainMachineOperational']=bool(complete and all(d.get('coverage',{}).get(k)=='PASS' for k in ('bucketA','bucketB','bucketC','bucketE')))
-if not complete:
-    for k in ('bucketA','bucketB','bucketC','bucketE'): d['coverage'][k]='FAIL_METADATA_PARTIAL'
+vc=d.get('coverage',{}).get('venueCoverage') or {}
+cov=d.get('coverage') or {}
+scan_universe=int(cov.get('executionUniverseCount') or cov.get('mainEligibleUniverseCount') or 0)
+scan_done=int(cov.get('mainScannedCount') or 0)
+scan_ratio=(scan_done/scan_universe) if scan_universe else 0.0
+core_missing=cov.get('coreMissingAssets') or []
+venue_operational=bool((vc.get('KuCoin')=='PASS' or vc.get('Bybit')=='PASS') and vc.get('GateFallback')=='PASS')
+d['metadataCoverage']={
+    'coinGeckoPages':S['cgPages'],
+    'fullCoinGeckoFourPages':complete,
+    'mode':'FULL' if complete else ('PARTIAL_BUT_EXCHANGE_ENRICHED' if S['cgPages'] else 'EXCHANGE_NATIVE_FALLBACK')
+}
+d['preAccumOperational']=bool(cov.get('preAccum')=='PASS' and venue_operational)
+# v2 health is based on measured execution coverage, not an arbitrary provider-page count.
+# A partial CoinGecko response is acceptable only when the exchange-enriched universe is
+# still broad, scan success is >=90%, CORE assets are present, and venue fallbacks are healthy.
+d['mainMachineOperational']=bool(
+    venue_operational
+    and scan_universe>=300
+    and scan_ratio>=0.90
+    and not core_missing
+)
+for k in ('bucketA','bucketB','bucketC','bucketE'):
+    if d['mainMachineOperational']:
+        d['coverage'][k]='PASS'
+    elif d['coverage'].get(k)=='PASS':
+        d['coverage'][k]='FAIL_EXECUTION_COVERAGE'
 rows=[]; seen=set()
 for x in (d.get('buyCandidates') or [])+(d.get('watchCandidates') or [])+(d.get('executionCandidates') or [])+(d.get('preAccumCandidates') or [])+(d.get('candidates') or []):
     if x.get('asset') and x['asset'] not in seen:
