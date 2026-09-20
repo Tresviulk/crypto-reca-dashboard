@@ -7,7 +7,7 @@ Pure functions only: the live scanner and regression suite use the same rules.
 
 import math
 
-CORE_ASSETS={"AVAX","ETH","SOL"}
+CORE_ASSETS={"BTC","ETH","SOL","XRP","AVAX","HBAR","ONDO"}
 
 def n(v, default=0.0):
     try:
@@ -119,11 +119,22 @@ def evaluate(row):
         and p1>=0.30
     )
 
-    core_buy=(
-        executable and fresh15 and fast_trigger and core
+    btc_confirm=(
+        asset=="BTC"
+        and rv15>=1.35 and intra>=0.40 and p1>=0.30
+        and price is not None and n(ft.get("baseHigh4h15m"),None) is not None
+        and price>=n(ft.get("baseHigh4h15m"))*.995
+    )
+    alt_core_buy=(
+        executable and fresh15 and fast_trigger and core and asset!="BTC"
         and rv15>=1.35 and rs1>=0.20 and irs>=0.40
         and p1>=0.30 and p4>=0.50
     )
+    btc_core_buy=(
+        executable and btc_confirm
+        and r1>=1.15 and p4>=0.50
+    )
+    core_buy=alt_core_buy or btc_core_buy
 
     pre_buy=(
         executable and fresh15
@@ -151,8 +162,11 @@ def evaluate(row):
     core_watch=(
         core and p24 < 20
         and (p1>=0.45 or p4>=1.5 or intra>=0.45)
-        and rs1>=0.10 and irs>=0.10
-        and (fast_watch or rv15>=1.0 or r1>=1.25)
+        and (
+            (asset=="BTC" and (rv15>=1.0 or r1>=1.25))
+            or
+            (asset!="BTC" and rs1>=0.10 and irs>=0.10 and (fast_watch or rv15>=1.0 or r1>=1.25))
+        )
     )
     wide_early=wide_watch and p24<18 and rs1>=0.5 and irs>=0.3
 
