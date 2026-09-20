@@ -336,7 +336,7 @@ d['executionEngine']={
     'watchBeforeBuy':True,
     'fresh15mRequiredForBuy':True,
     'deepTailMomentumReserve':True,
-    'coreAlwaysScan':['AVAX','ETH','SOL'],
+    'coreAlwaysScan':['BTC','ETH','SOL','XRP','AVAX','HBAR','ONDO'],
     'executionPoolIndependentOfTop30':True,
     'ntfyReScoresBuy':False
 }
