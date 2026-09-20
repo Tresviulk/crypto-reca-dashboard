@@ -2,6 +2,7 @@
 """CABAL v1.6.6 PUMP RADAR + PILOT ENTRY. Manual SPOT only; never auto-trades."""
 import importlib.util, json, math, os, statistics, time
 from urllib.parse import urlencode
+from cabal_decision_v2 import evaluate, tail_exchange_inclusion
 
 HERE=os.path.dirname(__file__); BASE=os.path.join(HERE,'cabal-machine-scan-v15.py')
 spec=importlib.util.spec_from_file_location('cabal_v15',BASE); mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
@@ -68,7 +69,7 @@ def market_universe():
         # Deep-tail momentum reserve: catches low-rank microcaps before they leave
         # the early window. It expands DISCOVERY only; BUY NOW still requires all
         # 15m/RS/no-chase/stop quality gates downstream.
-        tail=bool(turn>=75000 and p24>=6 and p24<25)
+        tail=tail_exchange_inclusion(turn,p24)
         if turn<mod.PRE_MIN_TURNOVER and not tail: continue
         item={'id':'exchange:'+sym,'symbol':sym,'name':a,'market_cap':0,'total_volume':turn,'current_price':lasts[0] if lasts else None,'price_change_percentage_1h_in_currency':0,'price_change_percentage_24h_in_currency':p24,'price_change_percentage_7d_in_currency':0}
         if tail:
@@ -248,6 +249,8 @@ def result(asset,m,b,venue,btc,pre_lane=False):
         'whalesRequiredForPilot':False,
         'whalesPolicy':'BONUS_NOT_VETO_UNLESS_VERIFIED_NEGATIVE_DISTRIBUTION'
     })
+    # Canonical v2 decision. This is the ONLY quality decision NTFY should relay.
+    r.update(evaluate(r))
     return r
 mod.result_from_bars=result
 mod.main()
