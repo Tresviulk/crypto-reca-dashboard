@@ -352,16 +352,10 @@ def main():
     dedup.sort(key=lambda x:float(x.get('effectiveTurnover') or 0),reverse=True)
     broad=dedup[:MAX_BROAD]
     sub2=[m for m in broad if PRE_MIN_TURNOVER<=float(m.get('effectiveTurnover') or 0)<MAIN_MIN_TURNOVER]
-    main=[
-        m for m in broad
-        if (
-            (
-                15_000_000<=float(m.get('market_cap') or 0)<=3_000_000_000
-                and float(m.get('effectiveTurnover') or 0)>=MAIN_MIN_TURNOVER
-            )
-            or str(m.get('symbol') or '').upper() in CORE_ALWAYS_SCAN
-        )
-    ]
+    # v2 execution universe: every supported broad asset is scanned.
+    # Market-cap bands and Stage-A retention are presentation/ranking concerns only;
+    # they must never decide whether an asset gets execution analysis.
+    main=list(broad)
     btc=None
     try:
         b,venue=candles_for('BTC',venues,180); btc={'venue':venue,'price':b[-1]['c'],'p1':pct(b[-1]['c'],b[-2]['c']),'p4':pct(b[-1]['c'],b[-5]['c']),'timestamp':b[-1]['t']}
@@ -377,7 +371,7 @@ def main():
     pre_res.sort(key=lambda x:(1 if x.get('preAccumTrigger') else 0,1 if x.get('preAccumWatch') else 0,x.get('stageAScore',0)),reverse=True)
     main_res=[]; main_fails=[]
     if btc:
-        with ThreadPoolExecutor(max_workers=6) as ex:
+        with ThreadPoolExecutor(max_workers=8) as ex:
             fs={ex.submit(candles_for,m['symbol'].upper(),venues,168):m for m in main}
             for f in as_completed(fs):
                 m=fs[f]; a=m['symbol'].upper()
