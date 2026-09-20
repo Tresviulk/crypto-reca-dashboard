@@ -42,7 +42,10 @@ vvv.update({
     "intrahourRelativeStrengthVsBTC":1.3945,"stageAScore":52.2646,
     "fastPump15m":{"rvol15m":42.4481,"trigger":True,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":27.009528}
 })
-expect("VVV",vvv,"BUY_NOW")
+vvv_result=expect("VVV",vvv,"BUY_NOW")
+assert vvv_result["notifyBuyEligible"] is True
+assert vvv_result["scalpBuyEligible"] is True
+assert vvv_result["signalLane"] in {"SCALP","SCALP+RUNNER"}
 
 # PROVE: moderate/flat signal -> never BUY.
 prove=base("PROVE")
@@ -75,7 +78,10 @@ celr.update({
     "intrahourRelativeStrengthVsBTC":1.1,"stageAScore":89,
     "fastPump15m":{"rvol15m":4.75,"trigger":True,"watch":True,"wideBaseWatch":True,"wideBaseTrigger":True,"invalidation15m":0.00252}
 })
-expect("CELR",celr,"BUY_NOW")
+celr_result=expect("CELR",celr,"BUY_NOW")
+assert celr_result["notifyBuyEligible"] is True
+assert celr_result["runnerBuyEligible"] is True
+assert celr_result["signalLane"] in {"RUNNER","SCALP+RUNNER"}
 
 # KMNO: real early momentum archetype must at least surface as WATCH even if stop is too wide for BUY.
 kmno=base("KMNO")
@@ -87,7 +93,26 @@ kmno.update({
     "fastPumpTrigger":False,"entryConfirmation15m":False,
     "fastPump15m":{"rvol15m":4.5811,"trigger":False,"watch":False,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.029057304}
 })
-expect("KMNO",kmno,"WATCH")
+kmno_result=expect("KMNO",kmno,"WATCH")
+assert kmno_result["runnerCandidateEligible"] is False
+assert kmno_result["notifyWatchEligible"] is False
+
+# EARLY RUNNER: not a BUY yet, but should surface as a rare runner candidate.
+runner=base("RUNNERX")
+runner.update({
+    "price":1.0,"noChase":1.08,"protectiveStopReference":0.96,
+    "priceChange1hPct":1.2,"priceChange4hPct":2.0,"priceChange6hPct":3.2,"priceChange24hPct":5.0,
+    "rvol1h":3.2,"relativeStrength1hVsBTC":1.1,"relativeStrength4hVsBTC":1.6,
+    "intrahourMovePct":0.4,"intrahourRelativeStrengthVsBTC":0.35,"stageAScore":65,
+    "bucketB":True,"bucketC":False,"preAccumWatch":True,"preAccumVolumeBuild6h":1.5,
+    "preAccumBaseRange12hPct":8.0,
+    "entryConfirmation15m":False,"fastPumpTrigger":False,
+    "fastPump15m":{"rvol15m":1.9,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.96}
+})
+runner_result=expect("RUNNERX",runner,"WATCH")
+assert runner_result["runnerCandidateEligible"] is True
+assert runner_result["notifyWatchEligible"] is True
+assert runner_result["signalLane"]=="RUNNER"
 
 # AGLD: too little headroom to no-chase -> no BUY.
 agld=base("AGLD")
