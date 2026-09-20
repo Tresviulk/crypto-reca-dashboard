@@ -15,6 +15,7 @@ WHALES_PATH=os.environ.get("CABAL_WHALES_PATH","data/whales-early-entry-state.js
 
 BUY_COOLDOWN_HOURS=12
 WATCH_COOLDOWN_HOURS=6
+WATCH_GLOBAL_COOLDOWN_MINUTES=15
 CANCEL_WINDOW_MINUTES=20
 MAX_MACHINE_AGE_MINUTES=10
 ALERT_VALIDITY_MINUTES=10
@@ -120,7 +121,8 @@ def build():
 
     prev=load(STATE_PATH,{
         "lastAlertAt":{},"lastWatchAt":{},"lastCancelAt":{},
-        "qualifiedSeenCount":{},"lastCabalGeneratedAt":None
+        "qualifiedSeenCount":{},"lastCabalGeneratedAt":None,
+        "systemLastWatchAt":None
     })
     last_alert=dict(prev.get("lastAlertAt") or {})
     last_watch=dict(prev.get("lastWatchAt") or {})
@@ -179,7 +181,8 @@ def build():
     cancels=cancels[:3]
 
     ready_watch=[]
-    if healthy and not ready_buy:
+    watch_global_ready=minutes_since(now,prev.get("systemLastWatchAt"))>=WATCH_GLOBAL_COOLDOWN_MINUTES
+    if healthy and not ready_buy and watch_global_ready:
         buy_assets={str(r.get("asset") or "").upper() for r in buys}
         for key,r in active_watch.items():
             if str(r.get("asset") or "").upper() in buy_assets: continue
@@ -217,6 +220,7 @@ def build():
     elif ready_watch:
         for r in ready_watch:
             last_watch[f'CABAL:{str(r.get("asset") or "").upper()}']=now_iso
+        prev["systemLastWatchAt"]=now_iso
         payload={
             "title":"🟡 CABAL v2 — VIGILAR",
             "priority":"default","kind":"WATCH","buyAssets":[],
@@ -231,6 +235,7 @@ def build():
         "lastAlertAt":last_alert,
         "lastWatchAt":last_watch,
         "lastCancelAt":last_cancel,
+        "systemLastWatchAt":prev.get("systemLastWatchAt"),
         "qualifiedSeenCount":seen,
         "lastCabalGeneratedAt":scan_id,
         "health":{"healthy":healthy,"cabalGeneratedAt":cabal.get("generatedAt"),"ageMinutes":round(age,2) if age<1e8 else None,"executionScanRatio":round(scan_ratio,4)}
@@ -253,17 +258,27 @@ def revalidate(latest_path):
         print("BUY suppressed: newest machine unhealthy/stale")
         return
     by_asset={str(x.get("asset") or "").upper():x for x in cabal.get("buyCandidates") or []}
-    valid=[]
+    state=load("/tmp/ntfy-alert-state.json",{})
+    seen=state.get("qualifiedSeenCount") or {}
+    valid_rows=[]
     for asset in payload.get("buyAssets") or []:
         r=by_asset.get(asset)
         if r and execution_valid(r):
-            valid.append(asset)
-    if set(valid)!=set(payload.get("buyAssets") or []):
-        # Do not send a partially stale multi-asset BUY. Next 5m run will rebuild cleanly.
+            valid_rows.append(r)
+    if not valid_rows:
         with open(PAYLOAD_PATH,"w",encoding="utf-8") as f: json.dump(None,f)
-        print("BUY suppressed: one or more assets failed send-time revalidation")
+        print("BUY suppressed: all assets failed send-time revalidation")
         return
-    print("BUY send-time revalidation PASS:", ",".join(valid))
+    if len(valid_rows)!=len(payload.get("buyAssets") or []):
+        payload["buyAssets"]=[str(r.get("asset") or "").upper() for r in valid_rows]
+        payload["message"]="\n\n".join(
+            buy_card(r,int(seen.get(f'CABAL:{str(r.get("asset") or "").upper()}',0)))
+            for r in valid_rows
+        ) + f'\n\nVENTANA: {ALERT_VALIDITY_MINUTES} min. Ejecutar SPOT solo si precio <= COMPRA MÁX. y no llega cancelación. Tú decides el importe.'
+        with open(PAYLOAD_PATH,"w",encoding="utf-8") as f: json.dump(payload,f,ensure_ascii=False)
+        print("BUY partially revalidated:", ",".join(payload["buyAssets"]))
+        return
+    print("BUY send-time revalidation PASS:", ",".join(payload.get("buyAssets") or []))
 
 if __name__=="__main__":
     if len(sys.argv)>=2 and sys.argv[1]=="revalidate":
