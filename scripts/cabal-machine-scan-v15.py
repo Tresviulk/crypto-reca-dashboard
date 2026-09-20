@@ -26,6 +26,7 @@ PREACCUM_SUB2M_RESERVE=6
 MAIN_MIN_TURNOVER=2_000_000
 PRE_MIN_TURNOVER=250_000
 MAX_BROAD=1200
+CORE_ALWAYS_SCAN={'AVAX','ETH','SOL'}
 
 STABLES={'usdt','usdc','dai','fdusd','tusd','usde','usds','pyusd','usdd','frax','crvusd','gho','usd1','usdp','gusd','usdt0','usd0','usdb'}
 WRAPPED=('wbtc','weth','wsteth','steth','cbeth','reth','weeth','ezeth','solvbtc','wavax','wsol','wmatic')
@@ -304,6 +305,8 @@ def select_retained(stage,limit=RETENTION_LIMIT):
             if len(selected)>=limit or added>=n: break
             if x['asset'] in seen: continue
             selected.append(x); seen.add(x['asset']); added+=1
+    # CORE assets can never be crowded out by Stage-A ranking.
+    take([x for x in stage if x.get('asset') in CORE_ALWAYS_SCAN],len(CORE_ALWAYS_SCAN))
     take([x for x in stage if x.get('preAccumTrigger') or x.get('preAccumWatch')],8)
     take([x for x in stage if x.get('secondLegTrigger') or x.get('secondLegWatch')],4)
     take([x for x in stage if x.get('classification') in {'PRE-MOVE','EARLY STARTER','EARLY-MOVE'}],8)
@@ -349,7 +352,16 @@ def main():
     dedup.sort(key=lambda x:float(x.get('effectiveTurnover') or 0),reverse=True)
     broad=dedup[:MAX_BROAD]
     sub2=[m for m in broad if PRE_MIN_TURNOVER<=float(m.get('effectiveTurnover') or 0)<MAIN_MIN_TURNOVER]
-    main=[m for m in broad if 15_000_000<=float(m.get('market_cap') or 0)<=3_000_000_000 and float(m.get('effectiveTurnover') or 0)>=MAIN_MIN_TURNOVER]
+    main=[
+        m for m in broad
+        if (
+            (
+                15_000_000<=float(m.get('market_cap') or 0)<=3_000_000_000
+                and float(m.get('effectiveTurnover') or 0)>=MAIN_MIN_TURNOVER
+            )
+            or str(m.get('symbol') or '').upper() in CORE_ALWAYS_SCAN
+        )
+    ]
     btc=None
     try:
         b,venue=candles_for('BTC',venues,180); btc={'venue':venue,'price':b[-1]['c'],'p1':pct(b[-1]['c'],b[-2]['c']),'p4':pct(b[-1]['c'],b[-5]['c']),'timestamp':b[-1]['t']}
@@ -372,17 +384,20 @@ def main():
                 try: b,venue=f.result(); main_res.append(result_from_bars(a,m,b,venue,btc,False))
                 except Exception as e: main_fails.append({'asset':a,'error':str(e)[:180]})
     main_res.sort(key=lambda x:x['stageAScore'],reverse=True)
-    stage=[x for x in main_res if x['bucketA'] or x['bucketB'] or x['bucketC'] or x['bucketE'] or x.get('preAccumWatch')]
+    stage=[x for x in main_res if x['bucketA'] or x['bucketB'] or x['bucketC'] or x['bucketE'] or x.get('preAccumWatch') or x.get('asset') in CORE_ALWAYS_SCAN]
     retained=select_retained(stage)
+    core_candidates=[x for x in main_res if x.get('asset') in CORE_ALWAYS_SCAN]
+    core_present={x.get('asset') for x in core_candidates}
+    core_missing=sorted(CORE_ALWAYS_SCAN-core_present)
     broad_count=len(broad); main_count=len(main); sub_count=len(sub2)
     main_ratio=len(main_res)/main_count if main_count else 0; pre_ratio=len(pre_res)/len(pre_short) if pre_short else 1
     venue_ok=(src['bybitSpot']=='PASS' or src['kucoinSpot']=='PASS') and src['gateSpot']=='PASS'
-    main_pass=src['coinGecko']=='PASS' and venue_ok and btc is not None and main_count>=20 and main_ratio>=.90
+    main_pass=src['coinGecko']=='PASS' and venue_ok and btc is not None and main_count>=20 and main_ratio>=.90 and not core_missing
     pre_pass=src['coinGecko']=='PASS' and venue_ok and btc is not None and broad_count>=50 and sub_count>0 and pre_ratio>=.80 and len(pre_short)>0
     lifecycle=merge_lifecycle(pre_res,now); sub_short=sum(1 for m in pre_short if float(m.get('effectiveTurnover') or 0)<MAIN_MIN_TURNOVER)
-    coverage={'bucketA':'PASS' if main_pass else 'FAIL','bucketB':'PASS' if main_pass else 'FAIL','bucketC':'PASS' if main_pass else 'FAIL','bucketD':'EXTERNAL_STAGE0_REQUIRED','bucketE':'PASS' if main_pass else 'FAIL','preAccum':'PASS' if pre_pass else 'FAIL','broadUniverseCount':broad_count,'preAccum250kTo2mUniverseCount':sub_count,'mainEligibleUniverseCount':main_count,'mainScannedCount':len(main_res),'mainScanSuccessRatio':round(main_ratio,4),'preAccumShortlistCount':len(pre_short),'preAccumSub2mShortlistCount':sub_short,'preAccumDeepLiteCompleted':len(pre_res),'preAccumDeepLiteSuccessRatio':round(pre_ratio,4),'venueCoverage':{'Bybit':src['bybitSpot'],'KuCoin':src['kucoinSpot'],'GateFallback':src['gateSpot']}}
+    coverage={'bucketA':'PASS' if main_pass else 'FAIL','bucketB':'PASS' if main_pass else 'FAIL','bucketC':'PASS' if main_pass else 'FAIL','bucketD':'EXTERNAL_STAGE0_REQUIRED','bucketE':'PASS' if main_pass else 'FAIL','preAccum':'PASS' if pre_pass else 'FAIL','broadUniverseCount':broad_count,'preAccum250kTo2mUniverseCount':sub_count,'mainEligibleUniverseCount':main_count,'mainScannedCount':len(main_res),'mainScanSuccessRatio':round(main_ratio,4),'preAccumShortlistCount':len(pre_short),'preAccumSub2mShortlistCount':sub_short,'preAccumDeepLiteCompleted':len(pre_res),'preAccumDeepLiteSuccessRatio':round(pre_ratio,4),'coreRequiredAssets':sorted(CORE_ALWAYS_SCAN),'coreScannedAssets':sorted(core_present),'coreMissingAssets':core_missing,'venueCoverage':{'Bybit':src['bybitSpot'],'KuCoin':src['kucoinSpot'],'GateFallback':src['gateSpot']}}
     retention={'limit':RETENTION_LIMIT,'stageAEligible':len(stage),'stageARetained':len(retained),'preAccumIndependentLimit':PREACCUM_LIMIT,'preAccumIndependentEligible':len(pre_short),'preAccumIndependentRetained':len(pre_res),'sub2mReserveRequired':PREACCUM_SUB2M_RESERVE,'sub2mReserveFilled':sub_short,'top30DoesNotGatePreAccum':True}
-    out={'schemaVersion':SCHEMA,'module':'cabalMachineDiscovery','ok':bool(main_pass and pre_pass),'generatedAt':now,'sources':src,'coverage':coverage,'retention':retention,'candidateCountStageA':len(stage),'deepValidatedCount':len(retained),'btcReference':btc,'preAccumCandidates':pre_res,'preAccumLifecycle':lifecycle,'candidates':retained,'failures':(pre_fails+main_fails)[:40],'errors':errors,'method':'v1.5: CoinGecko broad market metadata + preferred Bybit/KuCoin spot venue coverage + Gate fallback; independent >=250k PRE-STAGE-A universe; explicit 250k-2M coverage; max-10 PRE-ACCUM deep-lite with >=6 sub-2M reserve when available; separate preAccumCandidates output bypasses Stage-A top-30 retention; main CABAL >=2M/15M-3B lane preserved; completed 1h OHLCV; no auto-trading.'}
+    out={'schemaVersion':SCHEMA,'module':'cabalMachineDiscovery','ok':bool(main_pass and pre_pass),'generatedAt':now,'sources':src,'coverage':coverage,'retention':retention,'candidateCountStageA':len(stage),'deepValidatedCount':len(retained),'btcReference':btc,'coreCandidates':core_candidates,'preAccumCandidates':pre_res,'preAccumLifecycle':lifecycle,'candidates':retained,'failures':(pre_fails+main_fails)[:40],'errors':errors,'method':'v1.5: CoinGecko broad market metadata + preferred Bybit/KuCoin spot venue coverage + Gate fallback; independent >=250k PRE-STAGE-A universe; explicit 250k-2M coverage; max-10 PRE-ACCUM deep-lite with >=6 sub-2M reserve when available; separate preAccumCandidates output bypasses Stage-A top-30 retention; main CABAL >=2M/15M-3B lane preserved; completed 1h OHLCV; no auto-trading.'}
     os.makedirs(os.path.dirname(OUT) or '.',exist_ok=True); tmp=OUT+'.tmp'; json.dump(out,open(tmp,'w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(tmp,OUT)
     print(json.dumps({'ok':out['ok'],'generatedAt':now,'broad':broad_count,'sub2mBand':sub_count,'main':main_count,'mainScanned':len(main_res),'preShort':len(pre_short),'preSub2m':sub_short,'preDone':len(pre_res),'preTriggers':sum(1 for x in pre_res if x.get('preAccumTrigger')),'preWatches':sum(1 for x in pre_res if x.get('preAccumWatch')),'sources':src,'errors':errors},indent=2))
 
