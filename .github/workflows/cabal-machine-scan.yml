@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run CABAL machine v1.6.5 PUMP RADAR
+      - name: Run CABAL machine v1.6.6 PUMP RADAR
         run: python scripts/cabal-machine-scan-v16.py
 
       - name: Validate v1.6 shape before persistence
@@ -54,7 +54,7 @@ jobs:
           if missing: raise SystemExit(f'missing required keys: {missing}')
           if d.get('schemaVersion')!='1.6': raise SystemExit(f"unexpected schemaVersion: {d.get('schemaVersion')}")
           e=d.get('executionEngine',{})
-          if e.get('version') not in {'CABAL_PUMP_PILOT_V1.6','CABAL_PUMP_PILOT_V1.6.1','CABAL_PUMP_PILOT_V1.6.2','CABAL_PUMP_PILOT_V1.6.3','CABAL_PUMP_PILOT_V1.6.4','CABAL_PUMP_PILOT_V1.6.5'}: raise SystemExit(f"wrong execution engine: {e.get('version')}")
+          if e.get('version') not in {'CABAL_PUMP_PILOT_V1.6','CABAL_PUMP_PILOT_V1.6.1','CABAL_PUMP_PILOT_V1.6.2','CABAL_PUMP_PILOT_V1.6.3','CABAL_PUMP_PILOT_V1.6.4','CABAL_PUMP_PILOT_V1.6.5','CABAL_PUMP_PILOT_V1.6.6'}: raise SystemExit(f"wrong execution engine: {e.get('version')}")
           if not e.get('manualOnly') or e.get('autoTrade') is not False: raise SystemExit('manual-only safety contract missing')
           print('CABAL v1.6.x DIAGNOSTIC', json.dumps({'preAccumOperational':d.get('preAccumOperational'),'mainMachineOperational':d.get('mainMachineOperational'),'sourceMode':d.get('sourceMode'),'pumpRadarStats':d.get('pumpRadarStats'),'pilotEntries':[x.get('asset') for x in d.get('pilotEntries',[])[:10]],'coverage':d.get('coverage'),'sources':d.get('sources')},ensure_ascii=False))
           PY
@@ -88,6 +88,7 @@ jobs:
           if c.get('preAccumShortlistCount',0)<=0: raise SystemExit('PRE-ACCUM shortlist missing')
           if c.get('preAccumDeepLiteSuccessRatio',0)<.80: raise SystemExit('PRE-ACCUM deep-lite success below 80%')
           if not r.get('top30DoesNotGatePreAccum'): raise SystemExit('PRE-ACCUM still gated by Stage-A top-30')
+          if not r.get('top30DoesNotGateExecution'): raise SystemExit('EXECUTION still gated by Stage-A top-30')
           if c.get('preAccum250kTo2mUniverseCount',0)>=1 and r.get('sub2mReserveFilled',0)<1: raise SystemExit('250k-2M band exists but no qualified sub-2M candidate reached shortlist')
           if p.get('preAccumLimit',0)<40: raise SystemExit('v1.6 PRE-ACCUM expansion not active')
           if p.get('preAccumSub2mReserve',0)<20: raise SystemExit('v1.6 sub-2M reserve not active')
