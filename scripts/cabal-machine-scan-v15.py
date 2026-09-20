@@ -344,7 +344,7 @@ def main():
         if not a or a in seen: continue
         if not any(a in venues[v] for v in venues): continue
         m=dict(m); m['effectiveTurnover']=choose_effective_turnover(a,m,venues)
-        if m['effectiveTurnover']<PRE_MIN_TURNOVER: continue
+        if m['effectiveTurnover']<PRE_MIN_TURNOVER and not m.get('_tailMomentumReserve'): continue
         seen.add(a); dedup.append(m)
     dedup.sort(key=lambda x:float(x.get('effectiveTurnover') or 0),reverse=True)
     broad=dedup[:MAX_BROAD]
