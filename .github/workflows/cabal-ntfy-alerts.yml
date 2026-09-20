@@ -45,8 +45,9 @@ jobs:
           REQUIRED_FRESH_SCANS_FAST = 1
           MAX_ASSETS_PER_PUSH = 1
           MIN_EDGE_SCORE_STANDARD = 58.0
-          MIN_EDGE_SCORE_FAST = 38.0
+          MIN_EDGE_SCORE_FAST = 48.0
           MIN_EDGE_MARGIN = 0.0
+          MIN_NO_CHASE_HEADROOM_PCT = 1.0
           MAX_MACHINE_AGE_MINUTES = 10
           ALERT_VALIDITY_MINUTES = 10
           CANCEL_WINDOW_MINUTES = 20
@@ -260,8 +261,12 @@ jobs:
                   return False
 
               no_chase=num(row.get("noChase"))
-              if no_chase is not None and price >= no_chase:
-                  return False
+              if no_chase is not None:
+                  if price >= no_chase:
+                      return False
+                  headroom=((no_chase-price)/price*100.0) if price>0 else -99
+                  if headroom < MIN_NO_CHASE_HEADROOM_PCT:
+                      return False
 
               stop_dist=((price-stop)/price*100.0) if price>0 else 99
               if stop_dist < 1.0 or stop_dist > 4.5:
@@ -301,8 +306,18 @@ jobs:
               if reason=="PRE_ACCUM_TRIGGER":
                   return c and score>=65 and rvol1>=7 and rs4>=-0.10
               if reason=="FAST_PUMP_15M":
-                  structure_ok = c or score>=75
-                  return structure_ok and score>=35 and rvol15>=3 and irs>=0.40 and rs4>=0
+                  # BUY NOW only for genuinely strong fast continuation.
+                  # "Elite" can alert on one fresh scan; ordinary fast setups must
+                  # be stronger and persist. Weak/flat momentum stays WATCH.
+                  elite = (
+                      c and score>=70 and rvol15>=4.5
+                      and rs1>=0.60 and irs>=0.80 and p1>=0.50 and rs4>=0.20
+                  )
+                  standard = (
+                      c and score>=50 and rvol15>=5.5
+                      and rs1>=0.40 and irs>=0.55 and p1>=0.30 and rs4>=0.10
+                  )
+                  return elite or standard
               if reason=="ABC_EARLY_STRUCTURE":
                   return c and score>=65 and rvol1>=5 and rs4>=0
               if reason=="SECOND_LEG_TRIGGER":
@@ -355,8 +370,23 @@ jobs:
               ranked_now.append(row)
           ranked_now.sort(key=lambda x:(x["edgeScore"], x["rank"], num(x.get("stageScore")) or 0), reverse=True)
 
+          def fast_elite(row):
+              if str(row.get("reason") or "").upper()!="FAST_PUMP_15M":
+                  return False
+              return (
+                  bool(row.get("bucketC"))
+                  and (num(row.get("stageScore")) or 0)>=70
+                  and (num(row.get("rvol15m")) or 0)>=4.5
+                  and (num(row.get("rs1")) or 0)>=0.60
+                  and (num(row.get("intrahourRS")) or 0)>=0.80
+                  and (num(row.get("price1")) or 0)>=0.50
+                  and (num(row.get("rs4")) or 0)>=0.20
+              )
+
           def required_scans(row):
-              return REQUIRED_FRESH_SCANS_FAST if str(row.get("reason") or "").upper()=="FAST_PUMP_15M" else REQUIRED_FRESH_SCANS_STANDARD
+              if str(row.get("reason") or "").upper()=="FAST_PUMP_15M":
+                  return REQUIRED_FRESH_SCANS_FAST if fast_elite(row) else REQUIRED_FRESH_SCANS_STANDARD
+              return REQUIRED_FRESH_SCANS_STANDARD
 
           def min_edge(row):
               return MIN_EDGE_SCORE_FAST if str(row.get("reason") or "").upper()=="FAST_PUMP_15M" else MIN_EDGE_SCORE_STANDARD
@@ -446,7 +476,7 @@ jobs:
                   last_alert[key]=now_iso
 
           state={
-              "schemaVersion":"1.4",
+              "schemaVersion":"1.5",
               "generatedAt":now_iso,
               "seeded":True,
               "active":sorted(active),
