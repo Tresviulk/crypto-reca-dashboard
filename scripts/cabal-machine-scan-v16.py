@@ -130,6 +130,18 @@ def ku15(sym,limit=96):
     out.sort(key=lambda x:x['t'])
     if len(out)<24: raise RuntimeError('KuCoin 15m insufficient')
     return out[-limit:]
+def by15(sym,limit=96):
+    d=mod.get('https://api.bybit.com/v5/market/kline?'+urlencode({'category':'spot','symbol':sym,'interval':'15','limit':str(min(limit,200))}),12,1)
+    rows=((d.get('result') or {}).get('list') or []); now=int(time.time()*1000); out=[]
+    for r in rows:
+        if isinstance(r,list) and len(r)>=6:
+            t=int(r[0])
+            if t+900000<=now:
+                out.append({'t':t,'h':f(r[2]),'l':f(r[3]),'c':f(r[4]),'v':f(r[5])})
+    out.sort(key=lambda x:x['t'])
+    if len(out)<24: raise RuntimeError('Bybit 15m insufficient')
+    return out[-limit:]
+
 def gate15(sym,limit=96):
     rows=mod.get('https://api.gateio.ws/api/v4/spot/candlesticks?'+urlencode({'currency_pair':sym,'interval':'15m','limit':str(limit)}),12,1); now=int(time.time()); out=[]
     for r in rows if isinstance(rows,list) else []:
@@ -145,7 +157,11 @@ def fast15(asset,venue,px,intra,intra_rs,row):
     for k in order:
         t=S['tickers'].get(k,{}).get(asset)
         if not t: continue
-        try: b=ku15(t['symbol']) if k=='kucoin' else gate15(t['symbol']); src=k; break
+        try:
+            if k=='kucoin': b=ku15(t['symbol'])
+            elif k=='bybit': b=by15(t['symbol'])
+            else: b=gate15(t['symbol'])
+            src=k; break
         except: pass
     if not b: raise RuntimeError('15m DATA GAP')
     S['fast15Success']+=1; hist=[x['v'] for x in b[-21:-1] if x['v']>0]; mv=statistics.median(hist) if len(hist)>=12 else None; rv=b[-1]['v']/mv if mv else None
