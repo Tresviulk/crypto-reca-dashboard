@@ -20,7 +20,7 @@ CANCEL_WINDOW_MINUTES=20
 MAX_MACHINE_AGE_MINUTES=10
 ALERT_VALIDITY_MINUTES=10
 MAX_BUYS_PER_PUSH=3
-MAX_WATCH_PER_PUSH=3
+MAX_WATCH_PER_PUSH=5
 
 def num(v):
     try:
@@ -90,7 +90,7 @@ def execution_valid(row):
 def buy_card(r,seen):
     parts=[
         f'🚨 {r.get("asset")}',
-        f'PLATAFORMA: {r.get("venue") or "n/a"}',
+        f'PLATAFORMA: {r.get("executionVenue") or r.get("venue") or "n/a"}',
         f'CALIDAD: {fmt(r.get("qualityScore"))}/100',
         f'MOTIVO: {r.get("decisionReason") or "CONFIRMED"}',
         f'CONFIRMACIONES: {seen}/{int(r.get("requiredFreshScans") or 1)}',
@@ -104,13 +104,28 @@ def buy_card(r,seen):
 def watch_card(r):
     return "\n".join([
         f'⚡ {r.get("asset")}',
-        f'PLATAFORMA: {r.get("venue") or "n/a"}',
+        f'PLATAFORMA: {r.get("executionVenue") or r.get("venue") or "n/a"}',
         f'CALIDAD: {fmt(r.get("qualityScore"))}/100',
         f'MOTIVO: {r.get("decisionReason") or "EARLY WATCH"}',
         f'PRECIO: {fmt(r.get("price"))}',
-        f'24H: {fmt(r.get("priceChange24hPct"))}%',
+        f'1H / 6H / 24H: {fmt(r.get("priceChange1hPct"))}% / {fmt(r.get("priceChange6hPct"))}% / {fmt(r.get("priceChange24hPct"))}%',
         "ACCIÓN: VIGILAR. NO ES ORDEN DE COMPRA."
     ])
+
+def watch_priority(r):
+    core=1 if r.get("isCoreAsset") else 0
+    p1=num(r.get("priceChange1hPct")) or 0
+    p6=num(r.get("priceChange6hPct")) or 0
+    p24=num(r.get("priceChange24hPct")) or 0
+    fast=1 if (p6>=8 or p1>=3 or p24>=10) else 0
+    return (core,fast,num(r.get("qualityScore")) or 0,max(p1,p6,p24))
+
+def urgent_watch(r):
+    p1=num(r.get("priceChange1hPct")) or 0
+    p6=num(r.get("priceChange6hPct")) or 0
+    p24=num(r.get("priceChange24hPct")) or 0
+    q=num(r.get("qualityScore")) or 0
+    return bool(r.get("isCoreAsset") or p6>=8 or p1>=3 or p24>=12 or q>=70)
 
 def build():
     now=datetime.now(timezone.utc)
@@ -148,7 +163,7 @@ def build():
         dict(x) for x in (cabal.get("watchCandidates") or [])
         if x.get("decisionTier")=="WATCH" and x.get("watchEligible") is True
     ]
-    watches.sort(key=lambda r:num(r.get("qualityScore")) or 0,reverse=True)
+    watches.sort(key=watch_priority,reverse=True)
 
     scan_id=str(cabal.get("generatedAt") or "")
     is_new=bool(scan_id and scan_id!=str(prev.get("lastCabalGeneratedAt") or ""))
@@ -182,11 +197,14 @@ def build():
 
     ready_watch=[]
     watch_global_ready=minutes_since(now,prev.get("systemLastWatchAt"))>=WATCH_GLOBAL_COOLDOWN_MINUTES
-    if healthy and not ready_buy and watch_global_ready:
+    if healthy and not ready_buy:
         buy_assets={str(r.get("asset") or "").upper() for r in buys}
-        for key,r in active_watch.items():
+        ordered=sorted(active_watch.items(),key=lambda kv:watch_priority(kv[1]),reverse=True)
+        for key,r in ordered:
             if str(r.get("asset") or "").upper() in buy_assets: continue
             if hours_since(now,last_watch.get(key))<WATCH_COOLDOWN_HOURS: continue
+            # CORE and fast movers bypass the global WATCH throttle once per asset.
+            if not watch_global_ready and not urgent_watch(r): continue
             ready_watch.append(r)
         ready_watch=ready_watch[:MAX_WATCH_PER_PUSH]
 
