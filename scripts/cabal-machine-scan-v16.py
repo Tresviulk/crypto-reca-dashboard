@@ -171,7 +171,7 @@ def result(asset,m,b,venue,btc,pre_lane=False):
     rv15=f((ft or {}).get('rvol15m')); score=f(r.get('stageAScore'))
     fastq=bool(trg and rv15>=2.0 and irs>=.2 and r.get('bucketB') and (r.get('bucketC') or score>=35))
 
-    # v1.6.2 EXECUTION SAFETY:
+    # v1.6.3 EXECUTION SAFETY:
     # 1h PRE-ACCUM / ABC / SECOND-LEG states remain discovery signals only.
     # A real PILOT_ENTRY_WINDOW now requires a CURRENT completed-15m trigger.
     # This prevents a stale 1h trigger from authorizing a late/chased BUY.
@@ -184,7 +184,34 @@ def result(asset,m,b,venue,btc,pre_lane=False):
     loc=bool(px>stop>0 and sd<=5 and (not no or px<no) and (head is None or head>=.5) and intra<5 and f(r.get('priceChange24hPct'))<25)
     pilot=bool(loc and (fastq or pre_exec or old_exec or sec_exec))
     sig='NO_CHASE' if no and px>=no else ('PILOT_ENTRY_WINDOW' if pilot else ('WAIT_CONFIRMATION' if base in {'PRE-ACCUMULATION TRIGGER','PRE-MOVE','EARLY STARTER','SECOND-LEG TRIGGER'} or fw else r.get('executionSignal','OBSERVE')))
-    r.update({'entryConfirmation15m':fresh15,'entryConfirmation15mSource':(ft or {}).get('source'),'fastPumpQualifiedForPilot':fastq,'pilotEntryEligible':pilot,'pilotReason':('WIDE_BASE_ACCEL_15M' if pilot and fastq and (ft or {}).get('wideBaseTrigger') else ('FAST_PUMP_15M' if pilot and fastq else ('PRE_ACCUM_TRIGGER' if pilot and pre_exec else ('ABC_EARLY_STRUCTURE' if pilot and old_exec else ('SECOND_LEG_TRIGGER' if pilot and sec_exec else None)))),'pilotSizePctOfPlannedPosition':25 if pilot and old_exec else (20 if pilot else 0),'pilotEntryMax':min(no*.995 if no else px*1.005,px*1.005) if pilot else None,'confirmationAddTrigger':max([x for x in [px,f(r.get('preAccumTriggerLevel')),f((ft or {}).get('baseHigh4h15m'))] if x>0]) if pilot else None,'protectiveStopReference':stop if pilot else None,'pilotStopDistancePct':round(sd,4) if pilot else None,'requiresProtectiveStop':pilot,'protectionState':'UNARMED' if pilot else None,'executionSignal':sig,'whalesRequiredForPilot':False,'whalesPolicy':'BONUS_NOT_VETO_UNLESS_VERIFIED_NEGATIVE_DISTRIBUTION'})
+
+    pilot_reason=None
+    if pilot and fastq:
+        pilot_reason='WIDE_BASE_ACCEL_15M' if (ft or {}).get('wideBaseTrigger') else 'FAST_PUMP_15M'
+    elif pilot and pre_exec:
+        pilot_reason='PRE_ACCUM_TRIGGER'
+    elif pilot and old_exec:
+        pilot_reason='ABC_EARLY_STRUCTURE'
+    elif pilot and sec_exec:
+        pilot_reason='SECOND_LEG_TRIGGER'
+
+    r.update({
+        'entryConfirmation15m':fresh15,
+        'entryConfirmation15mSource':(ft or {}).get('source'),
+        'fastPumpQualifiedForPilot':fastq,
+        'pilotEntryEligible':pilot,
+        'pilotReason':pilot_reason,
+        'pilotSizePctOfPlannedPosition':25 if pilot and old_exec else (20 if pilot else 0),
+        'pilotEntryMax':min(no*.995 if no else px*1.005,px*1.005) if pilot else None,
+        'confirmationAddTrigger':max([x for x in [px,f(r.get('preAccumTriggerLevel')),f((ft or {}).get('baseHigh4h15m'))] if x>0]) if pilot else None,
+        'protectiveStopReference':stop if pilot else None,
+        'pilotStopDistancePct':round(sd,4) if pilot else None,
+        'requiresProtectiveStop':pilot,
+        'protectionState':'UNARMED' if pilot else None,
+        'executionSignal':sig,
+        'whalesRequiredForPilot':False,
+        'whalesPolicy':'BONUS_NOT_VETO_UNLESS_VERIFIED_NEGATIVE_DISTRIBUTION'
+    })
     return r
 mod.result_from_bars=result
 mod.main()
