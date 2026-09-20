@@ -116,15 +116,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Preserve the freshly generated state, then fast-forward to the newest
+          # main before writing it. This avoids rebase conflicts with WHALES/NTFY
+          # commits that land while the 2-3 minute full-universe scan is running.
+          cp data/cabal-machine.json /tmp/cabal-machine-v2.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/cabal-machine-v2.json data/cabal-machine.json
           git add data/cabal-machine.json
           if git diff --cached --quiet; then
             echo 'No CABAL machine state change.'
             exit 0
           fi
           git commit -m 'cabal-machine: refresh v2 decision state [skip ci]'
-          git pull --rebase origin main
           git push origin HEAD:main
 
       - name: Verify persisted CABAL v2 payload
