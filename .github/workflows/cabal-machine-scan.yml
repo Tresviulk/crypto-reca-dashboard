@@ -1,4 +1,4 @@
-name: CABAL Independent Machine Discovery
+name: CABAL v2 Machine Discovery
 
 on:
   schedule:
@@ -7,19 +7,17 @@ on:
   push:
     branches: ["main"]
     paths:
-      - 'scripts/cabal-machine-scan.py'
-      - 'scripts/cabal-machine-scan-v14.py'
-      - 'scripts/cabal-machine-scan-v141.py'
       - 'scripts/cabal-machine-scan-v15.py'
-      - 'scripts/cabal-machine-scan-v151.py'
       - 'scripts/cabal-machine-scan-v16.py'
+      - 'scripts/cabal_decision_v2.py'
+      - 'scripts/cabal_regression_v2.py'
       - '.github/workflows/cabal-machine-scan.yml'
 
 permissions:
   contents: write
 
 concurrency:
-  group: cabal-independent-machine-discovery
+  group: cabal-v2-machine-discovery
   cancel-in-progress: false
 
 jobs:
@@ -38,10 +36,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run CABAL machine v1.6.6 PUMP RADAR
+      - name: Regression gate — known good and bad archetypes
+        run: python scripts/cabal_regression_v2.py
+
+      - name: Run CABAL v2 full-universe scanner
         run: python scripts/cabal-machine-scan-v16.py
 
-      - name: Validate v1.6 shape before persistence
+      - name: Validate CABAL v2 contract
         shell: bash
         run: |
           set -euo pipefail
@@ -49,14 +50,66 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('data/cabal-machine.json',encoding='utf-8'))
-          required=('generatedAt','coverage','sources','retention','preAccumCandidates','preAccumLifecycle','preAccumOperational','mainMachineOperational','sourceMode','pumpRadar','pilotEntries','pumpRadarStats','executionEngine')
+          required=(
+              'generatedAt','coverage','sources','retention','preAccumCandidates',
+              'preAccumOperational','mainMachineOperational','sourceMode',
+              'buyCandidates','watchCandidates','missedMoverAudit',
+              'executionCandidates','decisionRadar','pumpRadarStats','executionEngine'
+          )
           missing=[k for k in required if k not in d]
           if missing: raise SystemExit(f'missing required keys: {missing}')
-          if d.get('schemaVersion')!='1.6': raise SystemExit(f"unexpected schemaVersion: {d.get('schemaVersion')}")
+          if d.get('schemaVersion')!='2.0':
+              raise SystemExit(f"unexpected schemaVersion: {d.get('schemaVersion')}")
           e=d.get('executionEngine',{})
-          if e.get('version') not in {'CABAL_PUMP_PILOT_V1.6','CABAL_PUMP_PILOT_V1.6.1','CABAL_PUMP_PILOT_V1.6.2','CABAL_PUMP_PILOT_V1.6.3','CABAL_PUMP_PILOT_V1.6.4','CABAL_PUMP_PILOT_V1.6.5','CABAL_PUMP_PILOT_V1.6.6'}: raise SystemExit(f"wrong execution engine: {e.get('version')}")
+          if e.get('version')!='CABAL_V2.0': raise SystemExit(f"wrong execution engine: {e.get('version')}")
+          if e.get('decisionEngine')!='CANONICAL_V2': raise SystemExit('canonical decision engine missing')
+          if not e.get('fullExecutionUniverse'): raise SystemExit('full execution universe disabled')
+          if not e.get('watchBeforeBuy'): raise SystemExit('WATCH lane disabled')
           if not e.get('manualOnly') or e.get('autoTrade') is not False: raise SystemExit('manual-only safety contract missing')
-          print('CABAL v1.6.x DIAGNOSTIC', json.dumps({'preAccumOperational':d.get('preAccumOperational'),'mainMachineOperational':d.get('mainMachineOperational'),'sourceMode':d.get('sourceMode'),'pumpRadarStats':d.get('pumpRadarStats'),'pilotEntries':[x.get('asset') for x in d.get('pilotEntries',[])[:10]],'coverage':d.get('coverage'),'sources':d.get('sources')},ensure_ascii=False))
+          if e.get('ntfyReScoresBuy') is not False: raise SystemExit('NTFY must not re-score BUY quality')
+          print('CABAL v2 CONTRACT PASS', json.dumps({
+              'buyNow':[x.get('asset') for x in d.get('buyCandidates',[])[:10]],
+              'watch':[x.get('asset') for x in d.get('watchCandidates',[])[:10]],
+              'coverage':d.get('coverage')
+          },ensure_ascii=False))
+          PY
+
+      - name: Strict coverage and decision validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('data/cabal-machine.json',encoding='utf-8'))
+          c=d['coverage']; r=d['retention']; p=d.get('pumpRadarStats',{})
+          if not d.get('preAccumOperational'): raise SystemExit('PRE-ACCUM operational=false')
+          if not d.get('mainMachineOperational'): raise SystemExit('main machine operational=false')
+          universe=int(c.get('executionUniverseCount') or 0)
+          scanned=int(c.get('mainScannedCount') or 0)
+          if universe<100: raise SystemExit(f'execution universe unexpectedly small: {universe}')
+          if not universe or scanned/universe < .90: raise SystemExit(f'execution scan ratio below 90%: {scanned}/{universe}')
+          if not r.get('top30DoesNotGateExecution'): raise SystemExit('execution still gated by Stage-A top-30')
+          if p.get('fast15Attempts',0)>0 and p.get('fast15SuccessRatio',0)<.70: raise SystemExit('15m coverage below 70%')
+          core_req=set(c.get('coreRequiredAssets') or [])
+          core_scanned=set(c.get('coreScannedAssets') or [])
+          core_missing=set(c.get('coreMissingAssets') or [])
+          if not {'AVAX','ETH','SOL'}.issubset(core_req): raise SystemExit(f'CORE contract incomplete: {sorted(core_req)}')
+          if core_missing or not core_req.issubset(core_scanned): raise SystemExit(f'CORE coverage gap: {sorted(core_missing or (core_req-core_scanned))}')
+          for x in d.get('buyCandidates',[]):
+              if x.get('decisionTier')!='BUY_NOW' or x.get('buyNowEligible') is not True:
+                  raise SystemExit(f'non-BUY leaked into buyCandidates: {x.get("asset")}')
+              if not x.get('decisionEntryMax') or not x.get('decisionStop'):
+                  raise SystemExit(f'BUY missing max/stop: {x.get("asset")}')
+              sd=x.get('decisionStopDistancePct')
+              if sd is None or not (1.0<=float(sd)<=4.5):
+                  raise SystemExit(f'BUY invalid stop distance: {x.get("asset")} {sd}')
+              head=x.get('decisionNoChaseHeadroomPct')
+              if head is not None and float(head)<1.0:
+                  raise SystemExit(f'BUY too close to no-chase: {x.get("asset")} {head}')
+          for x in d.get('watchCandidates',[]):
+              if x.get('decisionTier')!='WATCH' or x.get('watchEligible') is not True:
+                  raise SystemExit(f'non-WATCH leaked into watchCandidates: {x.get("asset")}')
+          print('CABAL v2 COVERAGE PASS', d['generatedAt'], 'execution=',scanned,'/',universe,'buy=',len(d.get('buyCandidates',[])),'watch=',len(d.get('watchCandidates',[])),'missedAudit=',len(d.get('missedMoverAudit',[])))
           PY
 
       - name: Persist machine state
@@ -68,56 +121,16 @@ jobs:
           git add data/cabal-machine.json
           if git diff --cached --quiet; then
             echo 'No CABAL machine state change.'
-          else
-            git commit -m 'cabal-machine: refresh pump radar v1.6 [skip ci]'
-            git pull --rebase origin main
-            git push origin HEAD:main
+            exit 0
           fi
+          git commit -m 'cabal-machine: refresh v2 decision state [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
 
-      - name: Strict PRE-ACCUM and PUMP coverage validation
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json
-          d=json.load(open('data/cabal-machine.json',encoding='utf-8'))
-          c=d['coverage']; r=d['retention']; p=d.get('pumpRadarStats',{})
-          if not d.get('preAccumOperational'): raise SystemExit('PRE-ACCUM operational=false')
-          if c.get('preAccum')!='PASS': raise SystemExit('PRE-ACCUM coverage not PASS')
-          if c.get('preAccum250kTo2mUniverseCount',0)<=0: raise SystemExit('250k-2M PRE-ACCUM band not covered')
-          if c.get('preAccumShortlistCount',0)<=0: raise SystemExit('PRE-ACCUM shortlist missing')
-          if c.get('preAccumDeepLiteSuccessRatio',0)<.80: raise SystemExit('PRE-ACCUM deep-lite success below 80%')
-          if not r.get('top30DoesNotGatePreAccum'): raise SystemExit('PRE-ACCUM still gated by Stage-A top-30')
-          if not r.get('top30DoesNotGateExecution'): raise SystemExit('EXECUTION still gated by Stage-A top-30')
-          if c.get('preAccum250kTo2mUniverseCount',0)>=1 and r.get('sub2mReserveFilled',0)<1: raise SystemExit('250k-2M band exists but no qualified sub-2M candidate reached shortlist')
-          if p.get('preAccumLimit',0)<40: raise SystemExit('v1.6 PRE-ACCUM expansion not active')
-          if p.get('preAccumSub2mReserve',0)<20: raise SystemExit('v1.6 sub-2M reserve not active')
-          if p.get('fast15Attempts',0)>0 and p.get('fast15SuccessRatio',0)<.70: raise SystemExit('fast 15m confirmation coverage below 70%')
-          core_req=set(c.get('coreRequiredAssets') or [])
-          core_scanned=set(c.get('coreScannedAssets') or [])
-          core_missing=set(c.get('coreMissingAssets') or [])
-          if 'AVAX' not in core_req: raise SystemExit('AVAX missing from mandatory CORE lane')
-          if core_missing: raise SystemExit(f'CORE coverage gap: {sorted(core_missing)}')
-          if not core_req.issubset(core_scanned): raise SystemExit(f'CORE assets not scanned: {sorted(core_req-core_scanned)}')
-          banned=('xstock','tokenized stock','tokenised stock','tokenized equity','tokenised equity','tokenized etf','tokenised etf','ondo tokenized')
-          for x in d.get('preAccumCandidates',[]):
-              name=str(x.get('name') or '').lower()
-              if any(b in name for b in banned): raise SystemExit(f"tokenized-equity leakage in PRE-ACCUM: {x.get('asset')} {x.get('name')}")
-          for x in d.get('pilotEntries',[]):
-              if x.get('executionSignal')!='PILOT_ENTRY_WINDOW': raise SystemExit('non-pilot leaked into pilotEntries')
-              if not x.get('requiresProtectiveStop') or not x.get('protectiveStopReference'): raise SystemExit(f"pilot without structural stop: {x.get('asset')}")
-              if x.get('pilotSizePctOfPlannedPosition',0)>25: raise SystemExit(f"pilot oversize: {x.get('asset')}")
-          print('CABAL PUMP/PILOT v1.6 PASS', d['generatedAt'], 'mode=',d.get('sourceMode'),'250k-2M=',c.get('preAccum250kTo2mUniverseCount'),'preDone=',c.get('preAccumDeepLiteCompleted'),'fast15=',p.get('fast15Success'),'/',p.get('fast15Attempts'),'pumpTriggers=',p.get('fastPumpTriggerCount'),'pilots=',p.get('pilotEntryCount'))
-          PY
-
-      - name: Verify persisted payload
+      - name: Verify persisted CABAL v2 payload
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main
-          git show origin/main:data/cabal-machine.json | python -m json.tool >/dev/null
-          git show origin/main:data/cabal-machine.json | python -c "import sys,json; d=json.load(sys.stdin); assert d.get('schemaVersion')=='1.6'; assert 'pumpRadar' in d and 'pilotEntries' in d"
-          echo 'CABAL MACHINE v1.6.x PERSISTENCE PASS'
-
-# IMPORTANT: issue/email alerts intentionally disabled 2026-09-17 after notification storm.
-# CABAL scanning remains active every 5 minutes; manual SPOT only.
+          git show origin/main:data/cabal-machine.json | python -c "import sys,json; d=json.load(sys.stdin); assert d.get('schemaVersion')=='2.0'; assert d.get('executionEngine',{}).get('version')=='CABAL_V2.0'; assert 'buyCandidates' in d and 'watchCandidates' in d"
+          echo 'CABAL v2 PERSISTENCE PASS'
