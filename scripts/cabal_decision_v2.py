@@ -242,8 +242,17 @@ def evaluate(row):
     # RUNNER WATCH is informational and intentionally earlier than BUY.
     # Do NOT apply BUY/no-chase headroom rules to an informational early warning:
     # OPG/PHA were seen with ~1% headroom on 2026-09-21 and then ran materially.
-    # A 72h extension guard blocks stale M-like momentum unless this is a real second leg.
-    runner_context_ok=(p72 < 22.0 or second_leg)
+    # A 72h extension guard blocks stale M-like momentum, but a fresh re-accumulation
+    # trigger can legitimately start a new leg even after a strong 72h move (PHA 2026-09-21).
+    fresh_reaccum=bool(
+        pre_trigger
+        and 4.0 <= p24 < 18.0
+        and p6 < 10.0
+        and base12 <= 12.0
+        and rs1 >= 1.0 and rs4 >= 1.5
+        and r1 >= 1.5
+    )
+    runner_context_ok=(p72 < 22.0 or second_leg or fresh_reaccum)
     runner_early_limits=(
         p1 >= 0.25 and p1 < 3.5
         and p6 < 10.0
