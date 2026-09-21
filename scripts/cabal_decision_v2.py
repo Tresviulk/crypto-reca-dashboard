@@ -287,7 +287,7 @@ def evaluate(row):
         and stop_dist is not None and 1.0<=stop_dist<=6.0
         and (base12<=16.0 or wide_watch or pre_watch or pre_trigger)
     )
-    runner_candidate=bool(
+    runner_early_candidate=bool(
         not buy
         and runner_early_limits
         and runner_structure
@@ -296,6 +296,22 @@ def evaluate(row):
         and q>=45
         and not reject
     )
+
+    # Fallback for scans that arrive after the earliest window. This never authorizes
+    # a BUY; it prevents KMNO-like genuine acceleration from becoming invisible.
+    runner_confirmed_candidate=bool(
+        not buy
+        and 3.5 <= p1 < 10.0
+        and p6 < 18.0 and p24 < 20.0
+        and q>=65
+        and r1>=5.0
+        and rs1>=1.5 and rs4>=1.5
+        and effort!="POOR"
+        and "CHURN" not in cls and "DISTRIBUTION" not in cls
+        and (headroom is None or headroom>=0.5)
+        and not reject
+    )
+    runner_candidate=bool(runner_early_candidate or runner_confirmed_candidate)
 
     runner_buy=bool(
         buy
@@ -335,6 +351,7 @@ def evaluate(row):
         "scalpBuyEligible":scalp_buy,
         "runnerBuyEligible":runner_buy,
         "runnerCandidateEligible":runner_candidate,
+        "runnerCandidateStage":("EARLY" if runner_early_candidate else ("CONFIRMED" if runner_confirmed_candidate else None)),
         "scalpTarget2Pct":round(price*1.02,12) if price is not None else None,
         "scalpTarget3Pct":round(price*1.03,12) if price is not None else None,
         "signalLane":("SCALP+RUNNER" if scalp_buy and runner_buy else ("RUNNER" if runner_buy or runner_candidate else ("SCALP" if scalp_buy else "INTERNAL"))),
