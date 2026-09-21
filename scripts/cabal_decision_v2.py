@@ -313,6 +313,13 @@ def evaluate(row):
     )
     runner_candidate=bool(runner_early_candidate or runner_confirmed_candidate)
 
+    # A user-facing RUNNER candidate is, by definition, a WATCH.
+    # Keep canonical tier/watch fields coherent for scanner + NTFY.
+    if runner_candidate and not buy and tier=="NONE":
+        watch=True
+        tier="WATCH"
+        reason="RUNNER_EARLY_WATCH" if runner_early_candidate else "RUNNER_CONFIRMED_WATCH"
+
     runner_buy=bool(
         buy
         and (asset=="BTC" or q>=55)
