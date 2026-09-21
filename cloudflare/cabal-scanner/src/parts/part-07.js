@@ -28,4 +28,25 @@
       });
     }
   }
+}
+
+export default {
+  async fetch(request,env){
+    const url=new URL(request.url);
+    if(url.pathname==="/health"){
+      const h=await guardHealth(env);
+      return new Response(JSON.stringify(h,null,2),{
+        status:200,
+        headers:{
+          "content-type":"application/json; charset=utf-8",
+          "cache-control":"no-store"
+        }
+      });
+    }
+    return handleScan(request,env);
+  },
+
+  async scheduled(event,env,ctx){
+    ctx.waitUntil(runMarketGuard(event,env));
+  }
 };
