@@ -12,6 +12,7 @@ STATE_PATH=os.environ.get("CABAL_NTFY_STATE","data/ntfy-alert-state.json")
 PAYLOAD_PATH=os.environ.get("CABAL_NTFY_PAYLOAD","/tmp/ntfy-payload.json")
 CABAL_PATH=os.environ.get("CABAL_MACHINE_PATH","data/cabal-machine.json")
 WHALES_PATH=os.environ.get("CABAL_WHALES_PATH","data/whales-early-entry-state.json")
+GUARD_HEALTH_PATH=os.environ.get("CABAL_GUARD_HEALTH_PATH","/tmp/cabal-guard-health.json")
 
 BUY_COOLDOWN_HOURS=12
 WATCH_COOLDOWN_HOURS=6
@@ -70,6 +71,18 @@ def machine_healthy(cabal,now):
         and ratio>=0.90
         and not (cov.get("coreMissingAssets") or [])
     ),age,ratio
+
+def market_guard_healthy(now):
+    g=load(GUARD_HEALTH_PATH,{})
+    t=parse_time(g.get("lastSuccessfulScan"))
+    age=((now-t).total_seconds()) if t else 1e9
+    ok=bool(
+        g.get("healthy") is True
+        and age<=210
+        and (num(g.get("schedulerLagSeconds")) or 0)<=120
+        and (num(g.get("lastObservationGapSeconds")) or 0)<=180
+    )
+    return ok,g,age
 
 def execution_valid(row):
     if row.get("decisionTier")!="BUY_NOW" or row.get("buyNowEligible") is not True or row.get("notifyBuyEligible") is not True:
@@ -163,6 +176,7 @@ def build():
     cabal=load(CABAL_PATH,{})
     whales=load(WHALES_PATH,{})
     healthy,age,scan_ratio=machine_healthy(cabal,now)
+    guard_ok,guard,guard_age=market_guard_healthy(now)
 
     prev=load(STATE_PATH,{
         "lastAlertAt":{},"lastWatchAt":{},"lastCancelAt":{},
@@ -229,7 +243,7 @@ def build():
 
     ready_watch=[]
     watch_global_ready=minutes_since(now,prev.get("systemLastWatchAt"))>=WATCH_GLOBAL_COOLDOWN_MINUTES
-    if healthy and not ready_buy:
+    if healthy and not ready_buy and not guard_ok:
         buy_assets={str(r.get("asset") or "").upper() for r in buys}
         ordered=sorted(active_watch.items(),key=lambda kv:watch_priority(kv[1]),reverse=True)
         for key,r in ordered:
@@ -296,7 +310,7 @@ def build():
         "systemLastWatchAt":prev.get("systemLastWatchAt"),
         "qualifiedSeenCount":seen,
         "lastCabalGeneratedAt":scan_id,
-        "health":{"healthy":healthy,"cabalGeneratedAt":cabal.get("generatedAt"),"ageMinutes":round(age,2) if age<1e8 else None,"executionScanRatio":round(scan_ratio,4)}
+        "health":{"healthy":bool(healthy and guard_ok),"machineHealthy":healthy,"marketGuardHealthy":guard_ok,"cabalGeneratedAt":cabal.get("generatedAt"),"ageMinutes":round(age,2) if age<1e8 else None,"executionScanRatio":round(scan_ratio,4),"guardAgeSeconds":round(guard_age,2) if guard_age<1e8 else None,"schedulerLagSeconds":guard.get("schedulerLagSeconds"),"lastObservationGapSeconds":guard.get("lastObservationGapSeconds"),"maxObservationGapSeconds":guard.get("maxObservationGapSeconds"),"lastSuccessfulScan":guard.get("lastSuccessfulScan"),"guardLastError":guard.get("lastError"),"watchFallbackMode":not guard_ok}
     }
     with open("/tmp/ntfy-alert-state.json","w",encoding="utf-8") as f:
         json.dump(state,f,ensure_ascii=False,indent=2)
