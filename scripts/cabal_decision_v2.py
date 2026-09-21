@@ -61,6 +61,8 @@ def evaluate(row):
     p4=n(row.get("priceChange4hPct"))
     p6=n(row.get("priceChange6hPct"))
     p24=n(row.get("priceChange24hPct"))
+    p72=n(row.get("priceChange72hPct"))
+    p7=n(row.get("priceChange7dPct"))
     r1=n(row.get("rvol1h"))
     rv15=n(ft.get("rvol15m"))
     rs1=n(row.get("relativeStrength1hVsBTC"))
@@ -78,6 +80,12 @@ def evaluate(row):
     effort=str(row.get("effortVsResult") or "").upper()
     cls=str(row.get("classification") or "").upper()
     core=asset in CORE_ASSETS
+    q=_quality_score(row)
+    second_leg=bool(
+        b(row.get("secondLegTrigger"))
+        or cls=="SECOND-LEG TRIGGER"
+        or str(row.get("pilotReason") or "").upper()=="SECOND_LEG_TRIGGER"
+    )
 
     headroom=((no_chase-price)/price*100) if price and no_chase else None
     stop_dist=((price-stop)/price*100) if price and stop and price>stop else None
@@ -125,9 +133,13 @@ def evaluate(row):
         and price is not None and n(ft.get("baseHigh4h15m"),None) is not None
         and price>=n(ft.get("baseHigh4h15m"))*.995
     )
+    # CORE is scanned aggressively, but CORE status must never bypass quality.
+    # 2026-09-21 ONDO failure: NO SETUP / B=False / q=24.21 was allowed to BUY.
     alt_core_buy=(
         executable and fresh15 and fast_trigger and core and asset!="BTC"
-        and rv15>=1.35 and rs1>=0.20 and irs>=0.40
+        and cls!="NO SETUP" and bb and q>=50
+        and r1>=1.0 and rv15>=1.50
+        and rs1>=0.30 and irs>=0.40
         and p1>=0.30 and p4>=0.50
     )
     btc_core_buy=(
@@ -202,7 +214,6 @@ def evaluate(row):
         tier="NONE"
         reason=reject[0] if reject else "NO_EDGE"
 
-    q=_quality_score(row)
     required=1 if (buy and (wide_buy or core_buy or q>=65)) else (2 if buy else 1)
 
     # USER-FACING CABAL has two separate lanes:
@@ -216,6 +227,7 @@ def evaluate(row):
 
     scalp_buy=bool(
         buy
+        and (asset=="BTC" or q>=50)
         and p24 < 12.0
         and p1 < 4.0
         and stop_dist is not None and 1.0 <= stop_dist <= 3.8
@@ -227,18 +239,33 @@ def evaluate(row):
         )
     )
 
+    # RUNNER WATCH is informational and intentionally earlier than BUY.
+    # Do NOT apply BUY/no-chase headroom rules to an informational early warning:
+    # OPG/PHA were seen with ~1% headroom on 2026-09-21 and then ran materially.
+    # A 72h extension guard blocks stale M-like momentum unless this is a real second leg.
+    runner_context_ok=(p72 < 22.0 or second_leg)
     runner_early_limits=(
         p1 >= 0.25 and p1 < 3.5
-        and p6 < 8.0
-        and p24 < 12.0
+        and p6 < 10.0
+        and p24 < 20.0
+        and runner_context_ok
     )
     runner_structure=(
-        bb
-        and effort!="POOR"
-        and "CHURN" not in cls and "DISTRIBUTION" not in cls
-        and (
-            pre_watch or pre_trigger or wide_watch
-            or score>=55
+        (
+            bb
+            and effort!="POOR"
+            and "CHURN" not in cls and "DISTRIBUTION" not in cls
+            and (
+                pre_watch or pre_trigger or wide_watch
+                or score>=55
+            )
+        )
+        # UAI-type early accumulation can be valuable before Bucket B completes.
+        or (
+            pre_watch and q>=45
+            and rs1>=1.0 and rs4>=2.0
+            and intra>=1.0
+            and effort!="POOR"
         )
     )
     runner_flow=(
@@ -247,11 +274,16 @@ def evaluate(row):
         (
             asset!="BTC"
             and rs1>=0.65 and rs4>=0.80
-            and (r1>=2.5 or rv15>=1.8 or vol_build>=1.35)
+            and (
+                r1>=2.5 or rv15>=1.8 or vol_build>=1.35
+                or (pre_watch and intra>=1.0 and rs1>=1.0 and rs4>=2.0)
+                or (pre_trigger and r1>=1.5)
+            )
         )
     )
     runner_location=(
-        (headroom is None or headroom>=4.0)
+        # 0.5% is enough for a WATCH. BUY keeps its much stricter execution headroom.
+        (headroom is None or headroom>=0.5)
         and stop_dist is not None and 1.0<=stop_dist<=6.0
         and (base12<=16.0 or wide_watch or pre_watch or pre_trigger)
     )
@@ -261,12 +293,13 @@ def evaluate(row):
         and runner_structure
         and runner_flow
         and runner_location
-        and q>=48
+        and q>=45
         and not reject
     )
 
     runner_buy=bool(
         buy
+        and (asset=="BTC" or q>=55)
         and p24<14.0
         and p1<4.5
         and (headroom is None or headroom>=3.5)
@@ -283,7 +316,8 @@ def evaluate(row):
         )
     )
 
-    notify_buy=bool(scalp_buy or runner_buy)
+    # Defense in depth: no non-BTC BUY reaches the user below quality 50.
+    notify_buy=bool((scalp_buy or runner_buy) and (asset=="BTC" or q>=50))
     notify_watch=bool(runner_candidate)
 
     # Scanner may have produced no pilotEntryMax for WATCH; BUY always gets a tight max.
