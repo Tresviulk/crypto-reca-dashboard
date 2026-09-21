@@ -1602,7 +1602,6 @@ async function handleScan(request, env){
       });
     }
   }
-}
 
 export default {
   async fetch(request,env){
