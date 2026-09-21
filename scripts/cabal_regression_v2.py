@@ -204,6 +204,26 @@ vvv_second_result=expect("VVV_SECOND_RUNNER",vvv_second,"WATCH")
 assert vvv_second_result["runnerCandidateEligible"] is True
 assert vvv_second_result["notifyWatchEligible"] is True
 
+# PHA 2026-09-21: fresh re-accumulation after an extended 72h move must still surface as RUNNER.
+pha_reaccum=base("PHA")
+pha_reaccum.update({
+    "price":0.0391,"noChase":0.039491,"protectiveStopReference":0.0377484,
+    "priceChange1hPct":2.3684,"priceChange4hPct":3.7333,"priceChange6hPct":4.8518,
+    "priceChange24hPct":10.5114,"priceChange72hPct":26.2987,"priceChange7dPct":41.5,
+    "rvol1h":1.6607,"relativeStrength1hVsBTC":2.2283,"relativeStrength4hVsBTC":3.4189,
+    "intrahourMovePct":0.5141,"intrahourRelativeStrengthVsBTC":0.7232,
+    "stageAScore":41.2454,"bucketB":True,"bucketC":True,
+    "preAccumWatch":True,"preAccumTrigger":True,"preAccumVolumeBuild6h":1.2021,
+    "preAccumBaseRange12hPct":8.7079,
+    "effortVsResult":"CONSTRUCTIVE","classification":"PRE-ACCUMULATION TRIGGER",
+    "entryConfirmation15m":False,"fastPumpTrigger":False,
+    "fastPump15m":{"rvol15m":1.7703,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.0377484}
+})
+pha_reaccum_result=expect("PHA_REACCUM",pha_reaccum,"WATCH")
+assert pha_reaccum_result["runnerCandidateEligible"] is True
+assert pha_reaccum_result["runnerCandidateStage"]=="EARLY"
+assert pha_reaccum_result["notifyWatchEligible"] is True
+
 # M-type stale extension: strong short-term stats after a large 72h move should not generate a fresh RUNNER.
 m_stale=base("M")
 m_stale.update({
