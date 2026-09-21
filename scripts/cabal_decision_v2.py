@@ -350,7 +350,13 @@ def evaluate(row):
 
     # Defense in depth: no non-BTC BUY reaches the user below quality 55.
     notify_buy=bool((scalp_buy or runner_buy) and (asset=="BTC" or q>=55))
-    notify_watch=bool(runner_candidate)
+    late_user_watch=bool(
+        runner_candidate
+        and p24>=10.0
+        and not second_leg
+        and not fresh_reaccum
+    )
+    notify_watch=bool(runner_candidate and not late_user_watch)
 
     # Scanner may have produced no pilotEntryMax for WATCH; BUY always gets a tight max.
     entry_max=n(row.get("pilotEntryMax"),None)
@@ -363,6 +369,7 @@ def evaluate(row):
         "buyNowEligible":buy,
         "watchEligible":watch,
         "notifyWatchEligible":notify_watch,
+        "userWatchSuppressedLateMove":late_user_watch,
         "notifyBuyEligible":notify_buy,
         "scalpBuyEligible":scalp_buy,
         "runnerBuyEligible":runner_buy,
