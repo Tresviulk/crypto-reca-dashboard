@@ -271,3 +271,22 @@ btc.update({
 expect("BTC",btc,"BUY_NOW")
 
 print("CABAL v2 regression: PASS")
+
+
+# MEW 2026-09-21: discovered only after +12% 24h. Keep internal WATCH if useful,
+# but never notify the user as an "EARLY" runner unless a real second-leg/re-accum exists.
+mew_late=base("MEW")
+mew_late.update({
+    "price":0.000466,"noChase":0.00049086,"protectiveStopReference":0.00044322,
+    "priceChange1hPct":3.1111,"priceChange4hPct":4.0359,"priceChange6hPct":5.4545,
+    "priceChange24hPct":12.3487,"priceChange72hPct":12.3487,
+    "rvol1h":25.1535,"relativeStrength1hVsBTC":2.6574,"relativeStrength4hVsBTC":2.3762,
+    "intrahourMovePct":0.431,"intrahourRelativeStrengthVsBTC":0.2831,"stageAScore":89.9343,
+    "bucketB":True,"bucketC":True,"preAccumWatch":False,"preAccumTrigger":False,
+    "effortVsResult":"EFFICIENT","classification":"EARLY STARTER",
+    "entryConfirmation15m":False,"fastPumpTrigger":False,"fastPumpWatch":True,
+    "fastPump15m":{"rvol15m":208.2022,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.00044322}
+})
+mew_late_result=expect("MEW_LATE_WATCH",mew_late,"WATCH")
+assert mew_late_result["notifyWatchEligible"] is False
+assert mew_late_result["userWatchSuppressedLateMove"] is True
