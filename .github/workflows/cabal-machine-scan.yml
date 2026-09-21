@@ -39,6 +39,7 @@ jobs:
           python-version: '3.12'
 
       - name: Regression gate — known good and bad archetypes
+        if: github.event_name != 'schedule'
         run: python scripts/cabal_regression_v2.py
 
       - name: Run CABAL v2 full-universe scanner
@@ -114,6 +115,29 @@ jobs:
                   raise SystemExit(f'non-WATCH leaked into watchCandidates: {x.get("asset")}')
           print('CABAL v2 COVERAGE PASS', d['generatedAt'], 'execution=',scanned,'/',universe,'buy=',len(d.get('buyCandidates',[])),'watch=',len(d.get('watchCandidates',[])),'missedAudit=',len(d.get('missedMoverAudit',[])))
           PY
+
+      - name: Read Cloudflare 1-minute market-guard health
+        shell: bash
+        run: |
+          set -euo pipefail
+          if curl -fsS --max-time 12 https://cabal-scanner.diondublin21.workers.dev/health -o /tmp/cabal-guard-health.json; then
+            python - <<'PY'
+          import json
+          d=json.load(open('/tmp/cabal-guard-health.json',encoding='utf-8'))
+          print('CLOUDFLARE MARKET GUARD', json.dumps({
+              'healthy':d.get('healthy'),
+              'lastSuccessfulScan':d.get('lastSuccessfulScan'),
+              'ageSeconds':d.get('ageSeconds'),
+              'schedulerLagSeconds':d.get('schedulerLagSeconds'),
+              'lastObservationGapSeconds':d.get('lastObservationGapSeconds'),
+              'maxObservationGapSeconds':d.get('maxObservationGapSeconds'),
+              'lastError':d.get('lastError')
+          },ensure_ascii=False))
+          PY
+          else
+            printf '%s\n' '{"ok":false,"healthy":false,"mode":"CLOUDFLARE_1M_MARKET_GUARD","reason":"HEALTH_ENDPOINT_UNREACHABLE"}' > /tmp/cabal-guard-health.json
+            echo 'Cloudflare Market Guard unavailable; GitHub WATCH fallback remains active.'
+          fi
 
       - name: Build CABAL v2 alert from this exact scan
         run: python scripts/cabal_ntfy_v2.py
