@@ -74,6 +74,14 @@ def machine_healthy(cabal,now):
 def execution_valid(row):
     if row.get("decisionTier")!="BUY_NOW" or row.get("buyNowEligible") is not True or row.get("notifyBuyEligible") is not True:
         return False
+    asset=str(row.get("asset") or "").upper()
+    quality=num(row.get("qualityScore"))
+    classification=str(row.get("baseClassification") or row.get("classification") or "").upper()
+    # Defense in depth: never relay another ONDO-2026-09-21 style low-quality CORE BUY.
+    if asset!="BTC" and (quality is None or quality<50):
+        return False
+    if row.get("isCoreAsset") is True and asset!="BTC" and classification=="NO SETUP":
+        return False
     price=num(row.get("price"))
     entry=num(row.get("decisionEntryMax") or row.get("pilotEntryMax"))
     stop=num(row.get("decisionStop") or row.get("protectiveStopReference"))
@@ -110,18 +118,27 @@ def buy_card(r,seen):
     return "\n".join(parts)
 
 def watch_card(r):
+    stage=str(r.get("runnerCandidateStage") or "EARLY").upper()
+    label="RUNNER TEMPRANO" if stage=="EARLY" else "RUNNER CONFIRMADO — NO CHASE"
+    action=(
+        "ACCIÓN: RUNNER CANDIDATE. NO COMPRAR AÚN; CABAL espera confirmación de entrada."
+        if stage=="EARLY"
+        else "ACCIÓN: MOVIMIENTO CONFIRMADO, PERO NO ES BUY. No perseguir precio; esperar entrada ejecutable."
+    )
     return "\n".join([
-        f'🚀 {r.get("asset")} — RUNNER TEMPRANO',
+        f'🚀 {r.get("asset")} — {label}',
         f'PLATAFORMA: {r.get("executionVenue") or r.get("venue") or "n/a"}',
         f'CALIDAD: {fmt(r.get("qualityScore"))}/100',
         f'PRECIO: {fmt(r.get("price"))}',
+        f'MARGEN NO-CHASE: {fmt(r.get("decisionNoChaseHeadroomPct") or r.get("noChaseHeadroomPct"))}%',
         f'1H / 6H / 24H: {fmt(r.get("priceChange1hPct"))}% / {fmt(r.get("priceChange6hPct"))}% / {fmt(r.get("priceChange24hPct"))}%',
         f'RS 1H / 4H vs BTC: {fmt(r.get("relativeStrength1hVsBTC"))}% / {fmt(r.get("relativeStrength4hVsBTC"))}%',
-        "ACCIÓN: RUNNER CANDIDATE. NO COMPRAR AÚN; CABAL espera confirmación de entrada."
+        action
     ])
 
 def watch_priority(r):
     core=1 if r.get("isCoreAsset") else 0
+    early=1 if str(r.get("runnerCandidateStage") or "EARLY").upper()=="EARLY" else 0
     p1=num(r.get("priceChange1hPct")) or 0
     p6=num(r.get("priceChange6hPct")) or 0
     p24=num(r.get("priceChange24hPct")) or 0
@@ -129,11 +146,16 @@ def watch_priority(r):
     fast=1 if (p6>=8 or p1>=3 or p24>=10) else 0
     # Urgency first: CORE, then strongest active mover, then model quality.
     # This prevents a KMNO-like +15% move from being hidden behind quieter high-score WATCHes.
-    return (core,fast,momentum,num(r.get("qualityScore")) or 0)
+    return (core,early,fast,momentum,num(r.get("qualityScore")) or 0)
 
 def urgent_watch(r):
-    # RUNNER alerts are globally throttled to avoid notification floods.
-    return False
+    # Fast/CORE/exceptional runners may bypass only the GLOBAL throttle.
+    # Per-asset cooldown still prevents repeated spam.
+    p1=num(r.get("priceChange1hPct")) or 0
+    p6=num(r.get("priceChange6hPct")) or 0
+    q=num(r.get("qualityScore")) or 0
+    stage=str(r.get("runnerCandidateStage") or "EARLY").upper()
+    return bool(r.get("isCoreAsset") or stage=="CONFIRMED" or p1>=3.0 or p6>=8.0 or q>=70)
 
 def build():
     now=datetime.now(timezone.utc)
@@ -251,7 +273,7 @@ def build():
         payload={
             "title":"🔴 CABAL v2 — CANCELAR COMPRA",
             "priority":"high","kind":"CANCEL","buyAssets":[],
-            "message":f'{names}\nLa señal anterior ya NO es válida.\nACCIÓN: NO COMPRAR. No es una orden de venta si ya ejecutaste.'
+            "message":f'{names}\nLa señal anterior ya NO es válida.\nSI NO ENTRASTE: NO COMPRAR.\nSI YA ENTRASTE: esta cancelación no ordena vender; no añadas posición y mantén como referencia el STOP comunicado en la alerta original.'
         }
     elif ready_watch:
         for r in ready_watch:
