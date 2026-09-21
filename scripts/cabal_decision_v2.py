@@ -137,7 +137,7 @@ def evaluate(row):
     # 2026-09-21 ONDO failure: NO SETUP / B=False / q=24.21 was allowed to BUY.
     alt_core_buy=(
         executable and fresh15 and fast_trigger and core and asset!="BTC"
-        and cls!="NO SETUP" and bb and q>=50
+        and cls!="NO SETUP" and bb and q>=55
         and r1>=1.0 and rv15>=1.50
         and rs1>=0.30 and irs>=0.40
         and p1>=0.30 and p4>=0.50
@@ -214,7 +214,7 @@ def evaluate(row):
         tier="NONE"
         reason=reject[0] if reject else "NO_EDGE"
 
-    required=1 if (buy and (wide_buy or core_buy or q>=65)) else (2 if buy else 1)
+    required=1 if (buy and (wide_buy or q>=65 or asset=="BTC")) else (2 if buy else 1)
 
     # USER-FACING CABAL has two separate lanes:
     # SCALP = immediate, executable +2%/+3% objective.
@@ -227,7 +227,7 @@ def evaluate(row):
 
     scalp_buy=bool(
         buy
-        and (asset=="BTC" or q>=50)
+        and (asset=="BTC" or q>=55)
         and p24 < 12.0
         and p1 < 4.0
         and stop_dist is not None and 1.0 <= stop_dist <= 3.8
@@ -339,8 +339,8 @@ def evaluate(row):
         )
     )
 
-    # Defense in depth: no non-BTC BUY reaches the user below quality 50.
-    notify_buy=bool((scalp_buy or runner_buy) and (asset=="BTC" or q>=50))
+    # Defense in depth: no non-BTC BUY reaches the user below quality 55.
+    notify_buy=bool((scalp_buy or runner_buy) and (asset=="BTC" or q>=55))
     notify_watch=bool(runner_candidate)
 
     # Scanner may have produced no pilotEntryMax for WATCH; BUY always gets a tight max.
