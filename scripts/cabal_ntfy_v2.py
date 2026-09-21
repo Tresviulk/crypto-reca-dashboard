@@ -78,7 +78,7 @@ def execution_valid(row):
     quality=num(row.get("qualityScore"))
     classification=str(row.get("baseClassification") or row.get("classification") or "").upper()
     # Defense in depth: never relay another ONDO-2026-09-21 style low-quality CORE BUY.
-    if asset!="BTC" and (quality is None or quality<50):
+    if asset!="BTC" and (quality is None or quality<55):
         return False
     if row.get("isCoreAsset") is True and asset!="BTC" and classification=="NO SETUP":
         return False
