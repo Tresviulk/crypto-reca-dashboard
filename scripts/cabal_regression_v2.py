@@ -94,8 +94,9 @@ kmno.update({
     "fastPump15m":{"rvol15m":4.5811,"trigger":False,"watch":False,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.029057304}
 })
 kmno_result=expect("KMNO",kmno,"WATCH")
-assert kmno_result["runnerCandidateEligible"] is False
-assert kmno_result["notifyWatchEligible"] is False
+assert kmno_result["runnerCandidateEligible"] is True
+assert kmno_result["runnerCandidateStage"]=="CONFIRMED"
+assert kmno_result["notifyWatchEligible"] is True
 
 # EARLY RUNNER: not a BUY yet, but should surface as a rare runner candidate.
 runner=base("RUNNERX")
@@ -135,6 +136,97 @@ avax.update({
     "fastPump15m":{"rvol15m":2.0,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":10.02}
 })
 expect("AVAX",avax,"WATCH")
+
+# 2026-09-21 ONDO failure: CORE must NOT bypass setup quality.
+ondo_bad=base("ONDO")
+ondo_bad.update({
+    "price":0.43602,"noChase":0.48378,"protectiveStopReference":0.42211476,
+    "priceChange1hPct":0.6805,"priceChange4hPct":1.3153,"priceChange6hPct":-0.7633,"priceChange24hPct":4.8559,
+    "rvol1h":0.5743,"relativeStrength1hVsBTC":0.4896,"relativeStrength4hVsBTC":0.6415,
+    "intrahourMovePct":1.6222,"intrahourRelativeStrengthVsBTC":1.2952,"stageAScore":20,
+    "bucketB":False,"bucketC":False,"effortVsResult":"NEUTRAL","classification":"NO SETUP",
+    "entryConfirmation15m":True,"fastPumpTrigger":True,
+    "fastPump15m":{"rvol15m":1.8,"trigger":True,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.42211476}
+})
+ondo_bad_result=evaluate(ondo_bad)
+assert ondo_bad_result["decisionTier"]!="BUY_NOW"
+assert ondo_bad_result["notifyBuyEligible"] is False
+
+# OPG-type case: ~1% no-chase headroom may block BUY but must NOT hide an early RUNNER watch.
+opg=base("OPG")
+opg.update({
+    "price":0.11808,"noChase":0.119301,"protectiveStopReference":0.11336,
+    "priceChange1hPct":3.4882,"priceChange4hPct":1.5742,"priceChange6hPct":2.1453,"priceChange24hPct":5.3721,
+    "priceChange72hPct":8.0,"rvol1h":9.7725,"relativeStrength1hVsBTC":3.3481,"relativeStrength4hVsBTC":1.2598,
+    "intrahourMovePct":0.2,"intrahourRelativeStrengthVsBTC":0.2,"stageAScore":60,
+    "bucketB":True,"bucketC":True,"preAccumWatch":True,"preAccumTrigger":True,
+    "effortVsResult":"CONSTRUCTIVE","classification":"PRE-ACCUMULATION TRIGGER",
+    "entryConfirmation15m":False,"fastPumpTrigger":False,
+    "fastPump15m":{"rvol15m":1.4,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.11336}
+})
+opg_result=expect("OPG_RUNNER",opg,"WATCH")
+assert opg_result["runnerCandidateEligible"] is True
+assert opg_result["runnerCandidateStage"]=="EARLY"
+assert opg_result["notifyWatchEligible"] is True
+
+# UAI-type case: strong pre-accumulation may surface before Bucket B completes.
+uai=base("UAI")
+uai.update({
+    "price":0.43233,"noChase":0.44183,"protectiveStopReference":0.416,
+    "priceChange1hPct":1.8175,"priceChange4hPct":3.089,"priceChange6hPct":2.1578,"priceChange24hPct":9.0902,
+    "priceChange72hPct":8.0,"rvol1h":1.2852,"relativeStrength1hVsBTC":1.4377,"relativeStrength4hVsBTC":2.9689,
+    "intrahourMovePct":2.4892,"intrahourRelativeStrengthVsBTC":2.4059,"stageAScore":50,
+    "bucketB":False,"bucketC":False,"preAccumWatch":True,"preAccumTrigger":False,
+    "effortVsResult":"CONSTRUCTIVE","classification":"PRE-ACCUMULATION WATCH",
+    "entryConfirmation15m":False,"fastPumpTrigger":False,
+    "fastPump15m":{"rvol15m":1.2,"trigger":False,"watch":False,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":0.416}
+})
+uai_result=expect("UAI_RUNNER",uai,"WATCH")
+assert uai_result["runnerCandidateEligible"] is True
+assert uai_result["runnerCandidateStage"]=="EARLY"
+assert uai_result["notifyWatchEligible"] is True
+
+# VVV-type second acceleration: +14% 24h must not automatically hide a fresh early runner.
+vvv_second=base("VVV")
+vvv_second.update({
+    "price":30.568,"noChase":31.63926,"protectiveStopReference":29.200728,
+    "priceChange1hPct":2.4088,"priceChange4hPct":8.5242,"priceChange6hPct":7.4635,"priceChange24hPct":14.0469,
+    "priceChange72hPct":19.0806,"priceChange7dPct":39.3,
+    "rvol1h":3.1494,"relativeStrength1hVsBTC":3.1658,"relativeStrength4hVsBTC":8.4324,
+    "intrahourMovePct":0.0,"intrahourRelativeStrengthVsBTC":-0.0369,"stageAScore":79.1325,
+    "bucketB":True,"bucketC":False,"preAccumWatch":True,"preAccumTrigger":True,
+    "preAccumVolumeBuild6h":1.761,"preAccumBaseRange12hPct":11.0293,
+    "effortVsResult":"EFFICIENT","classification":"PRE-ACCUMULATION TRIGGER",
+    "entryConfirmation15m":False,"fastPumpTrigger":False,
+    "fastPump15m":{"rvol15m":0.6455,"trigger":False,"watch":False,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":29.200728}
+})
+vvv_second_result=expect("VVV_SECOND_RUNNER",vvv_second,"WATCH")
+assert vvv_second_result["runnerCandidateEligible"] is True
+assert vvv_second_result["notifyWatchEligible"] is True
+
+# M-type stale extension: strong short-term stats after a large 72h move should not generate a fresh RUNNER.
+m_stale=base("M")
+m_stale.update({
+    "price":1.5414,"noChase":1.7957,"protectiveStopReference":1.48,
+    "priceChange1hPct":3.3424,"priceChange4hPct":4.6523,"priceChange6hPct":3.7706,"priceChange24hPct":0.3284,
+    "priceChange72hPct":26.0,"priceChange7dPct":35.0,
+    "rvol1h":2.0153,"relativeStrength1hVsBTC":2.7861,"relativeStrength4hVsBTC":3.9983,
+    "intrahourMovePct":0.9166,"intrahourRelativeStrengthVsBTC":0.7946,"stageAScore":70,
+    "bucketB":True,"bucketC":True,"preAccumWatch":True,
+    "effortVsResult":"CONSTRUCTIVE","classification":"PRE-ACCUMULATION WATCH",
+    "entryConfirmation15m":False,"fastPumpTrigger":False,
+    "fastPump15m":{"rvol15m":1.5,"trigger":False,"watch":True,"wideBaseWatch":False,"wideBaseTrigger":False,"invalidation15m":1.48}
+})
+m_stale_result=expect("M_STALE",m_stale,"WATCH")
+assert m_stale_result["runnerCandidateEligible"] is False
+assert m_stale_result["notifyWatchEligible"] is False
+
+# KMNO-like fallback: if the earliest scan was missed, exceptional acceleration must still reach NTFY as WATCH, never BUY.
+kmno_fallback=evaluate(kmno)
+assert kmno_fallback["runnerCandidateEligible"] is True
+assert kmno_fallback["runnerCandidateStage"]=="CONFIRMED"
+assert kmno_fallback["notifyWatchEligible"] is True
+assert kmno_fallback["notifyBuyEligible"] is False
 
 # Deep-tail discovery: RARI-like exchange-native mover outside CoinGecko top-1000 must enter discovery.
 assert tail_exchange_inclusion(120_000,8.0) is True
