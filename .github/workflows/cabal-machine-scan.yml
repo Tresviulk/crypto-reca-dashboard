@@ -157,6 +157,10 @@ jobs:
           priority=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("priority","default"))')
           message=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["message"])')
           curl -fsS \
+            --retry 3 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --max-time 20 \
             -H "Title: $title" \
             -H "Priority: $priority" \
             -H "Tags: chart_with_upwards_trend" \
