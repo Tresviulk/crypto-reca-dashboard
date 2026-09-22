@@ -1222,19 +1222,59 @@ async function runMarketGuard(event,env){
     await guardPut(env,"history",{items:history});
 
     const finished=Date.now();
+    const cycleHealthy=Boolean(
+      gap<=GUARD_HEALTH_MAX_AGE_MS &&
+      lag<=GUARD_MAX_SCHEDULER_LAG_MS
+    );
+    const consecutiveHealthyCycles=cycleHealthy
+      ? Number(prev.consecutiveHealthyCycles||0)+1
+      : 0;
+
     hb=Object.assign({},hb,{
       lastSuccessfulScan:finished,
       lastRuntimeMs:finished-started,
       lastUniverseCount:current.count,
       lastCandidateCount:candidates.length,
       lastAlertAssets:alerted,
-      lastError:null
+      lastError:null,
+      consecutiveHealthyCycles
     });
+
+    if(
+      consecutiveHealthyCycles>=3 &&
+      !hb.verificationNotifiedAt &&
+      env.NTFY_URL
+    ){
+      const vr=await fetch(env.NTFY_URL,{
+        method:"POST",
+        headers:{
+          "Title":"✅ CABAL STRUCTURAL VERIFIED",
+          "Priority":"default",
+          "Tags":"white_check_mark"
+        },
+        body:[
+          "Cloudflare 1-minute Market Guard is LIVE.",
+          "3 consecutive healthy cycles verified.",
+          "Universe: "+current.count+" assets.",
+          "Scheduler lag: "+Math.round(lag/1000)+"s.",
+          "Observation gap: "+Math.round(gap/1000)+"s.",
+          "CABAL -> NTFY production path confirmed.",
+          "From this message onward, alerts are POST-PATCH."
+        ].join("\n")
+      });
+      if(vr.ok){
+        hb.verificationNotifiedAt=Date.now();
+      }else{
+        hb.verificationNotifyError="HTTP_"+vr.status;
+      }
+    }
+
     await guardPut(env,"heartbeat",hb);
   }catch(e){
     hb=Object.assign({},hb,{
       lastRuntimeMs:Date.now()-started,
-      lastError:String(e)
+      lastError:String(e),
+      consecutiveHealthyCycles:0
     });
     await guardPut(env,"heartbeat",hb);
   }
@@ -1270,6 +1310,9 @@ async function guardHealth(env){
     lastUniverseCount:Number(hb.lastUniverseCount||0),
     lastCandidateCount:Number(hb.lastCandidateCount||0),
     lastAlertAssets:Array.isArray(hb.lastAlertAssets)?hb.lastAlertAssets:[],
+    consecutiveHealthyCycles:Number(hb.consecutiveHealthyCycles||0),
+    verificationNotifiedAt:hb.verificationNotifiedAt ? new Date(Number(hb.verificationNotifiedAt)).toISOString() : null,
+    verificationNotifyError:hb.verificationNotifyError||null,
     lastError:hb.lastError||null
   };
 }
