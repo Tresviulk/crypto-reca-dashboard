@@ -76,8 +76,10 @@ def market_guard_healthy(now):
     g=load(GUARD_HEALTH_PATH,{})
     t=parse_time(g.get("lastSuccessfulScan"))
     age=((now-t).total_seconds()) if t else 1e9
+    delivery_ok=(g.get("notificationHealthy") is not False)
     ok=bool(
         g.get("healthy") is True
+        and delivery_ok
         and age<=210
         and (num(g.get("schedulerLagSeconds")) or 0)<=120
         and (num(g.get("lastObservationGapSeconds")) or 0)<=180
@@ -310,7 +312,7 @@ def build():
         "systemLastWatchAt":prev.get("systemLastWatchAt"),
         "qualifiedSeenCount":seen,
         "lastCabalGeneratedAt":scan_id,
-        "health":{"healthy":bool(healthy and guard_ok),"machineHealthy":healthy,"marketGuardHealthy":guard_ok,"cabalGeneratedAt":cabal.get("generatedAt"),"ageMinutes":round(age,2) if age<1e8 else None,"executionScanRatio":round(scan_ratio,4),"guardAgeSeconds":round(guard_age,2) if guard_age<1e8 else None,"schedulerLagSeconds":guard.get("schedulerLagSeconds"),"lastObservationGapSeconds":guard.get("lastObservationGapSeconds"),"maxObservationGapSeconds":guard.get("maxObservationGapSeconds"),"lastSuccessfulScan":guard.get("lastSuccessfulScan"),"guardLastError":guard.get("lastError"),"watchFallbackMode":not guard_ok}
+        "health":{"healthy":bool(healthy and guard_ok),"machineHealthy":healthy,"marketGuardHealthy":guard_ok,"cabalGeneratedAt":cabal.get("generatedAt"),"ageMinutes":round(age,2) if age<1e8 else None,"executionScanRatio":round(scan_ratio,4),"guardAgeSeconds":round(guard_age,2) if guard_age<1e8 else None,"schedulerLagSeconds":guard.get("schedulerLagSeconds"),"lastObservationGapSeconds":guard.get("lastObservationGapSeconds"),"maxObservationGapSeconds":guard.get("maxObservationGapSeconds"),"lastSuccessfulScan":guard.get("lastSuccessfulScan"),"guardLastError":guard.get("lastError"),"guardNotificationHealthy":guard.get("notificationHealthy"),"guardNotificationMode":guard.get("notificationMode"),"guardNotificationStatus":guard.get("lastNotificationStatus"),"guardNotificationError":guard.get("lastNotificationError"),"guardNotificationBackoffUntil":guard.get("notificationBackoffUntil"),"watchFallbackMode":not guard_ok}
     }
     with open("/tmp/ntfy-alert-state.json","w",encoding="utf-8") as f:
         json.dump(state,f,ensure_ascii=False,indent=2)
