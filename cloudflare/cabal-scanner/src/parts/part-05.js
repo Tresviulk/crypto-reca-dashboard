@@ -136,7 +136,9 @@ const GUARD_MIN_TURNOVER = 50_000;
 const GUARD_MAX_ASSETS = 900;
 const GUARD_HISTORY_MINUTES = 7;
 const GUARD_ASSET_COOLDOWN_MS = 6 * 60 * 60 * 1000;
-const GUARD_GLOBAL_COOLDOWN_MS = 4 * 60 * 1000;
+const GUARD_GLOBAL_COOLDOWN_MS = 10 * 60 * 1000;
+const GUARD_NTFY_BACKOFF_BASE_MS = 10 * 60 * 1000;
+const GUARD_NTFY_BACKOFF_MAX_MS = 60 * 60 * 1000;
 const GUARD_HEALTH_MAX_AGE_MS = 150 * 1000;
 const GUARD_MAX_SCHEDULER_LAG_MS = 120 * 1000;
 
@@ -273,11 +275,37 @@ function guardCard(c){
   ].join("\n");
 }
 
+function guardRetryAfterMs(response){
+  const raw=response && response.headers ? response.headers.get("Retry-After") : null;
+  if(!raw) return null;
+  const seconds=Number(raw);
+  if(Number.isFinite(seconds) && seconds>=0) return Math.min(GUARD_NTFY_BACKOFF_MAX_MS,Math.max(5_000,seconds*1000));
+  const when=Date.parse(raw);
+  if(Number.isFinite(when)) return Math.min(GUARD_NTFY_BACKOFF_MAX_MS,Math.max(5_000,when-Date.now()));
+  return null;
+}
+
 async function guardNotify(env,candidates){
-  if(!candidates.length) return [];
   const now=Date.now();
+  const notifyState=await guardGet(env,"notify:state")||{};
+  const backoffUntil=Number(notifyState.backoffUntil||0);
+
+  if(backoffUntil>now){
+    return {
+      assets:[],
+      ok:false,
+      skipped:"BACKOFF",
+      status:Number(notifyState.lastStatus||0)||null,
+      error:notifyState.lastError||"NTFY_BACKOFF_ACTIVE",
+      backoffUntil
+    };
+  }
+  if(!candidates.length) return {assets:[],ok:true,skipped:"NO_CANDIDATES",status:null,error:null,backoffUntil:null};
+
   const global=await guardGet(env,"alert:__GLOBAL__");
-  if(global && now-Number(global.lastAlertAt||0)<GUARD_GLOBAL_COOLDOWN_MS) return [];
+  if(global && now-Number(global.lastAlertAt||0)<GUARD_GLOBAL_COOLDOWN_MS){
+    return {assets:[],ok:true,skipped:"GLOBAL_COOLDOWN",status:null,error:null,backoffUntil:null};
+  }
 
   const chosen=[];
   for(const c of candidates){
@@ -286,25 +314,70 @@ async function guardNotify(env,candidates){
     chosen.push(c);
     if(chosen.length>=2) break;
   }
-  if(!chosen.length) return [];
-  if(!env.NTFY_URL) throw new Error("GUARD_NTFY_URL_NOT_CONFIGURED");
+  if(!chosen.length) return {assets:[],ok:true,skipped:"ASSET_COOLDOWN",status:null,error:null,backoffUntil:null};
 
-  const r=await fetch(env.NTFY_URL,{
-    method:"POST",
-    headers:{
-      "Title":"⚡ CABAL EARLY GUARD — VIGILAR AHORA",
-      "Priority":"default",
-      "Tags":"chart_with_upwards_trend"
-    },
-    body:chosen.map(guardCard).join("\n\n")
-  });
-  if(!r.ok) throw new Error("GUARD_NTFY_HTTP_"+r.status);
+  if(!env.NTFY_URL){
+    const state={
+      lastAttemptAt:now,lastStatus:null,lastError:"GUARD_NTFY_URL_NOT_CONFIGURED",
+      consecutiveFailures:Number(notifyState.consecutiveFailures||0)+1,
+      backoffUntil:now+GUARD_NTFY_BACKOFF_BASE_MS,
+      lastSuccessAt:notifyState.lastSuccessAt||null
+    };
+    await guardPut(env,"notify:state",state);
+    return {assets:[],ok:false,skipped:null,status:null,error:state.lastError,backoffUntil:state.backoffUntil};
+  }
+
+  let r=null;
+  let responseText="";
+  try{
+    r=await fetch(env.NTFY_URL,{
+      method:"POST",
+      headers:{
+        "Title":"⚡ CABAL EARLY GUARD — VIGILAR AHORA",
+        "Priority":"default",
+        "Tags":"chart_with_upwards_trend"
+      },
+      body:chosen.map(guardCard).join("\n\n")
+    });
+    if(!r.ok){
+      try{ responseText=(await r.text()).slice(0,400); }catch(_){}
+    }
+  }catch(e){
+    const failures=Number(notifyState.consecutiveFailures||0)+1;
+    const backoff=Math.min(GUARD_NTFY_BACKOFF_MAX_MS,GUARD_NTFY_BACKOFF_BASE_MS*Math.pow(2,Math.min(3,failures-1)));
+    const state={
+      lastAttemptAt:now,lastStatus:null,lastError:"NTFY_FETCH_"+String(e),
+      consecutiveFailures:failures,backoffUntil:now+backoff,
+      lastSuccessAt:notifyState.lastSuccessAt||null
+    };
+    await guardPut(env,"notify:state",state);
+    return {assets:[],ok:false,skipped:null,status:null,error:state.lastError,backoffUntil:state.backoffUntil};
+  }
+
+  if(!r.ok){
+    const failures=Number(notifyState.consecutiveFailures||0)+1;
+    const headerBackoff=guardRetryAfterMs(r);
+    const exponential=Math.min(GUARD_NTFY_BACKOFF_MAX_MS,GUARD_NTFY_BACKOFF_BASE_MS*Math.pow(2,Math.min(3,failures-1)));
+    const backoff=r.status===429 ? (headerBackoff||exponential) : Math.max(5*60*1000,headerBackoff||0);
+    const state={
+      lastAttemptAt:now,lastStatus:r.status,
+      lastError:"GUARD_NTFY_HTTP_"+r.status+(responseText ? ":"+responseText : ""),
+      consecutiveFailures:failures,backoffUntil:now+backoff,
+      lastSuccessAt:notifyState.lastSuccessAt||null
+    };
+    await guardPut(env,"notify:state",state);
+    return {assets:[],ok:false,skipped:null,status:r.status,error:state.lastError,backoffUntil:state.backoffUntil};
+  }
 
   for(const c of chosen){
     await guardPut(env,"alert:"+c.base,{lastAlertAt:now,price:c.price,guardScore:c.guardScore});
   }
   await guardPut(env,"alert:__GLOBAL__",{lastAlertAt:now,assets:chosen.map(x=>x.base)});
-  return chosen.map(x=>x.base);
+  await guardPut(env,"notify:state",{
+    lastAttemptAt:now,lastStatus:r.status,lastError:null,consecutiveFailures:0,
+    backoffUntil:0,lastSuccessAt:now
+  });
+  return {assets:chosen.map(x=>x.base),ok:true,skipped:null,status:r.status,error:null,backoffUntil:null};
 }
 
 async function runMarketGuard(event,env){
@@ -313,11 +386,16 @@ async function runMarketGuard(event,env){
   const prev=await guardGet(env,"heartbeat")||{};
   const gap=prev.lastScheduledAt ? Math.max(0,started-Number(prev.lastScheduledAt)) : 0;
   const lag=Math.max(0,started-scheduledAt);
+  const recentObservationGapsMs=[
+    ...(Array.isArray(prev.recentObservationGapsMs)?prev.recentObservationGapsMs:[]),
+    gap
+  ].slice(-10);
   let hb=Object.assign({},prev,{
     lastScheduledAt:started,
     schedulerLagMs:lag,
     lastObservationGapMs:gap,
-    maxObservationGapMs:Math.max(Number(prev.maxObservationGapMs||0),gap)
+    recentObservationGapsMs,
+    maxObservationGapMs:Math.max(...recentObservationGapsMs)
   });
   await guardPut(env,"heartbeat",hb);
 
@@ -327,7 +405,8 @@ async function runMarketGuard(event,env){
     let history=Array.isArray(h && h.items) ? h.items : [];
     history=history.filter(x=>x && x.t>=started-GUARD_HISTORY_MINUTES*60_000);
     const candidates=guardCandidates(current,history);
-    const alerted=await guardNotify(env,candidates);
+    const notifyResult=await guardNotify(env,candidates);
+    const alerted=Array.isArray(notifyResult.assets)?notifyResult.assets:[];
     history.push(current);
     history=history.slice(-GUARD_HISTORY_MINUTES);
     await guardPut(env,"history",{items:history});
@@ -347,6 +426,12 @@ async function runMarketGuard(event,env){
       lastUniverseCount:current.count,
       lastCandidateCount:candidates.length,
       lastAlertAssets:alerted,
+      lastNotificationAttemptAt:Date.now(),
+      lastNotificationStatus:notifyResult.status||null,
+      lastNotificationError:notifyResult.error||null,
+      notificationBackoffUntil:notifyResult.backoffUntil||null,
+      notificationHealthy:notifyResult.ok!==false,
+      notificationMode:notifyResult.skipped||"DELIVERY_ATTEMPTED",
       lastError:null,
       consecutiveHealthyCycles
     });
@@ -354,29 +439,41 @@ async function runMarketGuard(event,env){
     if(
       consecutiveHealthyCycles>=3 &&
       !hb.verificationNotifiedAt &&
-      env.NTFY_URL
+      env.NTFY_URL &&
+      (!hb.verificationLastAttemptAt || Date.now()-Number(hb.verificationLastAttemptAt)>15*60*1000)
     ){
-      const vr=await fetch(env.NTFY_URL,{
-        method:"POST",
-        headers:{
-          "Title":"✅ CABAL STRUCTURAL VERIFIED",
-          "Priority":"default",
-          "Tags":"white_check_mark"
-        },
-        body:[
-          "Cloudflare 1-minute Market Guard is LIVE.",
-          "3 consecutive healthy cycles verified.",
-          "Universe: "+current.count+" assets.",
-          "Scheduler lag: "+Math.round(lag/1000)+"s.",
-          "Observation gap: "+Math.round(gap/1000)+"s.",
-          "CABAL -> NTFY production path confirmed.",
-          "From this message onward, alerts are POST-PATCH."
-        ].join("\n")
-      });
-      if(vr.ok){
-        hb.verificationNotifiedAt=Date.now();
-      }else{
-        hb.verificationNotifyError="HTTP_"+vr.status;
+      hb.verificationLastAttemptAt=Date.now();
+      try{
+        const notifyState=await guardGet(env,"notify:state")||{};
+        if(Number(notifyState.backoffUntil||0)<=Date.now()){
+          const vr=await fetch(env.NTFY_URL,{
+            method:"POST",
+            headers:{
+              "Title":"✅ CABAL STRUCTURAL VERIFIED",
+              "Priority":"default",
+              "Tags":"white_check_mark"
+            },
+            body:[
+              "Cloudflare 1-minute Market Guard is LIVE.",
+              "3 consecutive healthy cycles verified.",
+              "Universe: "+current.count+" assets.",
+              "Scheduler lag: "+Math.round(lag/1000)+"s.",
+              "Observation gap: "+Math.round(gap/1000)+"s.",
+              "CABAL -> NTFY production path confirmed.",
+              "From this message onward, alerts are POST-PATCH."
+            ].join("\n")
+          });
+          if(vr.ok){
+            hb.verificationNotifiedAt=Date.now();
+            hb.verificationNotifyError=null;
+          }else{
+            hb.verificationNotifyError="HTTP_"+vr.status;
+          }
+        }else{
+          hb.verificationNotifyError="DEFERRED_DURING_NTFY_BACKOFF";
+        }
+      }catch(e){
+        hb.verificationNotifyError="FETCH_"+String(e);
       }
     }
 
@@ -422,6 +519,11 @@ async function guardHealth(env){
     lastCandidateCount:Number(hb.lastCandidateCount||0),
     lastAlertAssets:Array.isArray(hb.lastAlertAssets)?hb.lastAlertAssets:[],
     consecutiveHealthyCycles:Number(hb.consecutiveHealthyCycles||0),
+    notificationHealthy:hb.notificationHealthy!==false,
+    notificationMode:hb.notificationMode||null,
+    lastNotificationStatus:hb.lastNotificationStatus||null,
+    lastNotificationError:hb.lastNotificationError||null,
+    notificationBackoffUntil:hb.notificationBackoffUntil ? new Date(Number(hb.notificationBackoffUntil)).toISOString() : null,
     verificationNotifiedAt:hb.verificationNotifiedAt ? new Date(Number(hb.verificationNotifiedAt)).toISOString() : null,
     verificationNotifyError:hb.verificationNotifyError||null,
     lastError:hb.lastError||null
