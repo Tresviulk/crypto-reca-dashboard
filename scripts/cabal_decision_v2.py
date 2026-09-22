@@ -351,7 +351,7 @@ def evaluate(row):
     # Defense in depth: no non-BTC BUY reaches the user below quality 55.
     notify_buy=bool((scalp_buy or runner_buy) and (asset=="BTC" or q>=55))
     late_user_watch=bool(
-        runner_candidate
+        runner_early_candidate
         and p24>=10.0
         and not second_leg
         and not fresh_reaccum
