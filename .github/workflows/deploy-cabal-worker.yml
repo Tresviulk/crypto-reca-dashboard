@@ -39,6 +39,9 @@ jobs:
           grep -q 'CLOUDFLARE_1M_MARKET_GUARD' cloudflare/cabal-scanner/src/index.js
           grep -q '"crons": \["\* \* \* \* \*"\]' cloudflare/cabal-scanner/wrangler.jsonc
 
+      - name: Run CABAL regression suite
+        run: python scripts/cabal_regression_v2.py
+
       - name: Deploy cabal-scanner
         working-directory: cloudflare/cabal-scanner
         env:
@@ -46,16 +49,26 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@latest deploy
 
-      - name: Verify live health endpoint
+      - name: Verify live health over multiple 1-minute cycles
         shell: bash
         run: |
           set -euo pipefail
           sleep 75
-          curl -fsS --retry 4 --retry-delay 10 --max-time 15             https://cabal-scanner.diondublin21.workers.dev/health             -o /tmp/cabal-health.json
-          python - <<'PY'
+          rm -f /tmp/cabal-health-samples.jsonl
+
+          for i in 1 2 3 4; do
+            curl -fsS --retry 4 --retry-delay 5 --max-time 15 \
+              https://cabal-scanner.diondublin21.workers.dev/health \
+              -o /tmp/cabal-health.json
+
+            python - <<'PY'
           import json
           d=json.load(open('/tmp/cabal-health.json',encoding='utf-8'))
-          required=('healthy','lastSuccessfulScan','schedulerLagSeconds','lastObservationGapSeconds','maxObservationGapSeconds')
+          required=(
+              'healthy','lastSuccessfulScan','schedulerLagSeconds',
+              'lastObservationGapSeconds','maxObservationGapSeconds',
+              'consecutiveHealthyCycles','verificationNotifiedAt'
+          )
           missing=[k for k in required if k not in d]
           if missing:
               raise SystemExit(f'health missing keys: {missing}')
@@ -63,11 +76,44 @@ jobs:
               raise SystemExit(f"unexpected guard mode: {d.get('mode')}")
           if d.get('healthy') is not True:
               raise SystemExit(f"market guard not healthy: {d}")
-          if float(d.get('ageSeconds') or 9999)>150:
+          def n(key, default=9999):
+              v=d.get(key)
+              return default if v is None else float(v)
+          if n('ageSeconds')>150:
               raise SystemExit(f"guard stale: {d}")
-          if float(d.get('schedulerLagSeconds') or 9999)>120:
+          if n('schedulerLagSeconds')>120:
               raise SystemExit(f"scheduler lag too high: {d}")
-          if float(d.get('lastObservationGapSeconds') or 9999)>150:
+          if n('lastObservationGapSeconds')>150:
               raise SystemExit(f"observation gap too high: {d}")
-          print('CABAL CLOUDFLARE MARKET GUARD LIVE PASS', json.dumps(d,ensure_ascii=False))
+          if n('maxObservationGapSeconds')>180:
+              raise SystemExit(f"max observation gap too high: {d}")
+          with open('/tmp/cabal-health-samples.jsonl','a',encoding='utf-8') as fh:
+              fh.write(json.dumps(d,ensure_ascii=False)+'\n')
+          print('CABAL HEALTH SAMPLE PASS', json.dumps(d,ensure_ascii=False))
+          PY
+
+            if [ "$i" -lt 4 ]; then sleep 65; fi
+          done
+
+          python - <<'PY'
+          import json
+          rows=[json.loads(x) for x in open('/tmp/cabal-health-samples.jsonl',encoding='utf-8') if x.strip()]
+          if len(rows)!=4:
+              raise SystemExit(f'expected 4 health samples, got {len(rows)}')
+          last=rows[-1]
+          if int(last.get('consecutiveHealthyCycles') or 0)<3:
+              raise SystemExit(f"insufficient consecutive healthy cycles: {last}")
+          if not last.get('verificationNotifiedAt'):
+              raise SystemExit(f"worker did not confirm NTFY verification delivery: {last}")
+          if last.get('verificationNotifyError'):
+              raise SystemExit(f"worker NTFY verification error: {last}")
+          print('CABAL STRUCTURAL LIVE VERIFICATION PASS', json.dumps({
+              'samples':len(rows),
+              'consecutiveHealthyCycles':last.get('consecutiveHealthyCycles'),
+              'verificationNotifiedAt':last.get('verificationNotifiedAt'),
+              'schedulerLagSeconds':last.get('schedulerLagSeconds'),
+              'lastObservationGapSeconds':last.get('lastObservationGapSeconds'),
+              'maxObservationGapSeconds':last.get('maxObservationGapSeconds'),
+              'lastUniverseCount':last.get('lastUniverseCount')
+          },ensure_ascii=False))
           PY
