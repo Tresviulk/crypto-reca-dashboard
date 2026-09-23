@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_1_2026-09-12";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_2_2026-09-23_EXEC_GUARD";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1554,6 +1554,7 @@ async function guardHealth(env){
   );
   return {
     ok:true,healthy,mode:"CLOUDFLARE_1M_MARKET_GUARD",
+    patchVersion:PATCH_VERSION,
     checkedAt:new Date(now).toISOString(),
     lastScheduledAt:hb.lastScheduledAt ? new Date(Number(hb.lastScheduledAt)).toISOString() : null,
     lastSuccessfulScan:last ? new Date(last).toISOString() : null,
