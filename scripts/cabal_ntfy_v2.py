@@ -14,14 +14,14 @@ CABAL_PATH=os.environ.get("CABAL_MACHINE_PATH","data/cabal-machine.json")
 WHALES_PATH=os.environ.get("CABAL_WHALES_PATH","data/whales-early-entry-state.json")
 GUARD_HEALTH_PATH=os.environ.get("CABAL_GUARD_HEALTH_PATH","/tmp/cabal-guard-health.json")
 
-BUY_COOLDOWN_HOURS=12
-WATCH_COOLDOWN_HOURS=6
-WATCH_GLOBAL_COOLDOWN_MINUTES=10
+BUY_COOLDOWN_HOURS=6
+WATCH_COOLDOWN_HOURS=12
+WATCH_GLOBAL_COOLDOWN_MINUTES=30
 CANCEL_WINDOW_MINUTES=20
 MAX_MACHINE_AGE_MINUTES=10
 ALERT_VALIDITY_MINUTES=10
 MAX_BUYS_PER_PUSH=3
-MAX_WATCH_PER_PUSH=2
+MAX_WATCH_PER_PUSH=1
 
 def num(v):
     try:
@@ -76,10 +76,11 @@ def market_guard_healthy(now):
     g=load(GUARD_HEALTH_PATH,{})
     t=parse_time(g.get("lastSuccessfulScan"))
     age=((now-t).total_seconds()) if t else 1e9
-    delivery_ok=(g.get("notificationHealthy") is not False)
+    # Guard scan health and notification transport health are separate.
+    # A temporary ntfy quota/backoff must not make the market scanner itself
+    # look unhealthy or trigger duplicate WATCH fallbacks that burn more quota.
     ok=bool(
         g.get("healthy") is True
-        and delivery_ok
         and age<=210
         and (num(g.get("schedulerLagSeconds")) or 0)<=120
         and (num(g.get("lastObservationGapSeconds")) or 0)<=180
@@ -129,6 +130,9 @@ def buy_card(r,seen):
         ]
     if r.get("runnerBuyEligible"):
         parts.append("RUNNER: estructura compatible con recorrido mayor; puedes igualmente asegurar +2/+3%.")
+    if r.get("pilotBuyEligible"):
+        pct=int(r.get("pilotSizePctOfPlannedPosition") or 20)
+        parts.append(f'ENTRADA PILOT: {pct}% de la posición prevista. Añadir solo si CABAL vuelve a confirmar; STOP obligatorio.')
     if r.get("_whaleConfirmed"): parts.append("WHALES: CONFIRMACIÓN POSITIVA")
     return "\n".join(parts)
 
@@ -270,12 +274,17 @@ def build():
             for k in cancels: last_cancel[k]=now_iso
         has_runner=any(r.get("runnerBuyEligible") for r in ready_buy)
         has_scalp=any(r.get("scalpBuyEligible") for r in ready_buy)
-        if has_runner and has_scalp:
+        has_pilot=any(r.get("pilotBuyEligible") for r in ready_buy)
+        if has_pilot and not (has_runner or has_scalp):
+            title="⚡ CABAL PILOT — COMPRAR AHORA"
+        elif has_runner and has_scalp:
             title="🟢🚀 CABAL — SCALP / RUNNER BUY"
         elif has_runner:
             title="🚀 CABAL RUNNER — COMPRAR AHORA"
-        else:
+        elif has_scalp:
             title="🟢 CABAL SCALP — COMPRAR AHORA"
+        else:
+            title="🟢 CABAL — COMPRAR AHORA"
         payload={
             "title":title,
             "priority":"high",
@@ -312,7 +321,7 @@ def build():
         "systemLastWatchAt":prev.get("systemLastWatchAt"),
         "qualifiedSeenCount":seen,
         "lastCabalGeneratedAt":scan_id,
-        "health":{"healthy":bool(healthy and guard_ok),"machineHealthy":healthy,"marketGuardHealthy":guard_ok,"cabalGeneratedAt":cabal.get("generatedAt"),"ageMinutes":round(age,2) if age<1e8 else None,"executionScanRatio":round(scan_ratio,4),"guardAgeSeconds":round(guard_age,2) if guard_age<1e8 else None,"schedulerLagSeconds":guard.get("schedulerLagSeconds"),"lastObservationGapSeconds":guard.get("lastObservationGapSeconds"),"maxObservationGapSeconds":guard.get("maxObservationGapSeconds"),"lastSuccessfulScan":guard.get("lastSuccessfulScan"),"guardLastError":guard.get("lastError"),"guardNotificationHealthy":guard.get("notificationHealthy"),"guardNotificationMode":guard.get("notificationMode"),"guardNotificationStatus":guard.get("lastNotificationStatus"),"guardNotificationError":guard.get("lastNotificationError"),"guardNotificationBackoffUntil":guard.get("notificationBackoffUntil"),"watchFallbackMode":not guard_ok}
+        "health":{"healthy":bool(healthy and guard_ok),"machineHealthy":healthy,"marketGuardHealthy":guard_ok,"cabalGeneratedAt":cabal.get("generatedAt"),"ageMinutes":round(age,2) if age<1e8 else None,"executionScanRatio":round(scan_ratio,4),"guardAgeSeconds":round(guard_age,2) if guard_age<1e8 else None,"schedulerLagSeconds":guard.get("schedulerLagSeconds"),"lastObservationGapSeconds":guard.get("lastObservationGapSeconds"),"maxObservationGapSeconds":guard.get("maxObservationGapSeconds"),"lastSuccessfulScan":guard.get("lastSuccessfulScan"),"guardLastError":guard.get("lastError"),"guardNotificationHealthy":guard.get("notificationHealthy"),"guardNotificationMode":guard.get("notificationMode"),"guardNotificationStatus":guard.get("lastNotificationStatus"),"guardNotificationError":guard.get("lastNotificationError"),"guardNotificationBackoffUntil":guard.get("notificationBackoffUntil"),"notificationDegraded":guard.get("notificationHealthy") is False,"watchFallbackMode":not guard_ok}
     }
     with open("/tmp/ntfy-alert-state.json","w",encoding="utf-8") as f:
         json.dump(state,f,ensure_ascii=False,indent=2)
