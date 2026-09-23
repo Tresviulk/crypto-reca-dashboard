@@ -1470,8 +1470,18 @@ async function runMarketGuard(event,env){
     let history=Array.isArray(h && h.items) ? h.items : [];
     history=history.filter(x=>x && x.t>=started-GUARD_HISTORY_MINUTES*60_000);
     const candidates=guardCandidates(current,history);
+
+    // WATCH data is persisted every minute. Every fifth scheduled minute the
+    // autonomous execution guard performs completed 15m/1h validation and can
+    // emit a strict PILOT BUY without waiting for GitHub Actions.
     const notifyResult=await guardNotify(env,candidates);
-    const alerted=Array.isArray(notifyResult.assets)?notifyResult.assets:[];
+    const minuteSlot=Math.floor(scheduledAt/60_000);
+    const executionDue=(minuteSlot%5)===0;
+    let tradeResult=null;
+    if(executionDue){
+      tradeResult=await guardEvaluateTrades(env,candidates);
+    }
+
     history.push(current);
     history=history.slice(-GUARD_HISTORY_MINUTES);
     await guardPut(env,"history",{items:history});
@@ -1484,63 +1494,30 @@ async function runMarketGuard(event,env){
     const consecutiveHealthyCycles=cycleHealthy
       ? Number(prev.consecutiveHealthyCycles||0)+1
       : 0;
+    const tradeNotify=tradeResult&&tradeResult.notify ? tradeResult.notify : null;
 
     hb=Object.assign({},hb,{
       lastSuccessfulScan:finished,
       lastRuntimeMs:finished-started,
       lastUniverseCount:current.count,
       lastCandidateCount:candidates.length,
-      lastAlertAssets:alerted,
-      lastNotificationAttemptAt:Date.now(),
-      lastNotificationStatus:notifyResult.status||null,
-      lastNotificationError:notifyResult.error||null,
-      notificationBackoffUntil:notifyResult.backoffUntil||null,
-      notificationHealthy:notifyResult.ok!==false,
-      notificationMode:notifyResult.skipped||"DELIVERY_ATTEMPTED",
+      lastAlertAssets:tradeNotify&&tradeNotify.kind==="BUY"&&tradeNotify.ok ? [tradeNotify.asset] : [],
+      lastNotificationAttemptAt:tradeNotify&&tradeNotify.kind!=="NONE" ? Date.now() : prev.lastNotificationAttemptAt||null,
+      lastNotificationStatus:tradeNotify ? (tradeNotify.status||null) : prev.lastNotificationStatus||null,
+      lastNotificationError:tradeNotify&&tradeNotify.ok===false ? (tradeNotify.error||"TRADE_NOTIFICATION_FAILED") : null,
+      notificationBackoffUntil:tradeNotify ? (tradeNotify.backoffUntil||null) : prev.notificationBackoffUntil||null,
+      notificationHealthy:tradeNotify ? tradeNotify.ok!==false : (prev.notificationHealthy!==false),
+      notificationMode:tradeNotify ? ("TRADE_"+tradeNotify.kind) : notifyResult.skipped||"WATCH_PERSIST_ONLY",
+      lastExecutionGuardAt:executionDue ? finished : (prev.lastExecutionGuardAt||null),
+      lastExecutionGuardBuyAssets:tradeResult ? tradeResult.buys.map(x=>x.asset) : (prev.lastExecutionGuardBuyAssets||[]),
+      lastExecutionGuardEvaluated:tradeResult ? tradeResult.evaluated.length : (prev.lastExecutionGuardEvaluated||0),
       lastError:null,
       consecutiveHealthyCycles
     });
 
-    if(
-      consecutiveHealthyCycles>=3 &&
-      !hb.verificationNotifiedAt &&
-      env.NTFY_URL &&
-      (!hb.verificationLastAttemptAt || Date.now()-Number(hb.verificationLastAttemptAt)>15*60*1000)
-    ){
-      hb.verificationLastAttemptAt=Date.now();
-      try{
-        const notifyState=await guardGet(env,"notify:state")||{};
-        if(Number(notifyState.backoffUntil||0)<=Date.now()){
-          const vr=await fetch(env.NTFY_URL,{
-            method:"POST",
-            headers:{
-              "Title":"✅ CABAL STRUCTURAL VERIFIED",
-              "Priority":"default",
-              "Tags":"white_check_mark"
-            },
-            body:[
-              "Cloudflare 1-minute Market Guard is LIVE.",
-              "3 consecutive healthy cycles verified.",
-              "Universe: "+current.count+" assets.",
-              "Scheduler lag: "+Math.round(lag/1000)+"s.",
-              "Observation gap: "+Math.round(gap/1000)+"s.",
-              "CABAL -> NTFY production path confirmed.",
-              "From this message onward, alerts are POST-PATCH."
-            ].join("\n")
-          });
-          if(vr.ok){
-            hb.verificationNotifiedAt=Date.now();
-            hb.verificationNotifyError=null;
-          }else{
-            hb.verificationNotifyError="HTTP_"+vr.status;
-          }
-        }else{
-          hb.verificationNotifyError="DEFERRED_DURING_NTFY_BACKOFF";
-        }
-      }catch(e){
-        hb.verificationNotifyError="FETCH_"+String(e);
-      }
-    }
+    // Structural test pushes are disabled in production. NTFY quota is reserved
+    // for BUY/CANCEL only; health is verified through /health and deployment CI.
+    hb.verificationNotifyError="DISABLED_RESERVE_NTFY_FOR_TRADE";
 
     await guardPut(env,"heartbeat",hb);
   }catch(e){
