@@ -156,16 +156,32 @@ jobs:
           title=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["title"])')
           priority=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("priority","default"))')
           message=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["message"])')
-          curl -fsS \
-            --retry 3 \
-            --retry-all-errors \
-            --retry-delay 5 \
+
+          # Notification transport must NEVER block scanner persistence.
+          # A ntfy 429/network failure used to abort the job here, leaving
+          # cabal-machine.json stale and causing the same WATCH to retry forever.
+          set +e
+          http_code=$(curl -sS \
             --max-time 20 \
+            -o /tmp/ntfy-response.txt \
+            -w "%{http_code}" \
             -H "Title: $title" \
             -H "Priority: $priority" \
             -H "Tags: chart_with_upwards_trend" \
             -d "$message" \
-            https://ntfy.sh/cabal-jr-7k29m4xq81
+            https://ntfy.sh/cabal-jr-7k29m4xq81)
+          curl_rc=$?
+          set -e
+
+          if [ "$curl_rc" -ne 0 ]; then
+            echo "::warning::NTFY transport failed rc=$curl_rc. CABAL state will still persist."
+          elif [[ "$http_code" =~ ^2 ]]; then
+            echo "NTFY delivery PASS HTTP $http_code"
+          else
+            echo "::warning::NTFY delivery failed HTTP $http_code. CABAL state will still persist."
+            head -c 500 /tmp/ntfy-response.txt || true
+            echo
+          fi
 
       - name: Persist machine and alert state atomically
         shell: bash
