@@ -76,7 +76,7 @@ async function main(){
   const retained=new Map((prev.events||[]).filter(e=>(tsMs(e.eventTime)||0)>=cutoff).map(e=>[e.id,e]));
   const labelCache=prev.labelCache||{},metaCache={},blockCache={},lookup={calls:0,errors:0,cacheHits:0,capped:0},rpcStats={},chainHealth={};
   const chains=[
-    {name:'ethereum',chainId:1,chunk:450,lookback:Number(config?.chains?.ethereum?.cexLookbackBlocks||1800)},
+    {name:'ethereum',chainId:1,chunk:Number(config?.chains?.ethereum?.cexChunkBlocks||50),lookback:Number(config?.chains?.ethereum?.cexLookbackBlocks||1800)},
     {name:'base',chainId:8453,chunk:1000,lookback:Number(config?.chains?.base?.cexLookbackBlocks||5000)},
     {name:'arbitrum',chainId:42161,chunk:1500,lookback:Number(config?.chains?.arbitrum?.cexLookbackBlocks||5000)}
   ];
