@@ -1120,7 +1120,7 @@ function guardCandidates(current,history){
     const delta5=turn5!=null ? Math.max(0,turn-turn5) : null;
     const volAccel5=(delta5!=null && turn>0) ? (delta5/turn)*288 : null;
 
-    const early24=p24<8.5;
+    const early24=p24>-8.0 && p24<8.5;
     const accel=(
       (p1!=null && p1>=0.60 && volAccel5!=null && volAccel5>=2.0) ||
       (p3!=null && p3>=0.80 && volAccel5!=null && volAccel5>=1.5) ||
@@ -1269,7 +1269,7 @@ function guardPilotDecision(c,m){
     live>0 && Number(m.stop)>0 && live>Number(m.stop)
     && sd>=1.0 && sd<=3.5
     && Number.isFinite(head) && head>=1.0
-    && p24<15.0
+    && p24>-8.0 && p24<15.0
   );
 
   const second=Boolean(
