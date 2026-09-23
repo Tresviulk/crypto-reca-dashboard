@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_2_2026-09-23_EXEC_GUARD";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_3_2026-09-23_EXEC_RECOVERY";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1120,7 +1120,7 @@ function guardCandidates(current,history){
     const delta5=turn5!=null ? Math.max(0,turn-turn5) : null;
     const volAccel5=(delta5!=null && turn>0) ? (delta5/turn)*288 : null;
 
-    const early24=p24<8.5;
+    const early24=p24>-8.0 && p24<8.5;
     const accel=(
       (p1!=null && p1>=0.60 && volAccel5!=null && volAccel5>=2.0) ||
       (p3!=null && p3>=0.80 && volAccel5!=null && volAccel5>=1.5) ||
@@ -1269,7 +1269,7 @@ function guardPilotDecision(c,m){
     live>0 && Number(m.stop)>0 && live>Number(m.stop)
     && sd>=1.0 && sd<=3.5
     && Number.isFinite(head) && head>=1.0
-    && p24<15.0
+    && p24>-8.0 && p24<15.0
   );
 
   const second=Boolean(
@@ -1476,7 +1476,8 @@ async function runMarketGuard(event,env){
     // emit a strict PILOT BUY without waiting for GitHub Actions.
     const notifyResult=await guardNotify(env,candidates);
     const minuteSlot=Math.floor(scheduledAt/60_000);
-    const executionDue=(minuteSlot%5)===0;
+    const lastExecutionAt=Number(prev.lastExecutionGuardAt||0);
+    const executionDue=(minuteSlot%5)===0 || !lastExecutionAt || (started-lastExecutionAt)>=5*60_000;
     let tradeResult=null;
     if(executionDue){
       tradeResult=await guardEvaluateTrades(env,candidates);
