@@ -45,6 +45,82 @@ jobs:
       - name: Run CABAL regression suite
         run: python scripts/cabal_regression_v2.py
 
+      - name: Neutralize Cloudflare Workers Builds production promotion
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"
+
+          http=$(curl -sS -o /tmp/cf-workers.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "${API}/workers/scripts")
+          if [ "${http}" != "200" ]; then
+            echo "Cannot enumerate Cloudflare Workers (HTTP ${http})." >&2
+            cat /tmp/cf-workers.json >&2
+            exit 1
+          fi
+
+          python - <<'PY' > /tmp/cabal-worker-tag.txt
+          import json
+          d=json.load(open('/tmp/cf-workers.json',encoding='utf-8'))
+          rows=d.get('result') or []
+          hit=next((x for x in rows if x.get('id')=='cabal-scanner'),None)
+          if not hit or not hit.get('tag'):
+              raise SystemExit('Cloudflare worker tag for cabal-scanner not found')
+          print(hit['tag'])
+          PY
+          WORKER_TAG=$(cat /tmp/cabal-worker-tag.txt)
+
+          http=$(curl -sS -o /tmp/cf-build-triggers.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "${API}/builds/workers/${WORKER_TAG}/triggers")
+          if [ "${http}" != "200" ]; then
+            echo "Cloudflare Workers Builds trigger API unavailable (HTTP ${http})." >&2
+            echo "The deployment token needs Workers Builds Configuration: Edit / Workers CI Write." >&2
+            cat /tmp/cf-build-triggers.json >&2
+            exit 1
+          fi
+
+          python - <<'PY' > /tmp/cabal-production-triggers.txt
+          import json
+          d=json.load(open('/tmp/cf-build-triggers.json',encoding='utf-8'))
+          for t in d.get('result') or []:
+              branches=t.get('branch_includes') or []
+              cmd=str(t.get('deploy_command') or '')
+              if 'main' in branches and 'versions upload' not in cmd:
+                  u=t.get('trigger_uuid')
+                  if u: print(u)
+          PY
+
+          if [ ! -s /tmp/cabal-production-triggers.txt ]; then
+            echo 'Cloudflare Workers Builds production promotion already neutralized.'
+          else
+            while IFS= read -r TRIGGER_UUID; do
+              echo "Neutralizing production promotion for Workers Builds trigger ${TRIGGER_UUID}"
+              http=$(curl -sS -o /tmp/cf-trigger-patch.json -w '%{http_code}' \
+                -X PATCH \
+                -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+                -H 'Content-Type: application/json' \
+                --data '{"deploy_command":"npx wrangler versions upload"}' \
+                "${API}/builds/triggers/${TRIGGER_UUID}")
+              if [ "${http}" != "200" ]; then
+                echo "Failed to neutralize Workers Builds trigger (HTTP ${http})." >&2
+                cat /tmp/cf-trigger-patch.json >&2
+                exit 1
+              fi
+              python - <<'PY'
+          import json
+          d=json.load(open('/tmp/cf-trigger-patch.json',encoding='utf-8'))
+          if d.get('success') is not True:
+              raise SystemExit(f"Cloudflare trigger patch failed: {d.get('errors')}")
+          print('WORKERS BUILDS PRODUCTION PROMOTION DISABLED')
+          PY
+            done < /tmp/cabal-production-triggers.txt
+          fi
+
       - name: Deploy cabal-scanner
         working-directory: cloudflare/cabal-scanner
         env:
