@@ -70,13 +70,19 @@ jobs:
           required=(
               'healthy','lastSuccessfulScan','schedulerLagSeconds',
               'lastObservationGapSeconds','maxObservationGapSeconds',
-              'consecutiveHealthyCycles','verificationNotifiedAt'
+              'consecutiveHealthyCycles','verificationNotifiedAt',
+              'patchVersion','executionGuard','watchRadar'
           )
           missing=[k for k in required if k not in d]
           if missing:
               raise SystemExit(f'health missing keys: {missing}')
           if d.get('mode')!='CLOUDFLARE_1M_MARKET_GUARD':
               raise SystemExit(f"unexpected guard mode: {d.get('mode')}")
+          if d.get('patchVersion')!='CABAL_WHALES_V3_1_2_2026-09-23_EXEC_GUARD':
+              raise SystemExit(f"wrong worker version served: {d.get('patchVersion')}")
+          eg=d.get('executionGuard') or {}
+          if eg.get('mode')!='CLOUDFLARE_5M_EXECUTION_GUARD':
+              raise SystemExit(f"execution guard missing/wrong: {eg}")
           if d.get('healthy') is not True:
               raise SystemExit(f"market guard not healthy: {d}")
           def n(key, default=9999):
@@ -106,6 +112,13 @@ jobs:
           last=rows[-1]
           if int(last.get('consecutiveHealthyCycles') or 0)<3:
               raise SystemExit(f"insufficient consecutive healthy cycles: {last}")
+          expected='CABAL_WHALES_V3_1_2_2026-09-23_EXEC_GUARD'
+          versions={r.get('patchVersion') for r in rows}
+          if versions!={expected}:
+              raise SystemExit(f'mixed worker versions served during verification: {versions}')
+          execution_runs=[(r.get('executionGuard') or {}).get('lastRunAt') for r in rows]
+          if not any(execution_runs):
+              raise SystemExit(f'5-minute execution guard did not run during verification: {execution_runs}')
           # NTFY transport is not part of scanner structural health. Quota/backoff
           # may degrade push delivery without invalidating the 1-minute market guard.
           if not last.get('verificationNotifiedAt') or last.get('verificationNotifyError'):
@@ -122,6 +135,8 @@ jobs:
               'schedulerLagSeconds':last.get('schedulerLagSeconds'),
               'lastObservationGapSeconds':last.get('lastObservationGapSeconds'),
               'maxObservationGapSeconds':last.get('maxObservationGapSeconds'),
-              'lastUniverseCount':last.get('lastUniverseCount')
+              'lastUniverseCount':last.get('lastUniverseCount'),
+              'patchVersion':last.get('patchVersion'),
+              'executionGuard':last.get('executionGuard')
           },ensure_ascii=False))
           PY
