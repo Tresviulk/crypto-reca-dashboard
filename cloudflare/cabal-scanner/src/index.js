@@ -1532,7 +1532,12 @@ async function runMarketGuard(event,env){
 
 async function guardHealth(env){
   const now=Date.now();
-  const hb=await guardGet(env,"heartbeat");
+  const [hb,trade,pending,watch]=await Promise.all([
+    guardGet(env,"heartbeat"),
+    guardGet(env,"trade:latest"),
+    guardGet(env,"trade:pending"),
+    guardGet(env,"watch:latest")
+  ]);
   if(!hb) return {
     ok:false,healthy:false,mode:"CLOUDFLARE_1M_MARKET_GUARD",
     reason:env.DB ? "NO_HEARTBEAT_YET" : "D1_NOT_BOUND",
@@ -1568,6 +1573,19 @@ async function guardHealth(env){
     notificationBackoffUntil:hb.notificationBackoffUntil ? new Date(Number(hb.notificationBackoffUntil)).toISOString() : null,
     verificationNotifiedAt:hb.verificationNotifiedAt ? new Date(Number(hb.verificationNotifiedAt)).toISOString() : null,
     verificationNotifyError:hb.verificationNotifyError||null,
+    executionGuard:{
+      mode:"CLOUDFLARE_5M_EXECUTION_GUARD",
+      lastRunAt:hb.lastExecutionGuardAt ? new Date(Number(hb.lastExecutionGuardAt)).toISOString() : null,
+      evaluatedCount:Number(hb.lastExecutionGuardEvaluated||0),
+      buyAssets:Array.isArray(hb.lastExecutionGuardBuyAssets)?hb.lastExecutionGuardBuyAssets:[],
+      generatedAt:trade&&trade.generatedAt ? trade.generatedAt : null,
+      buys:trade&&Array.isArray(trade.buys) ? trade.buys : [],
+      pendingBuy:pending&&pending.buy ? pending.buy : null
+    },
+    watchRadar:{
+      generatedAt:watch&&watch.generatedAt ? watch.generatedAt : null,
+      candidates:watch&&Array.isArray(watch.candidates) ? watch.candidates.slice(0,5) : []
+    },
     lastError:hb.lastError||null
   };
 }
