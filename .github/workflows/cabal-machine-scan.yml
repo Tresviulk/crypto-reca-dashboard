@@ -139,6 +139,11 @@ jobs:
             echo 'Cloudflare Market Guard unavailable; GitHub WATCH fallback remains active.'
           fi
 
+      - name: Snapshot previous alert state
+        shell: bash
+        run: |
+          cp data/ntfy-alert-state.json /tmp/ntfy-alert-state-before.json 2>/dev/null || printf '%s\n' '{}' > /tmp/ntfy-alert-state-before.json
+
       - name: Build CABAL v2 alert from this exact scan
         run: python scripts/cabal_ntfy_v2.py
 
@@ -151,21 +156,42 @@ jobs:
           set -euo pipefail
           if [ "$(cat /tmp/ntfy-payload.json)" = "null" ]; then
             echo "No notification this scan."
+            printf '%s\n' '{"attempted":false,"ok":true,"kind":"NONE"}' > /tmp/ntfy-delivery-status.json
             exit 0
           fi
           title=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["title"])')
           priority=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("priority","default"))')
           message=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json"))["message"])')
-          curl -fsS \
-            --retry 3 \
-            --retry-all-errors \
-            --retry-delay 5 \
+          kind=$(python -c 'import json; print(json.load(open("/tmp/ntfy-payload.json")).get("kind","UNKNOWN"))')
+
+          # Notification transport must NEVER block scanner persistence.
+          # A ntfy 429/network failure used to abort the job here, leaving
+          # cabal-machine.json stale and causing the same WATCH to retry forever.
+          set +e
+          http_code=$(curl -sS \
             --max-time 20 \
+            -o /tmp/ntfy-response.txt \
+            -w "%{http_code}" \
             -H "Title: $title" \
             -H "Priority: $priority" \
             -H "Tags: chart_with_upwards_trend" \
             -d "$message" \
-            https://ntfy.sh/cabal-jr-7k29m4xq81
+            https://ntfy.sh/cabal-jr-7k29m4xq81)
+          curl_rc=$?
+          set -e
+
+          if [ "$curl_rc" -ne 0 ]; then
+            echo "::warning::NTFY transport failed rc=$curl_rc. CABAL state will still persist."
+            printf '{"attempted":true,"ok":false,"kind":"%s","http":null,"rc":%s}\n' "$kind" "$curl_rc" > /tmp/ntfy-delivery-status.json
+          elif [[ "$http_code" =~ ^2 ]]; then
+            echo "NTFY delivery PASS HTTP $http_code"
+            printf '{"attempted":true,"ok":true,"kind":"%s","http":%s,"rc":0}\n' "$kind" "$http_code" > /tmp/ntfy-delivery-status.json
+          else
+            echo "::warning::NTFY delivery failed HTTP $http_code. CABAL state will still persist."
+            head -c 500 /tmp/ntfy-response.txt || true
+            echo
+            printf '{"attempted":true,"ok":false,"kind":"%s","http":%s,"rc":0}\n' "$kind" "$http_code" > /tmp/ntfy-delivery-status.json
+          fi
 
       - name: Persist machine and alert state atomically
         shell: bash
@@ -180,7 +206,18 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
           cp /tmp/cabal-machine-v2.json data/cabal-machine.json
-          cp /tmp/ntfy-alert-state.json data/ntfy-alert-state.json
+
+          # WATCH delivery may be dropped without retry to conserve quota.
+          # BUY/CANCEL are different: if transport failed, do not record them as
+          # delivered. Keep the previous alert state so the next fresh scan can retry.
+          delivery_kind=$(python -c 'import json,os; p="/tmp/ntfy-delivery-status.json"; d=json.load(open(p)) if os.path.exists(p) else {"kind":"NONE","ok":True}; print(d.get("kind","NONE"))')
+          delivery_ok=$(python -c 'import json,os; p="/tmp/ntfy-delivery-status.json"; d=json.load(open(p)) if os.path.exists(p) else {"kind":"NONE","ok":True}; print("true" if d.get("ok") else "false")')
+          if [ "$delivery_ok" != "true" ] && { [ "$delivery_kind" = "BUY" ] || [ "$delivery_kind" = "CANCEL" ]; }; then
+            echo "Critical NTFY $delivery_kind was NOT delivered; preserving pending alert state for retry."
+            cp /tmp/ntfy-alert-state-before.json data/ntfy-alert-state.json
+          else
+            cp /tmp/ntfy-alert-state.json data/ntfy-alert-state.json
+          fi
           git add data/cabal-machine.json data/ntfy-alert-state.json
           if git diff --cached --quiet; then
             echo 'No CABAL state change.'

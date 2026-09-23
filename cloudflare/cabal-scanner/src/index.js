@@ -1024,8 +1024,8 @@ async function readWhaleInjections(request, env){
 const GUARD_MIN_TURNOVER = 50_000;
 const GUARD_MAX_ASSETS = 900;
 const GUARD_HISTORY_MINUTES = 7;
-const GUARD_ASSET_COOLDOWN_MS = 6 * 60 * 60 * 1000;
-const GUARD_GLOBAL_COOLDOWN_MS = 10 * 60 * 1000;
+const GUARD_ASSET_COOLDOWN_MS = 12 * 60 * 60 * 1000;
+const GUARD_GLOBAL_COOLDOWN_MS = 30 * 60 * 1000;
 const GUARD_NTFY_BACKOFF_BASE_MS = 10 * 60 * 1000;
 const GUARD_NTFY_BACKOFF_MAX_MS = 60 * 60 * 1000;
 const GUARD_HEALTH_MAX_AGE_MS = 150 * 1000;
@@ -1201,7 +1201,7 @@ async function guardNotify(env,candidates){
     const prev=await guardGet(env,"alert:"+c.base);
     if(prev && now-Number(prev.lastAlertAt||0)<GUARD_ASSET_COOLDOWN_MS) continue;
     chosen.push(c);
-    if(chosen.length>=2) break;
+    if(chosen.length>=1) break;
   }
   if(!chosen.length) return {assets:[],ok:true,skipped:"ASSET_COOLDOWN",status:null,error:null,backoffUntil:null};
 

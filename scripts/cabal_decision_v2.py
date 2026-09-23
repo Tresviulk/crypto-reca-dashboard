@@ -51,11 +51,30 @@ def evaluate(row):
     ft=row.get("fastPump15m") or {}
     price=n(row.get("price"),None)
     no_chase=n(row.get("noChase"),None)
-    stop=n(row.get("protectiveStopReference"),None)
-    if stop is None:
-        stop=n(ft.get("invalidation15m"),None)
-    if stop is None:
-        stop=n(row.get("invalidation"),None)
+    # Prefer the freshest executable structural stop. A stale 1h invalidation
+    # must not block a valid second-leg/15m entry when a newer support exists.
+    raw_stops=[
+        row.get("protectiveStopReference"),
+        ft.get("wideBaseInvalidation15m"),
+        ft.get("invalidation15m"),
+        row.get("invalidation"),
+    ]
+    stop=None
+    fallback_stops=[]
+    valid_stops=[]
+    if price is not None:
+        for raw in raw_stops:
+            s=n(raw,None)
+            if s is None or not (price>s>0):
+                continue
+            fallback_stops.append(s)
+            dist=(price-s)/price*100
+            if 1.0 <= dist <= 4.5:
+                valid_stops.append(s)
+    if valid_stops:
+        stop=max(valid_stops)
+    elif fallback_stops:
+        stop=max(fallback_stops)
 
     p1=n(row.get("priceChange1hPct"))
     p4=n(row.get("priceChange4hPct"))
@@ -148,13 +167,24 @@ def evaluate(row):
     )
     core_buy=alt_core_buy or btc_core_buy
 
+    second_leg_buy=(
+        executable and fresh15 and second_leg
+        and bb and bc
+        and q>=65 and score>=70
+        and r1>=3.0 and rv15>=1.50
+        and rs1>=1.0 and rs4>=1.0 and irs>=0.20
+        and 0.50<=p1<7.0
+        and p24<15.0 and p72<25.0
+        and (headroom is None or headroom>=2.0)
+    )
+
     pre_buy=(
         executable and fresh15
-        and str(row.get("pilotReason") or "").upper() in {"PRE_ACCUM_TRIGGER","ABC_EARLY_STRUCTURE","SECOND_LEG_TRIGGER"}
+        and str(row.get("pilotReason") or "").upper() in {"PRE_ACCUM_TRIGGER","ABC_EARLY_STRUCTURE"}
         and bb and bc and score>=65 and r1>=5 and rs1>=0.20 and irs>=0.20
     )
 
-    buy=wide_buy or fast_buy or core_buy or pre_buy
+    buy=wide_buy or fast_buy or core_buy or second_leg_buy or pre_buy
 
     # WATCH is deliberately earlier than BUY. It is informational only.
     # This is what prevents KMNO/AVAX-like moves from becoming visible only after the move.
@@ -190,7 +220,9 @@ def evaluate(row):
 
     if buy:
         tier="BUY_NOW"
-        if wide_buy:
+        if second_leg_buy:
+            reason="SECOND_LEG_LIVE_CONFIRMED"
+        elif wide_buy:
             reason="WIDE_BASE_CONFIRMED"
         elif core_buy:
             reason="CORE_ACCEL_CONFIRMED"
@@ -214,7 +246,7 @@ def evaluate(row):
         tier="NONE"
         reason=reject[0] if reject else "NO_EDGE"
 
-    required=1 if (buy and (wide_buy or q>=65 or asset=="BTC")) else (2 if buy else 1)
+    required=1 if (buy and (second_leg_buy or wide_buy or q>=65 or asset=="BTC")) else (2 if buy else 1)
 
     # USER-FACING CABAL has two separate lanes:
     # SCALP = immediate, executable +2%/+3% objective.
@@ -348,8 +380,20 @@ def evaluate(row):
         )
     )
 
+    # A second-leg trigger is already a structurally-confirmed continuation.
+    # When live 15m participation and a tight fresh stop also confirm, surface it
+    # as a small PILOT BUY rather than forcing the user to wait for a redundant
+    # fast-pump trigger after the move has already started.
+    pilot_buy=bool(
+        buy and second_leg_buy
+        and q>=65
+        and p24<15.0 and p1<7.0
+        and stop_dist is not None and 1.0<=stop_dist<=3.5
+        and (headroom is None or headroom>=2.0)
+    )
+
     # Defense in depth: no non-BTC BUY reaches the user below quality 55.
-    notify_buy=bool((scalp_buy or runner_buy) and (asset=="BTC" or q>=55))
+    notify_buy=bool((scalp_buy or runner_buy or pilot_buy) and (asset=="BTC" or q>=55))
     late_user_watch=bool(
         runner_early_candidate
         and p24>=10.0
@@ -373,11 +417,13 @@ def evaluate(row):
         "notifyBuyEligible":notify_buy,
         "scalpBuyEligible":scalp_buy,
         "runnerBuyEligible":runner_buy,
+        "pilotBuyEligible":pilot_buy,
+        "secondLegBuyEligible":second_leg_buy,
         "runnerCandidateEligible":runner_candidate,
         "runnerCandidateStage":("EARLY" if runner_early_candidate else ("CONFIRMED" if runner_confirmed_candidate else None)),
         "scalpTarget2Pct":round(price*1.02,12) if price is not None else None,
         "scalpTarget3Pct":round(price*1.03,12) if price is not None else None,
-        "signalLane":("SCALP+RUNNER" if scalp_buy and runner_buy else ("RUNNER" if runner_buy or runner_candidate else ("SCALP" if scalp_buy else "INTERNAL"))),
+        "signalLane":("SECOND-LEG PILOT" if pilot_buy else ("SCALP+RUNNER" if scalp_buy and runner_buy else ("RUNNER" if runner_buy or runner_candidate else ("SCALP" if scalp_buy else "INTERNAL")))),
         "qualityScore":q,
         "requiredFreshScans":required,
         "decisionEntryMax":entry_max,
