@@ -224,17 +224,47 @@ def result(asset,m,b,venue,btc,pre_lane=False):
     rv15=f((ft or {}).get('rvol15m')); score=f(r.get('stageAScore'))
     fastq=bool(trg and rv15>=2.0 and irs>=.2 and r.get('bucketB') and (r.get('bucketC') or score>=35))
 
-    # v1.6.3 EXECUTION SAFETY:
-    # 1h PRE-ACCUM / ABC / SECOND-LEG states remain discovery signals only.
-    # A real PILOT_ENTRY_WINDOW now requires a CURRENT completed-15m trigger.
-    # This prevents a stale 1h trigger from authorizing a late/chased BUY.
-    fresh15=bool(ft and ft.get('trigger'))
-    pre_exec=bool(pre and fresh15)
-    old_exec=bool(old and fresh15)
+    # EXECUTION SAFETY:
+    # Generic PRE/ABC entries still require a completed-15m trigger. SECOND-LEG
+    # is different: the 1h structure itself is already a continuation trigger,
+    # so live 15m participation + positive relative strength may confirm it
+    # without waiting for a redundant fast-pump breakout after price has moved.
+    fresh15_trigger=bool(ft and ft.get('trigger'))
+    second_leg_live=bool(
+        sec and ft
+        and rv15>=1.50 and irs>=.20
+        and r.get('bucketB') and r.get('bucketC')
+        and score>=70 and f(r.get('rvol1h'))>=3.0
+        and f(r.get('relativeStrength1hVsBTC'))>=1.0
+        and f(r.get('relativeStrength4hVsBTC'))>=1.0
+        and .50<=f(r.get('priceChange1hPct'))<7.0
+        and f(r.get('priceChange24hPct'))<15.0
+        and f(r.get('priceChange72hPct'))<25.0
+        and (head is None or head>=2.0)
+    )
+    fresh15=bool(fresh15_trigger or second_leg_live)
+    pre_exec=bool(pre and fresh15_trigger)
+    old_exec=bool(old and fresh15_trigger)
     sec_exec=bool(sec and fresh15)
 
-    stop=f(ft.get('invalidation15m')) if fastq and ft else f(r.get('invalidation')); sd=pct(px,stop) if px>stop>0 else 999
-    loc=bool(px>stop>0 and sd<=5 and (not no or px<no) and (head is None or head>=.5) and intra<5 and f(r.get('priceChange24hPct'))<25)
+    # Choose the freshest support that is actually usable as a protective stop.
+    # The old code defaulted to a stale 1h invalidation unless fastq=True; that
+    # turned valid second-leg setups into 8-15% stops and blocked every BUY.
+    stop_pool=[]
+    if ft:
+        stop_pool.extend([f(ft.get('wideBaseInvalidation15m')),f(ft.get('invalidation15m'))])
+    stop_pool.append(f(r.get('invalidation')))
+    valid_stops=[]
+    fallback_stops=[]
+    for s in stop_pool:
+        if px>s>0:
+            fallback_stops.append(s)
+            dist=pct(px,s)
+            if 1.0<=dist<=4.5:
+                valid_stops.append(s)
+    stop=max(valid_stops) if valid_stops else (max(fallback_stops) if fallback_stops else 0)
+    sd=pct(px,stop) if px>stop>0 else 999
+    loc=bool(px>stop>0 and 1.0<=sd<=4.5 and (not no or px<no) and (head is None or head>=.5) and intra<5 and f(r.get('priceChange24hPct'))<25)
     pilot=bool(loc and (fastq or pre_exec or old_exec or sec_exec))
     sig='NO_CHASE' if no and px>=no else ('PILOT_ENTRY_WINDOW' if pilot else ('WAIT_CONFIRMATION' if base in {'PRE-ACCUMULATION TRIGGER','PRE-MOVE','EARLY STARTER','SECOND-LEG TRIGGER'} or fw else r.get('executionSignal','OBSERVE')))
 
@@ -250,7 +280,8 @@ def result(asset,m,b,venue,btc,pre_lane=False):
 
     r.update({
         'entryConfirmation15m':fresh15,
-        'entryConfirmation15mSource':(ft or {}).get('source'),
+        'entryConfirmation15mSource':((ft or {}).get('source') if fresh15 else None),
+        'entryConfirmationMode':('SECOND_LEG_LIVE_15M' if second_leg_live else ('FAST_TRIGGER_15M' if fresh15_trigger else None)),
         'fastPumpQualifiedForPilot':fastq,
         'pilotEntryEligible':pilot,
         'pilotReason':pilot_reason,
@@ -335,10 +366,12 @@ d['executionEngine']={
     'fullExecutionUniverse':True,
     'watchBeforeBuy':True,
     'fresh15mRequiredForBuy':True,
+    'secondLegLive15mConfirmationEnabled':True,
+    'adaptiveProtectiveStopSelection':True,
     'deepTailMomentumReserve':True,
     'coreAlwaysScan':['BTC','ETH','SOL','XRP','AVAX','HBAR','ONDO'],
     'executionPoolIndependentOfTop30':True,
     'ntfyReScoresBuy':False
 }
-d['method']='CABAL v2.0: every supported broad spot asset reaches execution analysis; Stage-A/top-30 never gates execution. One canonical engine emits WATCH or BUY_NOW. CORE assets are mandatory, low-rank exchange-native momentum has a guarded reserve, BUY requires fresh 15m confirmation plus stop/no-chase safety, and NTFY relays/revalidates rather than re-scoring. Missed movers are recorded with reject reasons. Manual SPOT only.'
+d['method']='CABAL v2.0: every supported broad spot asset reaches execution analysis; Stage-A/top-30 never gates execution. One canonical engine emits WATCH or BUY_NOW. CORE assets are mandatory, low-rank exchange-native momentum has a guarded reserve, BUY requires live 15m confirmation plus stop/no-chase safety; a confirmed SECOND-LEG may use live 15m participation/RS as that confirmation. Protective stops prefer the freshest executable 15m support. NTFY relays/revalidates rather than re-scoring. Manual SPOT only.'
 tmp=out+'.v16.tmp'; json.dump(d,open(tmp,'w',encoding='utf-8'),ensure_ascii=False,indent=2); os.replace(tmp,out); print(json.dumps({'schemaVersion':'2.0','preAccumOperational':d['preAccumOperational'],'mainMachineOperational':d['mainMachineOperational'],'sourceMode':d['sourceMode'],'pumpRadarStats':d['pumpRadarStats'],'buyNow':[x.get('asset') for x in d.get('buyCandidates',[])[:10]],'watch':[x.get('asset') for x in d.get('watchCandidates',[])[:10]]},indent=2))
