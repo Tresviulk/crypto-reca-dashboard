@@ -126,6 +126,16 @@ jobs:
             exit 0
           fi
           git commit -m 'whales: refresh canonical report and persistent intelligence'
+          # whales-early-entry-integrate also refreshes the master report in-memory.
+          # This workflow does not own that file; the System Master workflow persists it.
+          # Restore only that known side effect so rebase can proceed without silently
+          # discarding or committing unrelated state.
+          git restore --worktree data/system-master-report.json
+          if [ -n "$(git status --porcelain)" ]; then
+            echo 'Unexpected post-commit worktree changes:' >&2
+            git status --short >&2
+            exit 1
+          fi
           for attempt in 1 2 3 4 5; do
             git pull --rebase origin main
             if git push origin HEAD:main; then
