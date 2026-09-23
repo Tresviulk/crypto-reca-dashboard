@@ -255,6 +255,42 @@ assert tail_exchange_inclusion(120_000,30.0) is False
 
 
 
+# SECOND-LEG live-confirmation regression (UB 2026-09-23 archetype):
+# a real continuation trigger with strong live participation must become a small
+# executable PILOT BUY when a fresh 15m stop is available. The stale 1h stop
+# must not veto the setup.
+ub=base("UB")
+ub.update({
+    "price":0.154624,"noChase":0.16049203,"protectiveStopReference":None,
+    "priceChange1hPct":5.1303,"priceChange4hPct":4.6055,"priceChange6hPct":4.7777,
+    "priceChange24hPct":5.9154,"priceChange72hPct":17.8209,
+    "rvol1h":21.9475,"relativeStrength1hVsBTC":5.7565,"relativeStrength4hVsBTC":6.5436,
+    "intrahourMovePct":0.3928,"intrahourRelativeStrengthVsBTC":0.4817,
+    "stageAScore":93.1453,"bucketB":True,"bucketC":True,
+    "secondLegWatch":True,"secondLegTrigger":True,
+    "effortVsResult":"EFFICIENT","classification":"SECOND-LEG TRIGGER",
+    "entryConfirmation15m":True,"fastPumpTrigger":False,
+    "fastPump15m":{
+        "rvol15m":2.3066,"trigger":False,"watch":False,
+        "wideBaseWatch":False,"wideBaseTrigger":False,
+        "invalidation15m":0.14206944,"wideBaseInvalidation15m":0.151258536
+    }
+})
+ub_result=expect("UB_SECOND_LEG_LIVE",ub,"BUY_NOW")
+assert ub_result["secondLegBuyEligible"] is True
+assert ub_result["pilotBuyEligible"] is True
+assert ub_result["notifyBuyEligible"] is True
+assert ub_result["signalLane"]=="SECOND-LEG PILOT"
+assert 1.0 <= ub_result["decisionStopDistancePct"] <= 3.5
+
+# The same structural label without live 15m confirmation must remain WATCH/NONE.
+ub_stale=dict(ub)
+ub_stale["entryConfirmation15m"]=False
+ub_stale["fastPump15m"]=dict(ub["fastPump15m"],rvol15m=0.6)
+ub_stale_result=evaluate(ub_stale)
+assert ub_stale_result["decisionTier"]!="BUY_NOW"
+assert ub_stale_result["notifyBuyEligible"] is False
+
 # CORE contract must never silently shrink.
 assert CORE_ASSETS=={"BTC","ETH","SOL","XRP","AVAX","HBAR","ONDO"}
 
