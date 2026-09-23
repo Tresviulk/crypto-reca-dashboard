@@ -35,8 +35,11 @@ jobs:
         run: |
           set -euo pipefail
           test -s cloudflare/cabal-scanner/src/index.js
+          node --check cloudflare/cabal-scanner/src/index.js
           grep -q 'async scheduled' cloudflare/cabal-scanner/src/index.js
           grep -q 'CLOUDFLARE_1M_MARKET_GUARD' cloudflare/cabal-scanner/src/index.js
+          grep -q 'CLOUDFLARE_5M_EXECUTION_GUARD' cloudflare/cabal-scanner/src/index.js
+          grep -q 'WATCH_PERSIST_ONLY' cloudflare/cabal-scanner/src/index.js
           grep -q '"crons": \["\* \* \* \* \*"\]' cloudflare/cabal-scanner/wrangler.jsonc
 
       - name: Run CABAL regression suite
