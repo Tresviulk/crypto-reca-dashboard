@@ -39,6 +39,7 @@ jobs:
           grep -q 'async scheduled' cloudflare/cabal-scanner/src/index.js
           grep -q 'CLOUDFLARE_1M_MARKET_GUARD' cloudflare/cabal-scanner/src/index.js
           grep -q 'CLOUDFLARE_5M_EXECUTION_GUARD' cloudflare/cabal-scanner/src/index.js
+          grep -q 'CLOUDFLARE_1M_ACTIVE_REVALIDATION' cloudflare/cabal-scanner/src/index.js
           grep -q 'WATCH_PERSIST_ONLY' cloudflare/cabal-scanner/src/index.js
           grep -q 'EXTERNAL_FETCH_TIMEOUT_MS' cloudflare/cabal-scanner/src/index.js
           grep -q 'GUARD_EXECUTION_DATA_GAP' cloudflare/cabal-scanner/src/index.js
@@ -181,18 +182,21 @@ jobs:
               'healthy','lastSuccessfulScan','schedulerLagSeconds',
               'lastObservationGapSeconds','maxObservationGapSeconds',
               'consecutiveHealthyCycles','verificationNotifiedAt',
-              'patchVersion','executionGuard','watchRadar'
+              'patchVersion','executionGuard','activeRevalidation','watchRadar'
           )
           missing=[k for k in required if k not in d]
           if missing:
               raise SystemExit(f'health missing keys: {missing}')
           if d.get('mode')!='CLOUDFLARE_1M_MARKET_GUARD':
               raise SystemExit(f"unexpected guard mode: {d.get('mode')}")
-          if d.get('patchVersion')!='CABAL_WHALES_V3_1_5_2026-09-25_GUARD_CLEANUP':
+          if d.get('patchVersion')!='CABAL_WHALES_V3_1_6_2026-09-25_ACTIVE_1M_REVALIDATION':
               raise SystemExit(f"wrong worker version served: {d.get('patchVersion')}")
           eg=d.get('executionGuard') or {}
           if eg.get('mode')!='CLOUDFLARE_5M_EXECUTION_GUARD':
               raise SystemExit(f"execution guard missing/wrong: {eg}")
+          ar=d.get('activeRevalidation') or {}
+          if ar.get('mode')!='CLOUDFLARE_1M_ACTIVE_REVALIDATION':
+              raise SystemExit(f"1-minute active BUY revalidation missing/wrong: {ar}")
           if d.get('healthy') is not True:
               raise SystemExit(f"market guard not healthy: {d}")
           def n(key, default=9999):
@@ -223,7 +227,7 @@ jobs:
           last=rows[-1]
           if int(last.get('consecutiveHealthyCycles') or 0)<3:
               raise SystemExit(f"insufficient consecutive healthy cycles: {last}")
-          expected='CABAL_WHALES_V3_1_5_2026-09-25_GUARD_CLEANUP'
+          expected='CABAL_WHALES_V3_1_6_2026-09-25_ACTIVE_1M_REVALIDATION'
           versions={r.get('patchVersion') for r in rows}
           if versions!={expected}:
               raise SystemExit(f'mixed worker versions served during verification: {versions}')
