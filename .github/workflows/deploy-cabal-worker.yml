@@ -40,6 +40,8 @@ jobs:
           grep -q 'CLOUDFLARE_1M_MARKET_GUARD' cloudflare/cabal-scanner/src/index.js
           grep -q 'CLOUDFLARE_5M_EXECUTION_GUARD' cloudflare/cabal-scanner/src/index.js
           grep -q 'WATCH_PERSIST_ONLY' cloudflare/cabal-scanner/src/index.js
+          grep -q 'EXTERNAL_FETCH_TIMEOUT_MS' cloudflare/cabal-scanner/src/index.js
+          grep -q 'GUARD_EXECUTION_DATA_GAP' cloudflare/cabal-scanner/src/index.js
           grep -q '"crons": \["\* \* \* \* \*"\]' cloudflare/cabal-scanner/wrangler.jsonc
 
       - name: Run CABAL regression suite
@@ -186,7 +188,7 @@ jobs:
               raise SystemExit(f'health missing keys: {missing}')
           if d.get('mode')!='CLOUDFLARE_1M_MARKET_GUARD':
               raise SystemExit(f"unexpected guard mode: {d.get('mode')}")
-          if d.get('patchVersion')!='CABAL_WHALES_V3_1_3_2026-09-23_EXEC_RECOVERY':
+          if d.get('patchVersion')!='CABAL_WHALES_V3_1_4_2026-09-25_TIMEOUT_FALLBACK':
               raise SystemExit(f"wrong worker version served: {d.get('patchVersion')}")
           eg=d.get('executionGuard') or {}
           if eg.get('mode')!='CLOUDFLARE_5M_EXECUTION_GUARD':
@@ -221,7 +223,7 @@ jobs:
           last=rows[-1]
           if int(last.get('consecutiveHealthyCycles') or 0)<3:
               raise SystemExit(f"insufficient consecutive healthy cycles: {last}")
-          expected='CABAL_WHALES_V3_1_3_2026-09-23_EXEC_RECOVERY'
+          expected='CABAL_WHALES_V3_1_4_2026-09-25_TIMEOUT_FALLBACK'
           versions={r.get('patchVersion') for r in rows}
           if versions!={expected}:
               raise SystemExit(f'mixed worker versions served during verification: {versions}')

@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_3_2026-09-23_EXEC_RECOVERY";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_4_2026-09-25_TIMEOUT_FALLBACK";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -74,6 +74,18 @@ function upper(v){
   return String(v || "").trim().toUpperCase();
 }
 
+const EXTERNAL_FETCH_TIMEOUT_MS = 6500;
+
+async function fetchTimed(url, options={}, timeoutMs=EXTERNAL_FETCH_TIMEOUT_MS){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort("CABAL_FETCH_TIMEOUT"), timeoutMs);
+  try{
+    return await fetch(url,{...options,signal:controller.signal});
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
 async function mapLimit(items, concurrency, fn){
   const out = new Array(items.length);
   let next = 0;
@@ -116,7 +128,7 @@ function kucoinParts(symbol){
 }
 
 async function bybitTickers(){
-  const r = await fetch("https://api.bybit.com/v5/market/tickers?category=spot");
+  const r = await fetchTimed("https://api.bybit.com/v5/market/tickers?category=spot");
   if(!r.ok) throw new Error("Bybit tickers " + r.status);
 
   const j = await r.json();
@@ -145,7 +157,7 @@ async function bybitTickers(){
 }
 
 async function kucoinTickers(){
-  const r = await fetch("https://api.kucoin.com/api/v1/market/allTickers");
+  const r = await fetchTimed("https://api.kucoin.com/api/v1/market/allTickers");
   if(!r.ok) throw new Error("KuCoin tickers " + r.status);
 
   const j = await r.json();
@@ -536,7 +548,7 @@ async function bybitKline(symbol, interval, limit){
     "&interval=" + interval +
     "&limit=" + limit;
 
-  const r = await fetch(url);
+  const r = await fetchTimed(url);
   if(!r.ok) throw new Error("Bybit kline " + symbol + "/" + interval + " " + r.status);
 
   const j = await r.json();
@@ -568,7 +580,7 @@ async function kucoinKline(symbol, interval, limit){
     "&startAt=" + startAt +
     "&endAt=" + endAt;
 
-  const r = await fetch(url);
+  const r = await fetchTimed(url);
   if(!r.ok) throw new Error("KuCoin kline " + symbol + "/" + interval + " " + r.status);
 
   const j = await r.json();
@@ -1093,14 +1105,36 @@ async function guardBuildSnapshot(){
   const src=await Promise.allSettled([bybitTickers(),kucoinTickers()]);
   const bybit=src[0].status==="fulfilled" ? src[0].value : [];
   const kucoin=src[1].status==="fulfilled" ? src[1].value : [];
-  if(!bybit.length && !kucoin.length) throw new Error("GUARD_NO_SPOT_SOURCE");
-  const ded=dedupeMarkets([...bybit,...kucoin]).preferred
+  const bybitError=src[0].status==="rejected" ? String(src[0].reason||"BYBIT_FAILED") : null;
+  const kucoinError=src[1].status==="rejected" ? String(src[1].reason||"KUCOIN_FAILED") : null;
+  if(!bybit.length && !kucoin.length) throw new Error("GUARD_NO_SPOT_SOURCE | BYBIT="+bybitError+" | KUCOIN="+kucoinError);
+
+  // The one-minute guard must not inherit a Bybit outage when KuCoin is healthy.
+  // Prefer KuCoin for assets present on both venues; keep Bybit-only names as fallback.
+  const eligible=[...bybit,...kucoin]
     .filter(x=>(x.turnover24h||0)>=GUARD_MIN_TURNOVER)
+    .sort((a,b)=>(b.turnover24h||0)-(a.turnover24h||0));
+  const preferredByBase=new Map();
+  for(const m of eligible){
+    const prior=preferredByBase.get(m.base);
+    if(!prior || (m.venue==="KUCOIN" && prior.venue!=="KUCOIN")){
+      preferredByBase.set(m.base,m);
+    }
+  }
+  const ded=[...preferredByBase.values()]
     .sort((a,b)=>(b.turnover24h||0)-(a.turnover24h||0))
     .slice(0,GUARD_MAX_ASSETS);
+
   const a={};
   for(const m of ded) a[m.base]=guardSnapshotAsset(m);
-  return {t:Date.now(),a,count:ded.length,bybit:bybit.length,kucoin:kucoin.length};
+  return {
+    t:Date.now(),a,count:ded.length,bybit:bybit.length,kucoin:kucoin.length,
+    sourceStatus:{
+      bybit:bybit.length?"PASS":"FAIL",
+      kucoin:kucoin.length?"PASS":"FAIL",
+      bybitError,kucoinError
+    }
+  };
 }
 
 function guardCandidates(current,history){
@@ -1221,11 +1255,9 @@ function guardStopFrom15m(price,a15){
   return stops[0];
 }
 
-async function guardExecutionMetrics(c){
-  if(!c || !c.venue || !c.venueSymbol) throw new Error("GUARD_EXECUTION_SYMBOL_MISSING");
-  const market={venue:c.venue,venueSymbol:c.venueSymbol};
-  const btcSymbol=c.venue==="BYBIT" ? "BTCUSDT" : "BTC-USDT";
-  const btcMarket={venue:c.venue,venueSymbol:btcSymbol};
+async function guardExecutionMetricsOnMarket(c,market){
+  const btcSymbol=market.venue==="BYBIT" ? "BTCUSDT" : "BTC-USDT";
+  const btcMarket={venue:market.venue,venueSymbol:btcSymbol};
 
   const [a15,a60,btc60]=await Promise.all([
     klineOnMarket(market,"15",60),
@@ -1250,11 +1282,33 @@ async function guardExecutionMetrics(c){
   const stopInfo=guardStopFrom15m(c.price,a15);
 
   return {
+    executionVenue:market.venue,executionVenueSymbol:market.venueSymbol,
     p15,p1,p4,rs1,rs4,rvol15m:r15,rvol1h:r1,lite,
     noChase,headroom,
     stop:stopInfo ? stopInfo.stop : null,
     stopDistancePct:stopInfo ? stopInfo.dist : null
   };
+}
+
+async function guardExecutionMetrics(c){
+  if(!c || !c.base || !c.venue || !c.venueSymbol) throw new Error("GUARD_EXECUTION_SYMBOL_MISSING");
+  const alternatives=[{venue:c.venue,venueSymbol:c.venueSymbol}];
+  if(c.venue!=="KUCOIN") alternatives.push({venue:"KUCOIN",venueSymbol:c.base+"-USDT"});
+  if(c.venue!=="BYBIT") alternatives.push({venue:"BYBIT",venueSymbol:c.base+"USDT"});
+
+  const seen=new Set();
+  const errors=[];
+  for(const market of alternatives){
+    const key=market.venue+":"+market.venueSymbol;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    try{
+      return await guardExecutionMetricsOnMarket(c,market);
+    }catch(e){
+      errors.push(key+"="+String(e));
+    }
+  }
+  throw new Error("GUARD_EXECUTION_DATA_GAP "+c.base+" | "+errors.join(" | "));
 }
 
 function guardPilotDecision(c,m){
@@ -1303,7 +1357,7 @@ function guardPilotDecision(c,m){
   const entryMax=buy ? Math.min(live*1.004,Number(m.noChase)*0.995) : null;
 
   return {
-    asset:c.base,venue:c.venue,venueSymbol:c.venueSymbol,
+    asset:c.base,venue:m.executionVenue||c.venue,venueSymbol:m.executionVenueSymbol||c.venueSymbol,
     price:live,buy,reason,score,
     pilotSizePct:20,
     entryMax,
@@ -1502,6 +1556,7 @@ async function runMarketGuard(event,env){
       lastRuntimeMs:finished-started,
       lastUniverseCount:current.count,
       lastCandidateCount:candidates.length,
+      lastSourceStatus:current.sourceStatus||null,
       lastAlertAssets:tradeNotify&&tradeNotify.kind==="BUY"&&tradeNotify.ok ? [tradeNotify.asset] : [],
       lastNotificationAttemptAt:tradeNotify&&tradeNotify.kind!=="NONE" ? Date.now() : prev.lastNotificationAttemptAt||null,
       lastNotificationStatus:tradeNotify ? (tradeNotify.status||null) : prev.lastNotificationStatus||null,
@@ -1566,6 +1621,7 @@ async function guardHealth(env){
     lastRuntimeMs:Number(hb.lastRuntimeMs||0),
     lastUniverseCount:Number(hb.lastUniverseCount||0),
     lastCandidateCount:Number(hb.lastCandidateCount||0),
+    sourceStatus:hb.lastSourceStatus||null,
     lastAlertAssets:Array.isArray(hb.lastAlertAssets)?hb.lastAlertAssets:[],
     consecutiveHealthyCycles:Number(hb.consecutiveHealthyCycles||0),
     notificationHealthy:hb.notificationHealthy!==false,
