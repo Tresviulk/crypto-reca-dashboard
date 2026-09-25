@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_4_2026-09-25_TIMEOUT_FALLBACK";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_5_2026-09-25_GUARD_CLEANUP";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1441,10 +1441,22 @@ async function guardTradeNotify(env,state){
   }
 
   if(!buys.length){
+    // A pending BUY is only useful while the current validation still confirms it.
+    // If the next execution cycle has no BUY, explicitly invalidate stale pending
+    // transport state so health/dashboard cannot show an obsolete order.
+    const pending=await guardGet(env,"trade:pending");
+    let clearedPendingAsset=null;
+    if(pending && pending.buy && pending.buy.asset){
+      clearedPendingAsset=pending.buy.asset;
+      await guardPut(env,"trade:pending",{
+        asset:null,clearedAt:now,reason:"SIGNAL_NO_LONGER_VALID",
+        previousAsset:clearedPendingAsset
+      });
+    }
     if(active && active.asset && Number(active.validUntil||0)<=now){
       await guardPut(env,"trade:active",{asset:null,expiredAt:now});
     }
-    return {ok:true,kind:"NONE"};
+    return {ok:true,kind:"NONE",clearedPendingAsset};
   }
 
   const x=buys[0];
@@ -1637,6 +1649,7 @@ async function guardHealth(env){
       evaluatedCount:Number(hb.lastExecutionGuardEvaluated||0),
       buyAssets:Array.isArray(hb.lastExecutionGuardBuyAssets)?hb.lastExecutionGuardBuyAssets:[],
       generatedAt:trade&&trade.generatedAt ? trade.generatedAt : null,
+      evaluated:trade&&Array.isArray(trade.evaluated) ? trade.evaluated.slice(0,5) : [],
       buys:trade&&Array.isArray(trade.buys) ? trade.buys : [],
       pendingBuy:pending&&pending.buy ? pending.buy : null
     },
