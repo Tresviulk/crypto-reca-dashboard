@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_5_2026-09-25_GUARD_CLEANUP";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_6_2026-09-25_ACTIVE_1M_REVALIDATION";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1179,6 +1179,39 @@ function guardCandidates(current,history){
   return out;
 }
 
+function guardCandidateSnapshot(current,history,base){
+  const x=current && current.a ? current.a[base] : null;
+  if(!x) return null;
+
+  const now=current.t;
+  const price=Number(x[0]), turn=Number(x[1]), p24=Number(x[2]);
+  const venue=String(x[3]||""), venueSymbol=String(x[4]||"");
+  if(!(price>0) || !(turn>=GUARD_MIN_TURNOVER) || !venue || !venueSymbol) return null;
+
+  const x1=guardFindAsset(history,base,now-60_000);
+  const x3=guardFindAsset(history,base,now-180_000);
+  const x5=guardFindAsset(history,base,now-300_000);
+  const p1=x1 ? guardPct(price,Number(x1[0])) : null;
+  const p3=x3 ? guardPct(price,Number(x3[0])) : null;
+  const p5=x5 ? guardPct(price,Number(x5[0])) : null;
+  const turn5=x5 ? Number(x5[1]) : null;
+  const delta5=turn5!=null ? Math.max(0,turn-turn5) : null;
+  const volAccel5=(delta5!=null && turn>0) ? (delta5/turn)*288 : null;
+
+  let score=0;
+  score += Math.max(0,p1||0)*16;
+  score += Math.max(0,p3||0)*10;
+  score += Math.max(0,p5||0)*6;
+  score += Math.min(45,Math.max(0,volAccel5||0)*10);
+  if(turn>=250_000) score+=8;
+
+  return {
+    base,venue,venueSymbol,price,turnover24h:turn,change24h:p24,
+    change1m:p1,change3m:p3,change5m:p5,
+    volumeAccel5m:volAccel5,guardScore:Math.round(score*10)/10
+  };
+}
+
 function guardFmt(v){
   const x=Number(v);
   if(!Number.isFinite(x)) return "n/a";
@@ -1416,7 +1449,8 @@ async function guardTradeNotify(env,state){
   const active=await guardGet(env,"trade:active");
   const currentAssets=new Set(buys.map(x=>x.asset));
 
-  // Revoke a still-live order if the next 5-minute validation no longer confirms it.
+  // Revoke a still-live order immediately when the 1-minute active-order
+  // revalidation (or the regular 5-minute execution cycle) no longer confirms it.
   if(active && active.asset && Number(active.validUntil||0)>now && !currentAssets.has(active.asset)){
     if(!env.NTFY_URL) return {ok:false,kind:"CANCEL",asset:active.asset,error:"NTFY_URL_NOT_CONFIGURED"};
     try{
@@ -1425,7 +1459,7 @@ async function guardTradeNotify(env,state){
         headers:{"Title":"🔴 CABAL — CANCELAR COMPRA","Priority":"high","Tags":"warning"},
         body:[
           active.asset,
-          "La validación Cloudflare de 5 minutos ya no confirma la entrada.",
+          "La revalidación Cloudflare ya no confirma la entrada.",
           "SI NO ENTRASTE: NO COMPRAR.",
           "SI YA ENTRASTE: no añadir posición; mantener el STOP de la alerta original."
         ].join("\n")
@@ -1511,6 +1545,86 @@ async function guardTradeNotify(env,state){
   return {ok:true,kind:"BUY",asset:x.asset,status:r.status};
 }
 
+async function guardRevalidateActiveTrade(env,current,history){
+  const now=Date.now();
+  const active=await guardGet(env,"trade:active");
+
+  if(!active || !active.asset){
+    const state={
+      generatedAt:new Date(now).toISOString(),
+      mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
+      checked:false,asset:null,valid:null,reason:"NO_ACTIVE_BUY",notify:null
+    };
+    await guardPut(env,"trade:revalidation",state);
+    return state;
+  }
+
+  if(Number(active.validUntil||0)<=now){
+    await guardPut(env,"trade:active",{asset:null,expiredAt:now,previousAsset:active.asset});
+    const state={
+      generatedAt:new Date(now).toISOString(),
+      mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
+      checked:true,asset:active.asset,valid:false,reason:"WINDOW_EXPIRED",notify:null
+    };
+    await guardPut(env,"trade:revalidation",state);
+    return state;
+  }
+
+  const c=guardCandidateSnapshot(current,history,active.asset);
+  let decision=null;
+  let reason=null;
+
+  if(!c){
+    reason="ASSET_NOT_VISIBLE_OR_NOT_LIQUID";
+  }else{
+    try{
+      const m=await guardExecutionMetrics(c);
+      decision=guardPilotDecision(c,m);
+
+      if(!decision.buy){
+        reason=decision.reason||"SIGNAL_NO_LONGER_VALID";
+      }else if(Number(active.entryMax)>0 && Number(c.price)>Number(active.entryMax)){
+        decision.buy=false;
+        decision.reason="ORIGINAL_ENTRY_MAX_EXCEEDED";
+        reason=decision.reason;
+      }else if(Number(active.stop)>0 && Number(c.price)<=Number(active.stop)){
+        decision.buy=false;
+        decision.reason="ORIGINAL_STOP_BROKEN";
+        reason=decision.reason;
+      }
+    }catch(e){
+      reason="REVALIDATION_DATA_GAP:"+String(e);
+    }
+  }
+
+  // A data gap must not leave a fresh BUY pretending to be valid. The order is
+  // revoked defensively; if conditions recover, CABAL can issue a new order later.
+  const valid=Boolean(decision && decision.buy);
+  const stateForNotify={
+    generatedAt:new Date(now).toISOString(),
+    mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
+    evaluated:decision ? [decision] : [],
+    buys:valid ? [decision] : []
+  };
+  const notify=await guardTradeNotify(env,stateForNotify);
+
+  const state={
+    generatedAt:stateForNotify.generatedAt,
+    mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
+    checked:true,
+    asset:active.asset,
+    valid,
+    reason:valid ? "STILL_CONFIRMED" : (reason||"SIGNAL_NO_LONGER_VALID"),
+    price:c ? c.price : null,
+    originalEntryMax:Number(active.entryMax)||null,
+    originalStop:Number(active.stop)||null,
+    decision,
+    notify
+  };
+  await guardPut(env,"trade:revalidation",state);
+  return state;
+}
+
 async function runMarketGuard(event,env){
   const started=Date.now();
   const scheduledAt=Number(event && event.scheduledTime)||started;
@@ -1545,8 +1659,14 @@ async function runMarketGuard(event,env){
     const lastExecutionAt=Number(prev.lastExecutionGuardAt||0);
     const executionDue=(minuteSlot%5)===0 || !lastExecutionAt || (started-lastExecutionAt)>=5*60_000;
     let tradeResult=null;
+    let activeRevalidation=null;
     if(executionDue){
       tradeResult=await guardEvaluateTrades(env,candidates);
+    }else{
+      // Any BUY already delivered to the user is revalidated EVERY MINUTE.
+      // This closes the WET failure mode where a 10-minute alert could remain
+      // apparently executable after momentum/RS had already reversed.
+      activeRevalidation=await guardRevalidateActiveTrade(env,current,history);
     }
 
     history.push(current);
@@ -1561,7 +1681,9 @@ async function runMarketGuard(event,env){
     const consecutiveHealthyCycles=cycleHealthy
       ? Number(prev.consecutiveHealthyCycles||0)+1
       : 0;
-    const tradeNotify=tradeResult&&tradeResult.notify ? tradeResult.notify : null;
+    const tradeNotify=tradeResult&&tradeResult.notify
+      ? tradeResult.notify
+      : (activeRevalidation&&activeRevalidation.notify ? activeRevalidation.notify : null);
 
     hb=Object.assign({},hb,{
       lastSuccessfulScan:finished,
@@ -1579,6 +1701,10 @@ async function runMarketGuard(event,env){
       lastExecutionGuardAt:executionDue ? finished : (prev.lastExecutionGuardAt||null),
       lastExecutionGuardBuyAssets:tradeResult ? tradeResult.buys.map(x=>x.asset) : (prev.lastExecutionGuardBuyAssets||[]),
       lastExecutionGuardEvaluated:tradeResult ? tradeResult.evaluated.length : (prev.lastExecutionGuardEvaluated||0),
+      lastActiveRevalidationAt:activeRevalidation&&activeRevalidation.checked ? Date.now() : (prev.lastActiveRevalidationAt||null),
+      lastActiveRevalidationAsset:activeRevalidation&&activeRevalidation.checked ? activeRevalidation.asset : (prev.lastActiveRevalidationAsset||null),
+      lastActiveRevalidationValid:activeRevalidation&&activeRevalidation.checked ? activeRevalidation.valid : (prev.lastActiveRevalidationValid??null),
+      lastActiveRevalidationReason:activeRevalidation&&activeRevalidation.checked ? activeRevalidation.reason : (prev.lastActiveRevalidationReason||null),
       lastError:null,
       consecutiveHealthyCycles
     });
@@ -1600,11 +1726,12 @@ async function runMarketGuard(event,env){
 
 async function guardHealth(env){
   const now=Date.now();
-  const [hb,trade,pending,watch]=await Promise.all([
+  const [hb,trade,pending,watch,revalidation]=await Promise.all([
     guardGet(env,"heartbeat"),
     guardGet(env,"trade:latest"),
     guardGet(env,"trade:pending"),
-    guardGet(env,"watch:latest")
+    guardGet(env,"watch:latest"),
+    guardGet(env,"trade:revalidation")
   ]);
   if(!hb) return {
     ok:false,healthy:false,mode:"CLOUDFLARE_1M_MARKET_GUARD",
@@ -1652,6 +1779,16 @@ async function guardHealth(env){
       evaluated:trade&&Array.isArray(trade.evaluated) ? trade.evaluated.slice(0,5) : [],
       buys:trade&&Array.isArray(trade.buys) ? trade.buys : [],
       pendingBuy:pending&&pending.buy ? pending.buy : null
+    },
+    activeRevalidation:{
+      mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
+      generatedAt:revalidation&&revalidation.generatedAt ? revalidation.generatedAt : null,
+      checked:revalidation ? Boolean(revalidation.checked) : false,
+      asset:revalidation&&revalidation.asset ? revalidation.asset : null,
+      valid:revalidation&&typeof revalidation.valid==="boolean" ? revalidation.valid : null,
+      reason:revalidation&&revalidation.reason ? revalidation.reason : null,
+      price:revalidation&&revalidation.price!=null ? revalidation.price : null,
+      notify:revalidation&&revalidation.notify ? revalidation.notify : null
     },
     watchRadar:{
       generatedAt:watch&&watch.generatedAt ? watch.generatedAt : null,
