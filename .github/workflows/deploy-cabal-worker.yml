@@ -46,7 +46,9 @@ jobs:
           grep -q '"crons": \["\* \* \* \* \*"\]' cloudflare/cabal-scanner/wrangler.jsonc
 
       - name: Run CABAL regression suite
-        run: python scripts/cabal_regression_v2.py
+        run: |
+          python scripts/cabal_regression_v2.py
+          python scripts/cabal_ntfy_regression_v2.py
 
       - name: Neutralize Cloudflare Workers Builds production promotion
         shell: bash
