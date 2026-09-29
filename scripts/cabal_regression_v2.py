@@ -333,9 +333,6 @@ btc.update({
 })
 expect("BTC",btc,"BUY_NOW")
 
-print("CABAL v2 regression: PASS")
-
-
 # MEW 2026-09-21: discovered only after +12% 24h. Keep internal WATCH if useful,
 # but never notify the user as an "EARLY" runner unless a real second-leg/re-accum exists.
 mew_late=base("MEW")
@@ -353,3 +350,5 @@ mew_late.update({
 mew_late_result=expect("MEW_LATE_WATCH",mew_late,"WATCH")
 assert mew_late_result["notifyWatchEligible"] is False
 assert mew_late_result["userWatchSuppressedLateMove"] is True
+
+print("CABAL v2 regression: PASS")
