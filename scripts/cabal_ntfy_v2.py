@@ -22,6 +22,8 @@ MAX_MACHINE_AGE_MINUTES=10
 ALERT_VALIDITY_MINUTES=10
 MAX_BUYS_PER_PUSH=3
 MAX_WATCH_PER_PUSH=1
+MIN_ACTIONABLE_TURNOVER_24H=250_000
+MIN_NON_BTC_FRESH_SCANS=2
 
 def num(v):
     try:
@@ -95,6 +97,11 @@ def execution_valid(row):
     classification=str(row.get("baseClassification") or row.get("classification") or "").upper()
     # Defense in depth: never relay another ONDO-2026-09-21 style low-quality CORE BUY.
     if asset!="BTC" and (quality is None or quality<55):
+        return False
+    # Never relay a real BUY from ultra-thin markets. PRE-ACCUM may observe them,
+    # but execution requires at least the independent broad-universe liquidity floor.
+    turnover=num(row.get("volume24h") or row.get("coinGeckoVolume24h")) or 0
+    if asset!="BTC" and turnover < MIN_ACTIONABLE_TURNOVER_24H:
         return False
     if row.get("isCoreAsset") is True and asset!="BTC" and classification=="NO SETUP":
         return False
@@ -236,6 +243,8 @@ def build():
     if healthy:
         for key,r in active_buy.items():
             req=int(r.get("requiredFreshScans") or 1)
+            if str(r.get("asset") or "").upper()!="BTC":
+                req=max(req,MIN_NON_BTC_FRESH_SCANS)
             if int(seen.get(key,0))<req: continue
             if hours_since(now,last_alert.get(key))<BUY_COOLDOWN_HOURS: continue
             ready_buy.append(r)
@@ -299,9 +308,9 @@ def build():
         names=", ".join(k.split(":",1)[-1] for k in cancels)
         for k in cancels: last_cancel[k]=now_iso
         payload={
-            "title":"🔴 CABAL v2 — CANCELAR COMPRA",
+            "title":"🟠 CABAL v2 — VENTANA DE ENTRADA CERRADA",
             "priority":"high","kind":"CANCEL","buyAssets":[],
-            "message":f'{names}\nLa señal anterior ya NO es válida.\nSI NO ENTRASTE: NO COMPRAR.\nSI YA ENTRASTE: esta cancelación no ordena vender; no añadas posición y mantén como referencia el STOP comunicado en la alerta original.'
+            "message":f'{names}\nLa ventana de ENTRADA anterior ha dejado de ser válida.\nSI NO ENTRASTE: NO ENTRAR.\nSI YA ENTRASTE: NO ES UNA ORDEN DE VENTA. Pasa a gestión de posición, no añadas y mantén como referencia el STOP estructural comunicado en la alerta original.'
         }
     elif ready_watch:
         for r in ready_watch:
