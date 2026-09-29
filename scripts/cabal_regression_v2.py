@@ -152,6 +152,33 @@ ondo_bad_result=evaluate(ondo_bad)
 assert ondo_bad_result["decisionTier"]!="BUY_NOW"
 assert ondo_bad_result["notifyBuyEligible"] is False
 
+# HBAR 2026-09-28: CABAL saw the setup near 0.0974 at only +3.8% 24h.
+# This must reach NTFY as an early CORE WATCH, but must remain strictly non-BUY.
+hbar_early=base("HBAR")
+hbar_early.update({
+    "price":0.0974,"noChase":0.0986972,"protectiveStopReference":0.09425148,
+    "priceChange1hPct":1.083,"priceChange4hPct":-0.1972,"priceChange6hPct":2.0811,"priceChange24hPct":3.8117,
+    "priceChange72hPct":3.9913,"rvol1h":1.6093,
+    "relativeStrength1hVsBTC":0.8931,"relativeStrength4hVsBTC":0.5703,
+    "intrahourMovePct":1.3106,"intrahourRelativeStrengthVsBTC":1.6926,"stageAScore":22.2306,
+    "bucketB":True,"bucketC":False,"preAccumWatch":True,"preAccumTrigger":False,
+    "preAccumVolumeBuild6h":2.8981,"preAccumBaseRange12hPct":4.7711,
+    "effortVsResult":"CONSTRUCTIVE","classification":"PRE-ACCUMULATION WATCH",
+    "entryConfirmation15m":True,"fastPumpTrigger":True,"fastPumpWatch":True,
+    "fastPump15m":{
+        "rvol15m":0.7633,"trigger":True,"watch":True,
+        "wideBaseWatch":False,"wideBaseTrigger":False,
+        "invalidation15m":0.0939726,"wideBaseInvalidation15m":0.09425148
+    }
+})
+hbar_early_result=expect("HBAR_EARLY",hbar_early,"WATCH")
+assert hbar_early_result["coreEarlyAlertEligible"] is True
+assert hbar_early_result["runnerCandidateEligible"] is True
+assert hbar_early_result["runnerCandidateStage"]=="CORE_EARLY"
+assert hbar_early_result["notifyWatchEligible"] is True
+assert hbar_early_result["notifyBuyEligible"] is False
+assert hbar_early_result["signalLane"]=="CORE_EARLY"
+
 # OPG-type case: ~1% no-chase headroom may block BUY but must NOT hide an early RUNNER watch.
 opg=base("OPG")
 opg.update({
