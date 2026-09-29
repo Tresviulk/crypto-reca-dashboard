@@ -141,6 +141,9 @@ const GUARD_NTFY_BACKOFF_BASE_MS = 10 * 60 * 1000;
 const GUARD_NTFY_BACKOFF_MAX_MS = 60 * 60 * 1000;
 const GUARD_HEALTH_MAX_AGE_MS = 150 * 1000;
 const GUARD_MAX_SCHEDULER_LAG_MS = 120 * 1000;
+const BUY_DECISION_STATE_URL = "https://raw.githubusercontent.com/Tresviulk/crypto-reca-dashboard/main/data/cabal-machine.json";
+const BUY_DECISION_MAX_AGE_MS = 15 * 60 * 1000;
+const BUY_DECISION_STALE_ALERT_COOLDOWN_MS = 60 * 60 * 1000;
 
 async function guardEnsureStore(env){
   if(!env.DB) return false;
@@ -380,6 +383,70 @@ async function guardNotify(env,candidates){
   return {assets:chosen.map(x=>x.base),ok:true,skipped:null,status:r.status,error:null,backoffUntil:null};
 }
 
+async function guardCheckBuyDecisionFreshness(env){
+  const now=Date.now();
+  let generatedAt=null, ageMs=Number.POSITIVE_INFINITY, error=null;
+  try{
+    const r=await fetch(BUY_DECISION_STATE_URL,{
+      headers:{"cache-control":"no-cache"}
+    });
+    if(!r.ok) throw new Error("HTTP_"+r.status);
+    const j=await r.json();
+    generatedAt=j && j.generatedAt ? String(j.generatedAt) : null;
+    const ts=generatedAt ? Date.parse(generatedAt) : NaN;
+    if(Number.isFinite(ts)) ageMs=Math.max(0,now-ts);
+    else error="INVALID_GENERATED_AT";
+  }catch(e){
+    error=String(e);
+  }
+
+  const fresh=Number.isFinite(ageMs) && ageMs<=BUY_DECISION_MAX_AGE_MS && !error;
+  const prev=await guardGet(env,"decision:state")||{};
+  let lastStaleAlertAt=Number(prev.lastStaleAlertAt||0);
+  let lastAlertError=null;
+
+  if(!fresh && env.NTFY_URL && now-lastStaleAlertAt>=BUY_DECISION_STALE_ALERT_COOLDOWN_MS){
+    const notifyState=await guardGet(env,"notify:state")||{};
+    if(Number(notifyState.backoffUntil||0)<=now){
+      try{
+        const rr=await fetch(env.NTFY_URL,{
+          method:"POST",
+          headers:{
+            "Title":"🔴 CABAL — MOTOR BUY DESACTUALIZADO",
+            "Priority":"high",
+            "Tags":"warning"
+          },
+          body:[
+            "NO CONFIAR EN NUEVAS ÓRDENES BUY hasta recuperar el full-decision scan.",
+            "Market Guard 1-min puede seguir observando, pero no sustituye al motor ejecutable.",
+            "Último cabal-machine: "+(generatedAt||"desconocido"),
+            "Antigüedad: "+(Number.isFinite(ageMs)?Math.round(ageMs/60000)+" min":"n/a"),
+            "Error: "+(error||"STALE")
+          ].join("\n")
+        });
+        if(rr.ok) lastStaleAlertAt=now;
+        else lastAlertError="HTTP_"+rr.status;
+      }catch(e){
+        lastAlertError="FETCH_"+String(e);
+      }
+    }else{
+      lastAlertError="DEFERRED_DURING_NTFY_BACKOFF";
+    }
+  }
+
+  const state={
+    checkedAt:now,
+    generatedAt,
+    ageMs:Number.isFinite(ageMs)?ageMs:null,
+    fresh,
+    error,
+    lastStaleAlertAt,
+    lastAlertError
+  };
+  await guardPut(env,"decision:state",state);
+  return state;
+}
+
 async function runMarketGuard(event,env){
   const started=Date.now();
   const scheduledAt=Number(event && event.scheduledTime)||started;
@@ -405,6 +472,7 @@ async function runMarketGuard(event,env){
     let history=Array.isArray(h && h.items) ? h.items : [];
     history=history.filter(x=>x && x.t>=started-GUARD_HISTORY_MINUTES*60_000);
     const candidates=guardCandidates(current,history);
+    const decisionState=await guardCheckBuyDecisionFreshness(env);
     const notifyResult=await guardNotify(env,candidates);
     const alerted=Array.isArray(notifyResult.assets)?notifyResult.assets:[];
     history.push(current);
@@ -425,6 +493,12 @@ async function runMarketGuard(event,env){
       lastRuntimeMs:finished-started,
       lastUniverseCount:current.count,
       lastCandidateCount:candidates.length,
+      buyDecisionFresh:decisionState.fresh,
+      buyDecisionGeneratedAt:decisionState.generatedAt,
+      buyDecisionAgeMs:decisionState.ageMs,
+      buyDecisionError:decisionState.error,
+      buyDecisionLastStaleAlertAt:decisionState.lastStaleAlertAt,
+      buyDecisionLastAlertError:decisionState.lastAlertError,
       lastAlertAssets:alerted,
       lastNotificationAttemptAt:Date.now(),
       lastNotificationStatus:notifyResult.status||null,
@@ -517,6 +591,12 @@ async function guardHealth(env){
     lastRuntimeMs:Number(hb.lastRuntimeMs||0),
     lastUniverseCount:Number(hb.lastUniverseCount||0),
     lastCandidateCount:Number(hb.lastCandidateCount||0),
+    buyDecisionFresh:hb.buyDecisionFresh===true,
+    buyDecisionGeneratedAt:hb.buyDecisionGeneratedAt||null,
+    buyDecisionAgeMinutes:hb.buyDecisionAgeMs==null ? null : Math.round(Number(hb.buyDecisionAgeMs)/60000),
+    buyDecisionError:hb.buyDecisionError||null,
+    buyDecisionLastStaleAlertAt:hb.buyDecisionLastStaleAlertAt ? new Date(Number(hb.buyDecisionLastStaleAlertAt)).toISOString() : null,
+    buyDecisionLastAlertError:hb.buyDecisionLastAlertError||null,
     lastAlertAssets:Array.isArray(hb.lastAlertAssets)?hb.lastAlertAssets:[],
     consecutiveHealthyCycles:Number(hb.consecutiveHealthyCycles||0),
     notificationHealthy:hb.notificationHealthy!==false,
