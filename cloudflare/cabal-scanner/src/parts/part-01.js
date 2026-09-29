@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_1_2026-09-12";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_9_2026-09-29_QNT_RECOVERY";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -74,6 +74,18 @@ function upper(v){
   return String(v || "").trim().toUpperCase();
 }
 
+const EXTERNAL_FETCH_TIMEOUT_MS = 6500;
+
+async function fetchTimed(url, options={}, timeoutMs=EXTERNAL_FETCH_TIMEOUT_MS){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort("CABAL_FETCH_TIMEOUT"), timeoutMs);
+  try{
+    return await fetch(url,{...options,signal:controller.signal});
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
 async function mapLimit(items, concurrency, fn){
   const out = new Array(items.length);
   let next = 0;
@@ -116,7 +128,7 @@ function kucoinParts(symbol){
 }
 
 async function bybitTickers(){
-  const r = await fetch("https://api.bybit.com/v5/market/tickers?category=spot");
+  const r = await fetchTimed("https://api.bybit.com/v5/market/tickers?category=spot");
   if(!r.ok) throw new Error("Bybit tickers " + r.status);
 
   const j = await r.json();
@@ -145,7 +157,7 @@ async function bybitTickers(){
 }
 
 async function kucoinTickers(){
-  const r = await fetch("https://api.kucoin.com/api/v1/market/allTickers");
+  const r = await fetchTimed("https://api.kucoin.com/api/v1/market/allTickers");
   if(!r.ok) throw new Error("KuCoin tickers " + r.status);
 
   const j = await r.json();
