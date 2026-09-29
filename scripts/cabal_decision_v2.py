@@ -352,14 +352,39 @@ def evaluate(row):
         and (headroom is None or headroom>=0.5)
         and not reject
     )
-    runner_candidate=bool(runner_early_candidate or runner_confirmed_candidate)
+    # CORE early alert: surface a confirmed early setup before it reaches normal
+    # RUNNER/BUY quality thresholds. This is informational only and never relaxes BUY.
+    # HBAR 2026-09-28 archetype: pre-accumulation + live 15m trigger was detected
+    # around +3.8% 24h but stayed silent because generic RUNNER quality was still low.
+    core_early_alert=bool(
+        not buy
+        and core and asset!="BTC"
+        and p24 < 10.0
+        and 0.45 <= p1 < 3.5
+        and p6 < 10.0
+        and fresh15 and fast_trigger and fast_watch
+        and pre_watch and bb
+        and q >= 30
+        and r1 >= 1.25
+        and rs1 >= 0.50 and rs4 >= 0.25 and irs >= 0.75
+        and effort!="POOR"
+        and "NO SETUP" not in cls and "CHURN" not in cls and "DISTRIBUTION" not in cls
+        and (headroom is None or headroom>=0.75)
+        and stop_dist is not None and 1.0<=stop_dist<=5.0
+        and not reject
+    )
 
-    # A user-facing RUNNER candidate is, by definition, a WATCH.
+    runner_candidate=bool(runner_early_candidate or runner_confirmed_candidate or core_early_alert)
+
+    # A user-facing candidate is, by definition, a WATCH.
     # Keep canonical tier/watch fields coherent for scanner + NTFY.
     if runner_candidate and not buy and tier=="NONE":
         watch=True
         tier="WATCH"
-        reason="RUNNER_EARLY_WATCH" if runner_early_candidate else "RUNNER_CONFIRMED_WATCH"
+        if core_early_alert:
+            reason="CORE_EARLY_ALERT"
+        else:
+            reason="RUNNER_EARLY_WATCH" if runner_early_candidate else "RUNNER_CONFIRMED_WATCH"
 
     runner_buy=bool(
         buy
@@ -420,10 +445,11 @@ def evaluate(row):
         "pilotBuyEligible":pilot_buy,
         "secondLegBuyEligible":second_leg_buy,
         "runnerCandidateEligible":runner_candidate,
-        "runnerCandidateStage":("EARLY" if runner_early_candidate else ("CONFIRMED" if runner_confirmed_candidate else None)),
+        "coreEarlyAlertEligible":core_early_alert,
+        "runnerCandidateStage":("CORE_EARLY" if core_early_alert else ("EARLY" if runner_early_candidate else ("CONFIRMED" if runner_confirmed_candidate else None))),
         "scalpTarget2Pct":round(price*1.02,12) if price is not None else None,
         "scalpTarget3Pct":round(price*1.03,12) if price is not None else None,
-        "signalLane":("SECOND-LEG PILOT" if pilot_buy else ("SCALP+RUNNER" if scalp_buy and runner_buy else ("RUNNER" if runner_buy or runner_candidate else ("SCALP" if scalp_buy else "INTERNAL")))),
+        "signalLane":("SECOND-LEG PILOT" if pilot_buy else ("SCALP+RUNNER" if scalp_buy and runner_buy else ("CORE_EARLY" if core_early_alert else ("RUNNER" if runner_buy or runner_candidate else ("SCALP" if scalp_buy else "INTERNAL"))))),
         "qualityScore":q,
         "requiredFreshScans":required,
         "decisionEntryMax":entry_max,
