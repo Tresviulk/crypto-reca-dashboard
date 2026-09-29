@@ -40,7 +40,9 @@ jobs:
 
       - name: Regression gate — known good and bad archetypes
         if: github.event_name != 'schedule'
-        run: python scripts/cabal_regression_v2.py
+        run: |
+          python scripts/cabal_regression_v2.py
+          python scripts/cabal_ntfy_regression_v2.py
 
       - name: Run CABAL v2 full-universe scanner
         run: python scripts/cabal-machine-scan-v16.py
