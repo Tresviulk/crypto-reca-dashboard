@@ -1043,6 +1043,9 @@ const GUARD_NTFY_BACKOFF_MAX_MS = 60 * 60 * 1000;
 const GUARD_HEALTH_MAX_AGE_MS = 150 * 1000;
 const GUARD_MAX_SCHEDULER_LAG_MS = 120 * 1000;
 const GUARD_EXECUTION_MIN_TURNOVER = 250_000;
+const GUARD_RECOVERY_MIN_TURNOVER = 1_000_000;
+const GUARD_RECOVERY_MIN_24H_PCT = -35.0;
+const GUARD_RECOVERY_MAX_24H_PCT = -8.0;
 const GUARD_BUY_CONFIRMATIONS_REQUIRED_NON_BTC = 2;
 const GUARD_BUY_CONFIRMATION_MAX_GAP_MS = 7 * 60 * 1000;
 
@@ -1163,7 +1166,23 @@ function guardCandidates(current,history){
       (p3!=null && p3>=0.80 && volAccel5!=null && volAccel5>=1.5) ||
       (p5!=null && p5>=1.20 && volAccel5!=null && volAccel5>=1.2)
     );
-    if(!early24 || !accel) continue;
+
+    // Recovery lane: catches QNT-type violent reversals that begin while the
+    // rolling 24h change is still deeply negative after an earlier sell-off.
+    // This lane is intentionally restricted to liquid assets and stronger
+    // short-horizon acceleration; it does NOT weaken the standard early lane.
+    const recovery24=(
+      p24>=GUARD_RECOVERY_MIN_24H_PCT &&
+      p24<=GUARD_RECOVERY_MAX_24H_PCT &&
+      turn>=GUARD_RECOVERY_MIN_TURNOVER
+    );
+    const recoveryAccel=(
+      (p1!=null && p1>=0.90 && volAccel5!=null && volAccel5>=2.0) ||
+      (p3!=null && p3>=1.50 && volAccel5!=null && volAccel5>=1.5) ||
+      (p5!=null && p5>=2.00 && volAccel5!=null && volAccel5>=1.2)
+    );
+    const recoveryLane=recovery24 && recoveryAccel;
+    if(!(early24 && accel) && !recoveryLane) continue;
 
     let score=0;
     score += Math.max(0,p1||0)*16;
@@ -1171,11 +1190,14 @@ function guardCandidates(current,history){
     score += Math.max(0,p5||0)*6;
     score += Math.min(45,Math.max(0,volAccel5||0)*10);
     if(turn>=250_000) score+=8;
+    if(recoveryLane) score+=18;
+    if(recoveryLane && turn>=5_000_000) score+=8;
 
     out.push({
       base,venue,venueSymbol,price,turnover24h:turn,change24h:p24,
       change1m:p1,change3m:p3,change5m:p5,
-      volumeAccel5m:volAccel5,guardScore:Math.round(score*10)/10
+      volumeAccel5m:volAccel5,guardScore:Math.round(score*10)/10,
+      recoveryLane
     });
   }
   out.sort((a,b)=>b.guardScore-a.guardScore);
@@ -1208,10 +1230,24 @@ function guardCandidateSnapshot(current,history,base){
   score += Math.min(45,Math.max(0,volAccel5||0)*10);
   if(turn>=250_000) score+=8;
 
+  const recoveryLane=(
+    p24>=GUARD_RECOVERY_MIN_24H_PCT &&
+    p24<=GUARD_RECOVERY_MAX_24H_PCT &&
+    turn>=GUARD_RECOVERY_MIN_TURNOVER &&
+    (
+      (p1!=null && p1>=0.90 && volAccel5!=null && volAccel5>=2.0) ||
+      (p3!=null && p3>=1.50 && volAccel5!=null && volAccel5>=1.5) ||
+      (p5!=null && p5>=2.00 && volAccel5!=null && volAccel5>=1.2)
+    )
+  );
+  if(recoveryLane) score+=18;
+  if(recoveryLane && turn>=5_000_000) score+=8;
+
   return {
     base,venue,venueSymbol,price,turnover24h:turn,change24h:p24,
     change1m:p1,change3m:p3,change5m:p5,
-    volumeAccel5m:volAccel5,guardScore:Math.round(score*10)/10
+    volumeAccel5m:volAccel5,guardScore:Math.round(score*10)/10,
+    recoveryLane
   };
 }
 
@@ -1355,12 +1391,19 @@ function guardPilotDecision(c,m){
   const p24=Number(c.change24h);
   const live=Number(c.price);
   const shortAccel=(Number(c.change3m)>=0.80 || Number(c.change5m)>=1.20 || Number(c.change1m)>=0.60);
-  const safe=(
+  const baseSafe=(
     live>0 && Number(m.stop)>0 && live>Number(m.stop)
     && Number(c.turnover24h||0)>=GUARD_EXECUTION_MIN_TURNOVER
     && sd>=1.0 && sd<=3.5
     && Number.isFinite(head) && head>=1.0
-    && p24>-8.0 && p24<15.0
+  );
+  const safe=baseSafe && p24>-8.0 && p24<15.0;
+  const recoverySafe=Boolean(
+    baseSafe &&
+    c.recoveryLane===true &&
+    Number(c.turnover24h||0)>=GUARD_RECOVERY_MIN_TURNOVER &&
+    p24>=GUARD_RECOVERY_MIN_24H_PCT &&
+    p24<=GUARD_RECOVERY_MAX_24H_PCT
   );
 
   const second=Boolean(
@@ -1381,8 +1424,22 @@ function guardPilotDecision(c,m){
     && rs1>=0.25 && rs4>=0.25
   );
 
-  const buy=second||fast;
-  const reason=second ? "SECOND_LEG_CLOUD_CONFIRMED" : (fast ? "FAST_ACCEL_CLOUD_CONFIRMED" : "NO_BUY");
+  const recovery=Boolean(
+    recoverySafe && shortAccel
+    && c.guardScore>=45
+    && p15>=0
+    && p1>=1.0 && p1<10.0
+    && p4>-12.0
+    && r15>=1.30 && r1>=1.25
+    && rs1>=0.75 && rs4>-5.0
+  );
+
+  const buy=second||fast||recovery;
+  const reason=second
+    ? "SECOND_LEG_CLOUD_CONFIRMED"
+    : (fast
+      ? "FAST_ACCEL_CLOUD_CONFIRMED"
+      : (recovery ? "RECOVERY_ACCEL_CLOUD_CONFIRMED" : "NO_BUY"));
   const score=Math.round((
     Number(c.guardScore||0)
     +Math.max(0,rs1||0)*5
@@ -1406,7 +1463,9 @@ function guardPilotDecision(c,m){
     change1hPct:p1,change4hPct:p4,change24hPct:p24,
     rs1hVsBtc:rs1,rs4hVsBtc:rs4,
     rvol15m:r15,rvol1h:r1,
-    secondLegTrigger:Boolean(m.lite && m.lite.secondLegTrigger)
+    secondLegTrigger:Boolean(m.lite && m.lite.secondLegTrigger),
+    recoveryLane:Boolean(c.recoveryLane),
+    recoveryBuyEligible:recovery
   };
 }
 
@@ -1452,7 +1511,7 @@ async function guardQualifyBuySignals(env,evaluated){
 }
 
 async function guardEvaluateTrades(env,candidates){
-  const top=(candidates||[]).slice(0,4);
+  const top=(candidates||[]).slice(0,6);
   const evaluated=await mapLimit(top,2,async x=>{
     try{
       const m=await guardExecutionMetrics(x);
