@@ -138,12 +138,15 @@ def buy_card(r,seen):
 
 def watch_card(r):
     stage=str(r.get("runnerCandidateStage") or "EARLY").upper()
-    label="RUNNER TEMPRANO" if stage=="EARLY" else "RUNNER CONFIRMADO — NO CHASE"
-    action=(
-        "ACCIÓN: RUNNER CANDIDATE. NO COMPRAR AÚN; CABAL espera confirmación de entrada."
-        if stage=="EARLY"
-        else "ACCIÓN: MOVIMIENTO CONFIRMADO, PERO NO ES BUY. No perseguir precio; esperar entrada ejecutable."
-    )
+    if stage=="CORE_EARLY":
+        label="CORE EARLY WATCH — NO BUY"
+        action="ACCIÓN: AVISO TEMPRANO CORE. NO COMPRAR AÚN; CABAL ha detectado estructura + confirmación 15m y espera entrada ejecutable."
+    elif stage=="EARLY":
+        label="RUNNER TEMPRANO"
+        action="ACCIÓN: RUNNER CANDIDATE. NO COMPRAR AÚN; CABAL espera confirmación de entrada."
+    else:
+        label="RUNNER CONFIRMADO — NO CHASE"
+        action="ACCIÓN: MOVIMIENTO CONFIRMADO, PERO NO ES BUY. No perseguir precio; esperar entrada ejecutable."
     return "\n".join([
         f'🚀 {r.get("asset")} — {label}',
         f'PLATAFORMA: {r.get("executionVenue") or r.get("venue") or "n/a"}',
@@ -157,7 +160,7 @@ def watch_card(r):
 
 def watch_priority(r):
     core=1 if r.get("isCoreAsset") else 0
-    early=1 if str(r.get("runnerCandidateStage") or "EARLY").upper()=="EARLY" else 0
+    early=1 if str(r.get("runnerCandidateStage") or "EARLY").upper() in {"EARLY","CORE_EARLY"} else 0
     p1=num(r.get("priceChange1hPct")) or 0
     p6=num(r.get("priceChange6hPct")) or 0
     p24=num(r.get("priceChange24hPct")) or 0
