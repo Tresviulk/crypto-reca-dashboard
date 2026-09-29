@@ -44,6 +44,8 @@ jobs:
           grep -q 'EXTERNAL_FETCH_TIMEOUT_MS' cloudflare/cabal-scanner/src/index.js
           grep -q 'GUARD_EXECUTION_DATA_GAP' cloudflare/cabal-scanner/src/index.js
           grep -q 'GUARD_BUY_CONFIRMATIONS_REQUIRED_NON_BTC = 2' cloudflare/cabal-scanner/src/index.js
+          grep -q 'GUARD_RECOVERY_MIN_TURNOVER = 1_000_000' cloudflare/cabal-scanner/src/index.js
+          grep -q 'RECOVERY_ACCEL_CLOUD_CONFIRMED' cloudflare/cabal-scanner/src/index.js
           grep -q 'COMMITTED_WINDOW_SIGNAL_SOFTENED' cloudflare/cabal-scanner/src/index.js
           grep -q '"crons": \["\* \* \* \* \*"\]' cloudflare/cabal-scanner/wrangler.jsonc
 
@@ -51,6 +53,7 @@ jobs:
         run: |
           python scripts/cabal_regression_v2.py
           python scripts/cabal_ntfy_regression_v2.py
+          node scripts/cabal_worker_regression_v3.mjs
 
       - name: Neutralize Cloudflare Workers Builds production promotion
         shell: bash
@@ -193,7 +196,7 @@ jobs:
               raise SystemExit(f'health missing keys: {missing}')
           if d.get('mode')!='CLOUDFLARE_1M_MARKET_GUARD':
               raise SystemExit(f"unexpected guard mode: {d.get('mode')}")
-          if d.get('patchVersion')!='CABAL_WHALES_V3_1_8_2026-09-29_BUY_PERSISTENCE':
+          if d.get('patchVersion')!='CABAL_WHALES_V3_1_9_2026-09-29_QNT_RECOVERY':
               raise SystemExit(f"wrong worker version served: {d.get('patchVersion')}")
           eg=d.get('executionGuard') or {}
           if eg.get('mode')!='CLOUDFLARE_5M_EXECUTION_GUARD':
@@ -231,7 +234,7 @@ jobs:
           last=rows[-1]
           if int(last.get('consecutiveHealthyCycles') or 0)<3:
               raise SystemExit(f"insufficient consecutive healthy cycles: {last}")
-          expected='CABAL_WHALES_V3_1_8_2026-09-29_BUY_PERSISTENCE'
+          expected='CABAL_WHALES_V3_1_9_2026-09-29_QNT_RECOVERY'
           versions={r.get('patchVersion') for r in rows}
           if versions!={expected}:
               raise SystemExit(f'mixed worker versions served during verification: {versions}')
