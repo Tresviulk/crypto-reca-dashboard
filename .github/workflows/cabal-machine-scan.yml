@@ -220,7 +220,42 @@ jobs:
           else
             cp /tmp/ntfy-alert-state.json data/ntfy-alert-state.json
           fi
-          git add data/cabal-machine.json data/ntfy-alert-state.json
+
+          # Durable audit trail: every successfully delivered CABAL NTFY is retained
+          # with the exact title/message/assets and machine timestamp. This makes
+          # future WOD-style disputes fully reconstructable.
+          if [ "$delivery_ok" = "true" ] && [ "$delivery_kind" != "NONE" ] && [ -f /tmp/ntfy-payload.json ]; then
+            python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          path="data/ntfy-alert-log.json"
+          try:
+              log=json.load(open(path,encoding="utf-8"))
+          except Exception:
+              log={"schemaVersion":"1.0","module":"cabalNtfyAlertLog","events":[]}
+          payload=json.load(open("/tmp/ntfy-payload.json",encoding="utf-8"))
+          state=json.load(open("/tmp/ntfy-alert-state.json",encoding="utf-8"))
+          delivery=json.load(open("/tmp/ntfy-delivery-status.json",encoding="utf-8"))
+          if payload:
+              event={
+                  "deliveredAt":datetime.now(timezone.utc).isoformat().replace("+00:00","Z"),
+                  "kind":payload.get("kind"),
+                  "title":payload.get("title"),
+                  "buyAssets":payload.get("buyAssets") or [],
+                  "message":payload.get("message"),
+                  "cabalGeneratedAt":state.get("lastCabalGeneratedAt"),
+                  "http":delivery.get("http"),
+              }
+              events=list(log.get("events") or [])
+              events.append(event)
+              log["events"]=events[-500:]
+              with open(path,"w",encoding="utf-8") as fh:
+                  json.dump(log,fh,ensure_ascii=False,indent=2)
+                  fh.write("\n")
+          PY
+          fi
+
+          git add data/cabal-machine.json data/ntfy-alert-state.json data/ntfy-alert-log.json
           if git diff --cached --quiet; then
             echo 'No CABAL state change.'
             exit 0
