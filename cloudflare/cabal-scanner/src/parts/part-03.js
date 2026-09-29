@@ -66,7 +66,7 @@ async function bybitKline(symbol, interval, limit){
     "&interval=" + interval +
     "&limit=" + limit;
 
-  const r = await fetch(url);
+  const r = await fetchTimed(url);
   if(!r.ok) throw new Error("Bybit kline " + symbol + "/" + interval + " " + r.status);
 
   const j = await r.json();
@@ -98,7 +98,7 @@ async function kucoinKline(symbol, interval, limit){
     "&startAt=" + startAt +
     "&endAt=" + endAt;
 
-  const r = await fetch(url);
+  const r = await fetchTimed(url);
   if(!r.ok) throw new Error("KuCoin kline " + symbol + "/" + interval + " " + r.status);
 
   const j = await r.json();
