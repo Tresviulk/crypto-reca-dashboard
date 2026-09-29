@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_7_2026-09-29_CORE_EARLY_ALERT_REDEPLOY";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_1_2026-09-12";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -74,18 +74,6 @@ function upper(v){
   return String(v || "").trim().toUpperCase();
 }
 
-const EXTERNAL_FETCH_TIMEOUT_MS = 6500;
-
-async function fetchTimed(url, options={}, timeoutMs=EXTERNAL_FETCH_TIMEOUT_MS){
-  const controller = new AbortController();
-  const timer = setTimeout(()=>controller.abort("CABAL_FETCH_TIMEOUT"), timeoutMs);
-  try{
-    return await fetch(url,{...options,signal:controller.signal});
-  }finally{
-    clearTimeout(timer);
-  }
-}
-
 async function mapLimit(items, concurrency, fn){
   const out = new Array(items.length);
   let next = 0;
@@ -128,7 +116,7 @@ function kucoinParts(symbol){
 }
 
 async function bybitTickers(){
-  const r = await fetchTimed("https://api.bybit.com/v5/market/tickers?category=spot");
+  const r = await fetch("https://api.bybit.com/v5/market/tickers?category=spot");
   if(!r.ok) throw new Error("Bybit tickers " + r.status);
 
   const j = await r.json();
@@ -157,7 +145,7 @@ async function bybitTickers(){
 }
 
 async function kucoinTickers(){
-  const r = await fetchTimed("https://api.kucoin.com/api/v1/market/allTickers");
+  const r = await fetch("https://api.kucoin.com/api/v1/market/allTickers");
   if(!r.ok) throw new Error("KuCoin tickers " + r.status);
 
   const j = await r.json();
@@ -548,7 +536,7 @@ async function bybitKline(symbol, interval, limit){
     "&interval=" + interval +
     "&limit=" + limit;
 
-  const r = await fetchTimed(url);
+  const r = await fetch(url);
   if(!r.ok) throw new Error("Bybit kline " + symbol + "/" + interval + " " + r.status);
 
   const j = await r.json();
@@ -580,7 +568,7 @@ async function kucoinKline(symbol, interval, limit){
     "&startAt=" + startAt +
     "&endAt=" + endAt;
 
-  const r = await fetchTimed(url);
+  const r = await fetch(url);
   if(!r.ok) throw new Error("KuCoin kline " + symbol + "/" + interval + " " + r.status);
 
   const j = await r.json();
@@ -1036,12 +1024,15 @@ async function readWhaleInjections(request, env){
 const GUARD_MIN_TURNOVER = 50_000;
 const GUARD_MAX_ASSETS = 900;
 const GUARD_HISTORY_MINUTES = 7;
-const GUARD_ASSET_COOLDOWN_MS = 12 * 60 * 60 * 1000;
-const GUARD_GLOBAL_COOLDOWN_MS = 30 * 60 * 1000;
+const GUARD_ASSET_COOLDOWN_MS = 6 * 60 * 60 * 1000;
+const GUARD_GLOBAL_COOLDOWN_MS = 10 * 60 * 1000;
 const GUARD_NTFY_BACKOFF_BASE_MS = 10 * 60 * 1000;
 const GUARD_NTFY_BACKOFF_MAX_MS = 60 * 60 * 1000;
 const GUARD_HEALTH_MAX_AGE_MS = 150 * 1000;
 const GUARD_MAX_SCHEDULER_LAG_MS = 120 * 1000;
+const BUY_DECISION_STATE_URL = "https://raw.githubusercontent.com/Tresviulk/crypto-reca-dashboard/main/data/cabal-machine.json";
+const BUY_DECISION_MAX_AGE_MS = 15 * 60 * 1000;
+const BUY_DECISION_STALE_ALERT_COOLDOWN_MS = 60 * 60 * 1000;
 
 async function guardEnsureStore(env){
   if(!env.DB) return false;
@@ -1086,8 +1077,7 @@ function guardSnapshotAsset(m){
     Number(m.lastPrice)||0,
     Number(m.turnover24h)||0,
     Number(m.price24hPct)||0,
-    String(m.venue||""),
-    String(m.venueSymbol||"")
+    String(m.venue||"")
   ];
 }
 
@@ -1105,43 +1095,21 @@ async function guardBuildSnapshot(){
   const src=await Promise.allSettled([bybitTickers(),kucoinTickers()]);
   const bybit=src[0].status==="fulfilled" ? src[0].value : [];
   const kucoin=src[1].status==="fulfilled" ? src[1].value : [];
-  const bybitError=src[0].status==="rejected" ? String(src[0].reason||"BYBIT_FAILED") : null;
-  const kucoinError=src[1].status==="rejected" ? String(src[1].reason||"KUCOIN_FAILED") : null;
-  if(!bybit.length && !kucoin.length) throw new Error("GUARD_NO_SPOT_SOURCE | BYBIT="+bybitError+" | KUCOIN="+kucoinError);
-
-  // The one-minute guard must not inherit a Bybit outage when KuCoin is healthy.
-  // Prefer KuCoin for assets present on both venues; keep Bybit-only names as fallback.
-  const eligible=[...bybit,...kucoin]
+  if(!bybit.length && !kucoin.length) throw new Error("GUARD_NO_SPOT_SOURCE");
+  const ded=dedupeMarkets([...bybit,...kucoin]).preferred
     .filter(x=>(x.turnover24h||0)>=GUARD_MIN_TURNOVER)
-    .sort((a,b)=>(b.turnover24h||0)-(a.turnover24h||0));
-  const preferredByBase=new Map();
-  for(const m of eligible){
-    const prior=preferredByBase.get(m.base);
-    if(!prior || (m.venue==="KUCOIN" && prior.venue!=="KUCOIN")){
-      preferredByBase.set(m.base,m);
-    }
-  }
-  const ded=[...preferredByBase.values()]
     .sort((a,b)=>(b.turnover24h||0)-(a.turnover24h||0))
     .slice(0,GUARD_MAX_ASSETS);
-
   const a={};
   for(const m of ded) a[m.base]=guardSnapshotAsset(m);
-  return {
-    t:Date.now(),a,count:ded.length,bybit:bybit.length,kucoin:kucoin.length,
-    sourceStatus:{
-      bybit:bybit.length?"PASS":"FAIL",
-      kucoin:kucoin.length?"PASS":"FAIL",
-      bybitError,kucoinError
-    }
-  };
+  return {t:Date.now(),a,count:ded.length,bybit:bybit.length,kucoin:kucoin.length};
 }
 
 function guardCandidates(current,history){
   const out=[];
   const now=current.t;
   for(const [base,x] of Object.entries(current.a||{})){
-    const price=Number(x[0]), turn=Number(x[1]), p24=Number(x[2]), venue=String(x[3]||""), venueSymbol=String(x[4]||"");
+    const price=Number(x[0]), turn=Number(x[1]), p24=Number(x[2]), venue=String(x[3]||"");
     if(!(price>0) || !(turn>=GUARD_MIN_TURNOVER)) continue;
 
     const x1=guardFindAsset(history,base,now-60_000);
@@ -1154,7 +1122,7 @@ function guardCandidates(current,history){
     const delta5=turn5!=null ? Math.max(0,turn-turn5) : null;
     const volAccel5=(delta5!=null && turn>0) ? (delta5/turn)*288 : null;
 
-    const early24=p24>-8.0 && p24<8.5;
+    const early24=p24<8.5;
     const accel=(
       (p1!=null && p1>=0.60 && volAccel5!=null && volAccel5>=2.0) ||
       (p3!=null && p3>=0.80 && volAccel5!=null && volAccel5>=1.5) ||
@@ -1170,46 +1138,13 @@ function guardCandidates(current,history){
     if(turn>=250_000) score+=8;
 
     out.push({
-      base,venue,venueSymbol,price,turnover24h:turn,change24h:p24,
+      base,venue,price,turnover24h:turn,change24h:p24,
       change1m:p1,change3m:p3,change5m:p5,
       volumeAccel5m:volAccel5,guardScore:Math.round(score*10)/10
     });
   }
   out.sort((a,b)=>b.guardScore-a.guardScore);
   return out;
-}
-
-function guardCandidateSnapshot(current,history,base){
-  const x=current && current.a ? current.a[base] : null;
-  if(!x) return null;
-
-  const now=current.t;
-  const price=Number(x[0]), turn=Number(x[1]), p24=Number(x[2]);
-  const venue=String(x[3]||""), venueSymbol=String(x[4]||"");
-  if(!(price>0) || !(turn>=GUARD_MIN_TURNOVER) || !venue || !venueSymbol) return null;
-
-  const x1=guardFindAsset(history,base,now-60_000);
-  const x3=guardFindAsset(history,base,now-180_000);
-  const x5=guardFindAsset(history,base,now-300_000);
-  const p1=x1 ? guardPct(price,Number(x1[0])) : null;
-  const p3=x3 ? guardPct(price,Number(x3[0])) : null;
-  const p5=x5 ? guardPct(price,Number(x5[0])) : null;
-  const turn5=x5 ? Number(x5[1]) : null;
-  const delta5=turn5!=null ? Math.max(0,turn-turn5) : null;
-  const volAccel5=(delta5!=null && turn>0) ? (delta5/turn)*288 : null;
-
-  let score=0;
-  score += Math.max(0,p1||0)*16;
-  score += Math.max(0,p3||0)*10;
-  score += Math.max(0,p5||0)*6;
-  score += Math.min(45,Math.max(0,volAccel5||0)*10);
-  if(turn>=250_000) score+=8;
-
-  return {
-    base,venue,venueSymbol,price,turnover24h:turn,change24h:p24,
-    change1m:p1,change3m:p3,change5m:p5,
-    volumeAccel5m:volAccel5,guardScore:Math.round(score*10)/10
-  };
 }
 
 function guardFmt(v){
@@ -1243,385 +1178,161 @@ function guardRetryAfterMs(response){
 }
 
 async function guardNotify(env,candidates){
-  // WATCH is persisted for observability but no longer consumes NTFY quota.
-  // NTFY is reserved for executable BUY/CANCEL decisions.
-  const chosen=(candidates||[]).slice(0,10).map(x=>({
-    base:x.base,venue:x.venue,venueSymbol:x.venueSymbol,price:x.price,
-    guardScore:x.guardScore,change1m:x.change1m,change3m:x.change3m,
-    change5m:x.change5m,change24h:x.change24h,volumeAccel5m:x.volumeAccel5m
-  }));
-  await guardPut(env,"watch:latest",{
-    generatedAt:new Date().toISOString(),
-    candidates:chosen
-  });
-  return {
-    assets:[],
-    ok:true,
-    skipped:chosen.length ? "WATCH_PERSIST_ONLY" : "NO_CANDIDATES",
-    status:null,
-    error:null,
-    backoffUntil:null
-  };
-}
-
-function guardRvol(bars){
-  if(!bars || bars.length<8) return null;
-  const last=bars[bars.length-1];
-  const base=median(bars.slice(Math.max(0,bars.length-21),bars.length-1).map(x=>x.v)) || last.v || 1;
-  return base>0 ? last.v/base : null;
-}
-
-function guardStopFrom15m(price,a15){
-  if(!(price>0) || !a15 || !a15.length) return null;
-  const stops=[];
-  for(const n of [4,8,12]){
-    const w=a15.slice(Math.max(0,a15.length-n));
-    if(!w.length) continue;
-    const support=Math.min(...w.map(x=>x.l).filter(Number.isFinite));
-    const stop=support*0.996;
-    if(!(price>stop && stop>0)) continue;
-    const dist=(price-stop)/price*100;
-    if(dist>=1.0 && dist<=3.5) stops.push({stop,dist});
-  }
-  if(!stops.length) return null;
-  stops.sort((a,b)=>b.stop-a.stop);
-  return stops[0];
-}
-
-async function guardExecutionMetricsOnMarket(c,market){
-  const btcSymbol=market.venue==="BYBIT" ? "BTCUSDT" : "BTC-USDT";
-  const btcMarket={venue:market.venue,venueSymbol:btcSymbol};
-
-  const [a15,a60,btc60]=await Promise.all([
-    klineOnMarket(market,"15",60),
-    klineOnMarket(market,"60",180),
-    klineOnMarket(btcMarket,"60",30)
-  ]);
-  if(a15.length<20 || a60.length<30 || btc60.length<6) throw new Error("GUARD_EXECUTION_INSUFFICIENT_BARS");
-
-  const last15=a15[a15.length-1], last60=a60[a60.length-1], btcLast=btc60[btc60.length-1];
-  const p15=pct(last15.c,last15.o);
-  const p1=pct(last60.c,a60[a60.length-2].c);
-  const p4=pct(last60.c,a60[a60.length-5].c);
-  const btc1=pct(btcLast.c,btc60[btc60.length-2].c);
-  const btc4=pct(btcLast.c,btc60[btc60.length-5].c);
-  const rs1=(p1==null||btc1==null)?null:p1-btc1;
-  const rs4=(p4==null||btc4==null)?null:p4-btc4;
-  const r15=guardRvol(a15), r1=guardRvol(a60);
-  const lite=deepLiteAnalysis(a60,{change24h:c.change24h,change7d:null});
-  const high24=Math.max(...a60.slice(-24).map(x=>x.h).filter(Number.isFinite));
-  const noChase=Number.isFinite(high24) ? high24*1.01 : null;
-  const headroom=(noChase && c.price>0) ? guardPct(noChase,c.price) : null;
-  const stopInfo=guardStopFrom15m(c.price,a15);
-
-  return {
-    executionVenue:market.venue,executionVenueSymbol:market.venueSymbol,
-    p15,p1,p4,rs1,rs4,rvol15m:r15,rvol1h:r1,lite,
-    noChase,headroom,
-    stop:stopInfo ? stopInfo.stop : null,
-    stopDistancePct:stopInfo ? stopInfo.dist : null
-  };
-}
-
-async function guardExecutionMetrics(c){
-  if(!c || !c.base || !c.venue || !c.venueSymbol) throw new Error("GUARD_EXECUTION_SYMBOL_MISSING");
-  const alternatives=[{venue:c.venue,venueSymbol:c.venueSymbol}];
-  if(c.venue!=="KUCOIN") alternatives.push({venue:"KUCOIN",venueSymbol:c.base+"-USDT"});
-  if(c.venue!=="BYBIT") alternatives.push({venue:"BYBIT",venueSymbol:c.base+"USDT"});
-
-  const seen=new Set();
-  const errors=[];
-  for(const market of alternatives){
-    const key=market.venue+":"+market.venueSymbol;
-    if(seen.has(key)) continue;
-    seen.add(key);
-    try{
-      return await guardExecutionMetricsOnMarket(c,market);
-    }catch(e){
-      errors.push(key+"="+String(e));
-    }
-  }
-  throw new Error("GUARD_EXECUTION_DATA_GAP "+c.base+" | "+errors.join(" | "));
-}
-
-function guardPilotDecision(c,m){
-  const p15=Number(m.p15), p1=Number(m.p1), p4=Number(m.p4);
-  const rs1=Number(m.rs1), rs4=Number(m.rs4);
-  const r15=Number(m.rvol15m), r1=Number(m.rvol1h);
-  const head=Number(m.headroom), sd=Number(m.stopDistancePct);
-  const p24=Number(c.change24h);
-  const live=Number(c.price);
-  const shortAccel=(Number(c.change3m)>=0.80 || Number(c.change5m)>=1.20 || Number(c.change1m)>=0.60);
-  const safe=(
-    live>0 && Number(m.stop)>0 && live>Number(m.stop)
-    && sd>=1.0 && sd<=3.5
-    && Number.isFinite(head) && head>=1.0
-    && p24>-8.0 && p24<15.0
-  );
-
-  const second=Boolean(
-    safe && m.lite && m.lite.secondLegTrigger
-    && r1>=1.20 && r15>=1.10
-    && rs1>=0.50 && rs4>=0.25
-    && p1>=0.20 && p1<6.5
-  );
-
-  const fast=Boolean(
-    safe && shortAccel
-    && c.guardScore>=30
-    && p24<8.5
-    && p15>=0
-    && p1>=0.20 && p1<5.0
-    && p4<9.0
-    && r15>=1.25 && r1>=1.35
-    && rs1>=0.25 && rs4>=0.25
-  );
-
-  const buy=second||fast;
-  const reason=second ? "SECOND_LEG_CLOUD_CONFIRMED" : (fast ? "FAST_ACCEL_CLOUD_CONFIRMED" : "NO_BUY");
-  const score=Math.round((
-    Number(c.guardScore||0)
-    +Math.max(0,rs1||0)*5
-    +Math.max(0,rs4||0)*2
-    +Math.max(0,(r15||0)-1)*10
-    +Math.max(0,(r1||0)-1)*8
-    +(second?20:0)
-  )*10)/10;
-  const entryMax=buy ? Math.min(live*1.004,Number(m.noChase)*0.995) : null;
-
-  return {
-    asset:c.base,venue:m.executionVenue||c.venue,venueSymbol:m.executionVenueSymbol||c.venueSymbol,
-    price:live,buy,reason,score,
-    pilotSizePct:20,
-    entryMax,
-    stop:buy ? Number(m.stop) : null,
-    stopDistancePct:buy ? sd : null,
-    noChase:m.noChase,
-    headroomPct:head,
-    change1m:c.change1m,change3m:c.change3m,change5m:c.change5m,
-    change1hPct:p1,change4hPct:p4,change24hPct:p24,
-    rs1hVsBtc:rs1,rs4hVsBtc:rs4,
-    rvol15m:r15,rvol1h:r1,
-    secondLegTrigger:Boolean(m.lite && m.lite.secondLegTrigger)
-  };
-}
-
-async function guardEvaluateTrades(env,candidates){
-  const top=(candidates||[]).slice(0,4);
-  const evaluated=await mapLimit(top,2,async x=>{
-    try{
-      const m=await guardExecutionMetrics(x);
-      return guardPilotDecision(x,m);
-    }catch(e){
-      return {asset:x.base,venue:x.venue,price:x.price,buy:false,reason:"DATA_GAP",error:String(e)};
-    }
-  });
-  const buys=evaluated.filter(x=>x.buy).sort((a,b)=>b.score-a.score).slice(0,3);
-  const state={
-    generatedAt:new Date().toISOString(),
-    mode:"CLOUDFLARE_5M_EXECUTION_GUARD",
-    evaluated,
-    buys
-  };
-  await guardPut(env,"trade:latest",state);
-  const notify=await guardTradeNotify(env,state);
-  return {...state,notify};
-}
-
-function guardTradeCard(x){
-  return [
-    "🚨 "+x.asset+" — CABAL PILOT BUY",
-    "PLATAFORMA: "+x.venue,
-    "MOTIVO: "+x.reason,
-    "PRECIO AHORA: "+guardFmt(x.price),
-    "COMPRA MÁX.: "+guardFmt(x.entryMax),
-    "STOP: "+guardFmt(x.stop)+" ("+guardFmt(x.stopDistancePct)+"%)",
-    "RS 1H / 4H vs BTC: "+guardFmt(x.rs1hVsBtc)+"% / "+guardFmt(x.rs4hVsBtc)+"%",
-    "RVOL 15M / 1H: "+guardFmt(x.rvol15m)+"x / "+guardFmt(x.rvol1h)+"x",
-    "TAMAÑO PILOT: "+x.pilotSizePct+"% de la posición prevista.",
-    "VENTANA: 10 min. SPOT manual. No ejecutar si el precio supera COMPRA MÁX."
-  ].join("\n");
-}
-
-async function guardTradeNotify(env,state){
   const now=Date.now();
-  const buys=Array.isArray(state&&state.buys)?state.buys:[];
-  const active=await guardGet(env,"trade:active");
-  const currentAssets=new Set(buys.map(x=>x.asset));
+  const notifyState=await guardGet(env,"notify:state")||{};
+  const backoffUntil=Number(notifyState.backoffUntil||0);
 
-  // Revoke a still-live order immediately when the 1-minute active-order
-  // revalidation (or the regular 5-minute execution cycle) no longer confirms it.
-  if(active && active.asset && Number(active.validUntil||0)>now && !currentAssets.has(active.asset)){
-    if(!env.NTFY_URL) return {ok:false,kind:"CANCEL",asset:active.asset,error:"NTFY_URL_NOT_CONFIGURED"};
-    try{
-      const r=await fetch(env.NTFY_URL,{
-        method:"POST",
-        headers:{"Title":"🔴 CABAL — CANCELAR COMPRA","Priority":"high","Tags":"warning"},
-        body:[
-          active.asset,
-          "La revalidación Cloudflare ya no confirma la entrada.",
-          "SI NO ENTRASTE: NO COMPRAR.",
-          "SI YA ENTRASTE: no añadir posición; mantener el STOP de la alerta original."
-        ].join("\n")
-      });
-      if(r.ok){
-        await guardPut(env,"trade:active",{asset:null,clearedAt:now});
-        return {ok:true,kind:"CANCEL",asset:active.asset,status:r.status};
-      }
-      return {ok:false,kind:"CANCEL",asset:active.asset,status:r.status,error:"HTTP_"+r.status};
-    }catch(e){
-      return {ok:false,kind:"CANCEL",asset:active.asset,error:String(e)};
-    }
+  if(backoffUntil>now){
+    return {
+      assets:[],
+      ok:false,
+      skipped:"BACKOFF",
+      status:Number(notifyState.lastStatus||0)||null,
+      error:notifyState.lastError||"NTFY_BACKOFF_ACTIVE",
+      backoffUntil
+    };
+  }
+  if(!candidates.length) return {assets:[],ok:true,skipped:"NO_CANDIDATES",status:null,error:null,backoffUntil:null};
+
+  const global=await guardGet(env,"alert:__GLOBAL__");
+  if(global && now-Number(global.lastAlertAt||0)<GUARD_GLOBAL_COOLDOWN_MS){
+    return {assets:[],ok:true,skipped:"GLOBAL_COOLDOWN",status:null,error:null,backoffUntil:null};
   }
 
-  if(!buys.length){
-    // A pending BUY is only useful while the current validation still confirms it.
-    // If the next execution cycle has no BUY, explicitly invalidate stale pending
-    // transport state so health/dashboard cannot show an obsolete order.
-    const pending=await guardGet(env,"trade:pending");
-    let clearedPendingAsset=null;
-    if(pending && pending.buy && pending.buy.asset){
-      clearedPendingAsset=pending.buy.asset;
-      await guardPut(env,"trade:pending",{
-        asset:null,clearedAt:now,reason:"SIGNAL_NO_LONGER_VALID",
-        previousAsset:clearedPendingAsset
-      });
-    }
-    if(active && active.asset && Number(active.validUntil||0)<=now){
-      await guardPut(env,"trade:active",{asset:null,expiredAt:now});
-    }
-    return {ok:true,kind:"NONE",clearedPendingAsset};
+  const chosen=[];
+  for(const c of candidates){
+    const prev=await guardGet(env,"alert:"+c.base);
+    if(prev && now-Number(prev.lastAlertAt||0)<GUARD_ASSET_COOLDOWN_MS) continue;
+    chosen.push(c);
+    if(chosen.length>=2) break;
   }
-
-  const x=buys[0];
-  const prior=await guardGet(env,"trade:alert:"+x.asset);
-  if(prior && now-Number(prior.lastAlertAt||0)<6*60*60*1000){
-    return {ok:true,kind:"COOLDOWN",asset:x.asset};
-  }
-
-  const notifyState=await guardGet(env,"trade:notify:state")||{};
-  if(Number(notifyState.backoffUntil||0)>now){
-    await guardPut(env,"trade:pending",{generatedAt:state.generatedAt,buy:x});
-    return {ok:false,kind:"BUY",asset:x.asset,error:"NTFY_BACKOFF_ACTIVE",backoffUntil:notifyState.backoffUntil};
-  }
+  if(!chosen.length) return {assets:[],ok:true,skipped:"ASSET_COOLDOWN",status:null,error:null,backoffUntil:null};
 
   if(!env.NTFY_URL){
-    await guardPut(env,"trade:pending",{generatedAt:state.generatedAt,buy:x});
-    return {ok:false,kind:"BUY",asset:x.asset,error:"NTFY_URL_NOT_CONFIGURED"};
+    const state={
+      lastAttemptAt:now,lastStatus:null,lastError:"GUARD_NTFY_URL_NOT_CONFIGURED",
+      consecutiveFailures:Number(notifyState.consecutiveFailures||0)+1,
+      backoffUntil:now+GUARD_NTFY_BACKOFF_BASE_MS,
+      lastSuccessAt:notifyState.lastSuccessAt||null
+    };
+    await guardPut(env,"notify:state",state);
+    return {assets:[],ok:false,skipped:null,status:null,error:state.lastError,backoffUntil:state.backoffUntil};
   }
 
-  let r=null, responseText="";
+  let r=null;
+  let responseText="";
   try{
     r=await fetch(env.NTFY_URL,{
       method:"POST",
-      headers:{"Title":"🚨 CABAL — COMPRAR AHORA","Priority":"high","Tags":"chart_with_upwards_trend"},
-      body:guardTradeCard(x)
+      headers:{
+        "Title":"⚡ CABAL EARLY GUARD — VIGILAR AHORA",
+        "Priority":"default",
+        "Tags":"chart_with_upwards_trend"
+      },
+      body:chosen.map(guardCard).join("\n\n")
     });
-    if(!r.ok){ try{responseText=(await r.text()).slice(0,300);}catch(_){} }
+    if(!r.ok){
+      try{ responseText=(await r.text()).slice(0,400); }catch(_){}
+    }
   }catch(e){
-    const state2={lastAttemptAt:now,lastStatus:null,lastError:String(e),backoffUntil:now+10*60*1000};
-    await guardPut(env,"trade:notify:state",state2);
-    await guardPut(env,"trade:pending",{generatedAt:state.generatedAt,buy:x});
-    return {ok:false,kind:"BUY",asset:x.asset,error:String(e),backoffUntil:state2.backoffUntil};
+    const failures=Number(notifyState.consecutiveFailures||0)+1;
+    const backoff=Math.min(GUARD_NTFY_BACKOFF_MAX_MS,GUARD_NTFY_BACKOFF_BASE_MS*Math.pow(2,Math.min(3,failures-1)));
+    const state={
+      lastAttemptAt:now,lastStatus:null,lastError:"NTFY_FETCH_"+String(e),
+      consecutiveFailures:failures,backoffUntil:now+backoff,
+      lastSuccessAt:notifyState.lastSuccessAt||null
+    };
+    await guardPut(env,"notify:state",state);
+    return {assets:[],ok:false,skipped:null,status:null,error:state.lastError,backoffUntil:state.backoffUntil};
   }
 
   if(!r.ok){
-    const retry=guardRetryAfterMs(r);
-    const backoff=retry||Math.min(60*60*1000,(r.status===429?30:10)*60*1000);
-    const state2={
+    const failures=Number(notifyState.consecutiveFailures||0)+1;
+    const headerBackoff=guardRetryAfterMs(r);
+    const exponential=Math.min(GUARD_NTFY_BACKOFF_MAX_MS,GUARD_NTFY_BACKOFF_BASE_MS*Math.pow(2,Math.min(3,failures-1)));
+    const backoff=r.status===429 ? (headerBackoff||exponential) : Math.max(5*60*1000,headerBackoff||0);
+    const state={
       lastAttemptAt:now,lastStatus:r.status,
-      lastError:"HTTP_"+r.status+(responseText?":"+responseText:""),
-      backoffUntil:now+backoff
+      lastError:"GUARD_NTFY_HTTP_"+r.status+(responseText ? ":"+responseText : ""),
+      consecutiveFailures:failures,backoffUntil:now+backoff,
+      lastSuccessAt:notifyState.lastSuccessAt||null
     };
-    await guardPut(env,"trade:notify:state",state2);
-    await guardPut(env,"trade:pending",{generatedAt:state.generatedAt,buy:x});
-    return {ok:false,kind:"BUY",asset:x.asset,status:r.status,error:state2.lastError,backoffUntil:state2.backoffUntil};
+    await guardPut(env,"notify:state",state);
+    return {assets:[],ok:false,skipped:null,status:r.status,error:state.lastError,backoffUntil:state.backoffUntil};
   }
 
-  await guardPut(env,"trade:alert:"+x.asset,{lastAlertAt:now,price:x.price,entryMax:x.entryMax,stop:x.stop});
-  await guardPut(env,"trade:active",{asset:x.asset,lastAlertAt:now,validUntil:now+10*60*1000,entryMax:x.entryMax,stop:x.stop});
-  await guardPut(env,"trade:pending",{asset:null,clearedAt:now});
-  await guardPut(env,"trade:notify:state",{lastAttemptAt:now,lastStatus:r.status,lastError:null,backoffUntil:0,lastSuccessAt:now});
-  return {ok:true,kind:"BUY",asset:x.asset,status:r.status};
+  for(const c of chosen){
+    await guardPut(env,"alert:"+c.base,{lastAlertAt:now,price:c.price,guardScore:c.guardScore});
+  }
+  await guardPut(env,"alert:__GLOBAL__",{lastAlertAt:now,assets:chosen.map(x=>x.base)});
+  await guardPut(env,"notify:state",{
+    lastAttemptAt:now,lastStatus:r.status,lastError:null,consecutiveFailures:0,
+    backoffUntil:0,lastSuccessAt:now
+  });
+  return {assets:chosen.map(x=>x.base),ok:true,skipped:null,status:r.status,error:null,backoffUntil:null};
 }
 
-async function guardRevalidateActiveTrade(env,current,history){
+async function guardCheckBuyDecisionFreshness(env){
   const now=Date.now();
-  const active=await guardGet(env,"trade:active");
-
-  if(!active || !active.asset){
-    const state={
-      generatedAt:new Date(now).toISOString(),
-      mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
-      checked:false,asset:null,valid:null,reason:"NO_ACTIVE_BUY",notify:null
-    };
-    await guardPut(env,"trade:revalidation",state);
-    return state;
+  let generatedAt=null, ageMs=Number.POSITIVE_INFINITY, error=null;
+  try{
+    const r=await fetch(BUY_DECISION_STATE_URL,{
+      headers:{"cache-control":"no-cache"}
+    });
+    if(!r.ok) throw new Error("HTTP_"+r.status);
+    const j=await r.json();
+    generatedAt=j && j.generatedAt ? String(j.generatedAt) : null;
+    const ts=generatedAt ? Date.parse(generatedAt) : NaN;
+    if(Number.isFinite(ts)) ageMs=Math.max(0,now-ts);
+    else error="INVALID_GENERATED_AT";
+  }catch(e){
+    error=String(e);
   }
 
-  if(Number(active.validUntil||0)<=now){
-    await guardPut(env,"trade:active",{asset:null,expiredAt:now,previousAsset:active.asset});
-    const state={
-      generatedAt:new Date(now).toISOString(),
-      mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
-      checked:true,asset:active.asset,valid:false,reason:"WINDOW_EXPIRED",notify:null
-    };
-    await guardPut(env,"trade:revalidation",state);
-    return state;
-  }
+  const fresh=Number.isFinite(ageMs) && ageMs<=BUY_DECISION_MAX_AGE_MS && !error;
+  const prev=await guardGet(env,"decision:state")||{};
+  let lastStaleAlertAt=Number(prev.lastStaleAlertAt||0);
+  let lastAlertError=null;
 
-  const c=guardCandidateSnapshot(current,history,active.asset);
-  let decision=null;
-  let reason=null;
-
-  if(!c){
-    reason="ASSET_NOT_VISIBLE_OR_NOT_LIQUID";
-  }else{
-    try{
-      const m=await guardExecutionMetrics(c);
-      decision=guardPilotDecision(c,m);
-
-      if(!decision.buy){
-        reason=decision.reason||"SIGNAL_NO_LONGER_VALID";
-      }else if(Number(active.entryMax)>0 && Number(c.price)>Number(active.entryMax)){
-        decision.buy=false;
-        decision.reason="ORIGINAL_ENTRY_MAX_EXCEEDED";
-        reason=decision.reason;
-      }else if(Number(active.stop)>0 && Number(c.price)<=Number(active.stop)){
-        decision.buy=false;
-        decision.reason="ORIGINAL_STOP_BROKEN";
-        reason=decision.reason;
+  if(!fresh && env.NTFY_URL && now-lastStaleAlertAt>=BUY_DECISION_STALE_ALERT_COOLDOWN_MS){
+    const notifyState=await guardGet(env,"notify:state")||{};
+    if(Number(notifyState.backoffUntil||0)<=now){
+      try{
+        const rr=await fetch(env.NTFY_URL,{
+          method:"POST",
+          headers:{
+            "Title":"🔴 CABAL — MOTOR BUY DESACTUALIZADO",
+            "Priority":"high",
+            "Tags":"warning"
+          },
+          body:[
+            "NO CONFIAR EN NUEVAS ÓRDENES BUY hasta recuperar el full-decision scan.",
+            "Market Guard 1-min puede seguir observando, pero no sustituye al motor ejecutable.",
+            "Último cabal-machine: "+(generatedAt||"desconocido"),
+            "Antigüedad: "+(Number.isFinite(ageMs)?Math.round(ageMs/60000)+" min":"n/a"),
+            "Error: "+(error||"STALE")
+          ].join("\n")
+        });
+        if(rr.ok) lastStaleAlertAt=now;
+        else lastAlertError="HTTP_"+rr.status;
+      }catch(e){
+        lastAlertError="FETCH_"+String(e);
       }
-    }catch(e){
-      reason="REVALIDATION_DATA_GAP:"+String(e);
+    }else{
+      lastAlertError="DEFERRED_DURING_NTFY_BACKOFF";
     }
   }
 
-  // A data gap must not leave a fresh BUY pretending to be valid. The order is
-  // revoked defensively; if conditions recover, CABAL can issue a new order later.
-  const valid=Boolean(decision && decision.buy);
-  const stateForNotify={
-    generatedAt:new Date(now).toISOString(),
-    mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
-    evaluated:decision ? [decision] : [],
-    buys:valid ? [decision] : []
-  };
-  const notify=await guardTradeNotify(env,stateForNotify);
-
   const state={
-    generatedAt:stateForNotify.generatedAt,
-    mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
-    checked:true,
-    asset:active.asset,
-    valid,
-    reason:valid ? "STILL_CONFIRMED" : (reason||"SIGNAL_NO_LONGER_VALID"),
-    price:c ? c.price : null,
-    originalEntryMax:Number(active.entryMax)||null,
-    originalStop:Number(active.stop)||null,
-    decision,
-    notify
+    checkedAt:now,
+    generatedAt,
+    ageMs:Number.isFinite(ageMs)?ageMs:null,
+    fresh,
+    error,
+    lastStaleAlertAt,
+    lastAlertError
   };
-  await guardPut(env,"trade:revalidation",state);
+  await guardPut(env,"decision:state",state);
   return state;
 }
 
@@ -1650,25 +1361,9 @@ async function runMarketGuard(event,env){
     let history=Array.isArray(h && h.items) ? h.items : [];
     history=history.filter(x=>x && x.t>=started-GUARD_HISTORY_MINUTES*60_000);
     const candidates=guardCandidates(current,history);
-
-    // WATCH data is persisted every minute. Every fifth scheduled minute the
-    // autonomous execution guard performs completed 15m/1h validation and can
-    // emit a strict PILOT BUY without waiting for GitHub Actions.
+    const decisionState=await guardCheckBuyDecisionFreshness(env);
     const notifyResult=await guardNotify(env,candidates);
-    const minuteSlot=Math.floor(scheduledAt/60_000);
-    const lastExecutionAt=Number(prev.lastExecutionGuardAt||0);
-    const executionDue=(minuteSlot%5)===0 || !lastExecutionAt || (started-lastExecutionAt)>=5*60_000;
-    let tradeResult=null;
-    let activeRevalidation=null;
-    if(executionDue){
-      tradeResult=await guardEvaluateTrades(env,candidates);
-    }else{
-      // Any BUY already delivered to the user is revalidated EVERY MINUTE.
-      // This closes the WET failure mode where a 10-minute alert could remain
-      // apparently executable after momentum/RS had already reversed.
-      activeRevalidation=await guardRevalidateActiveTrade(env,current,history);
-    }
-
+    const alerted=Array.isArray(notifyResult.assets)?notifyResult.assets:[];
     history.push(current);
     history=history.slice(-GUARD_HISTORY_MINUTES);
     await guardPut(env,"history",{items:history});
@@ -1681,37 +1376,69 @@ async function runMarketGuard(event,env){
     const consecutiveHealthyCycles=cycleHealthy
       ? Number(prev.consecutiveHealthyCycles||0)+1
       : 0;
-    const tradeNotify=tradeResult&&tradeResult.notify
-      ? tradeResult.notify
-      : (activeRevalidation&&activeRevalidation.notify ? activeRevalidation.notify : null);
 
     hb=Object.assign({},hb,{
       lastSuccessfulScan:finished,
       lastRuntimeMs:finished-started,
       lastUniverseCount:current.count,
       lastCandidateCount:candidates.length,
-      lastSourceStatus:current.sourceStatus||null,
-      lastAlertAssets:tradeNotify&&tradeNotify.kind==="BUY"&&tradeNotify.ok ? [tradeNotify.asset] : [],
-      lastNotificationAttemptAt:tradeNotify&&tradeNotify.kind!=="NONE" ? Date.now() : prev.lastNotificationAttemptAt||null,
-      lastNotificationStatus:tradeNotify ? (tradeNotify.status||null) : prev.lastNotificationStatus||null,
-      lastNotificationError:tradeNotify&&tradeNotify.ok===false ? (tradeNotify.error||"TRADE_NOTIFICATION_FAILED") : null,
-      notificationBackoffUntil:tradeNotify ? (tradeNotify.backoffUntil||null) : prev.notificationBackoffUntil||null,
-      notificationHealthy:tradeNotify ? tradeNotify.ok!==false : (prev.notificationHealthy!==false),
-      notificationMode:tradeNotify ? ("TRADE_"+tradeNotify.kind) : notifyResult.skipped||"WATCH_PERSIST_ONLY",
-      lastExecutionGuardAt:executionDue ? finished : (prev.lastExecutionGuardAt||null),
-      lastExecutionGuardBuyAssets:tradeResult ? tradeResult.buys.map(x=>x.asset) : (prev.lastExecutionGuardBuyAssets||[]),
-      lastExecutionGuardEvaluated:tradeResult ? tradeResult.evaluated.length : (prev.lastExecutionGuardEvaluated||0),
-      lastActiveRevalidationAt:activeRevalidation&&activeRevalidation.checked ? Date.now() : (prev.lastActiveRevalidationAt||null),
-      lastActiveRevalidationAsset:activeRevalidation&&activeRevalidation.checked ? activeRevalidation.asset : (prev.lastActiveRevalidationAsset||null),
-      lastActiveRevalidationValid:activeRevalidation&&activeRevalidation.checked ? activeRevalidation.valid : (prev.lastActiveRevalidationValid??null),
-      lastActiveRevalidationReason:activeRevalidation&&activeRevalidation.checked ? activeRevalidation.reason : (prev.lastActiveRevalidationReason||null),
+      buyDecisionFresh:decisionState.fresh,
+      buyDecisionGeneratedAt:decisionState.generatedAt,
+      buyDecisionAgeMs:decisionState.ageMs,
+      buyDecisionError:decisionState.error,
+      buyDecisionLastStaleAlertAt:decisionState.lastStaleAlertAt,
+      buyDecisionLastAlertError:decisionState.lastAlertError,
+      lastAlertAssets:alerted,
+      lastNotificationAttemptAt:Date.now(),
+      lastNotificationStatus:notifyResult.status||null,
+      lastNotificationError:notifyResult.error||null,
+      notificationBackoffUntil:notifyResult.backoffUntil||null,
+      notificationHealthy:notifyResult.ok!==false,
+      notificationMode:notifyResult.skipped||"DELIVERY_ATTEMPTED",
       lastError:null,
       consecutiveHealthyCycles
     });
 
-    // Structural test pushes are disabled in production. NTFY quota is reserved
-    // for BUY/CANCEL only; health is verified through /health and deployment CI.
-    hb.verificationNotifyError="DISABLED_RESERVE_NTFY_FOR_TRADE";
+    if(
+      consecutiveHealthyCycles>=3 &&
+      !hb.verificationNotifiedAt &&
+      env.NTFY_URL &&
+      (!hb.verificationLastAttemptAt || Date.now()-Number(hb.verificationLastAttemptAt)>15*60*1000)
+    ){
+      hb.verificationLastAttemptAt=Date.now();
+      try{
+        const notifyState=await guardGet(env,"notify:state")||{};
+        if(Number(notifyState.backoffUntil||0)<=Date.now()){
+          const vr=await fetch(env.NTFY_URL,{
+            method:"POST",
+            headers:{
+              "Title":"✅ CABAL STRUCTURAL VERIFIED",
+              "Priority":"default",
+              "Tags":"white_check_mark"
+            },
+            body:[
+              "Cloudflare 1-minute Market Guard is LIVE.",
+              "3 consecutive healthy cycles verified.",
+              "Universe: "+current.count+" assets.",
+              "Scheduler lag: "+Math.round(lag/1000)+"s.",
+              "Observation gap: "+Math.round(gap/1000)+"s.",
+              "CABAL -> NTFY production path confirmed.",
+              "From this message onward, alerts are POST-PATCH."
+            ].join("\n")
+          });
+          if(vr.ok){
+            hb.verificationNotifiedAt=Date.now();
+            hb.verificationNotifyError=null;
+          }else{
+            hb.verificationNotifyError="HTTP_"+vr.status;
+          }
+        }else{
+          hb.verificationNotifyError="DEFERRED_DURING_NTFY_BACKOFF";
+        }
+      }catch(e){
+        hb.verificationNotifyError="FETCH_"+String(e);
+      }
+    }
 
     await guardPut(env,"heartbeat",hb);
   }catch(e){
@@ -1726,13 +1453,7 @@ async function runMarketGuard(event,env){
 
 async function guardHealth(env){
   const now=Date.now();
-  const [hb,trade,pending,watch,revalidation]=await Promise.all([
-    guardGet(env,"heartbeat"),
-    guardGet(env,"trade:latest"),
-    guardGet(env,"trade:pending"),
-    guardGet(env,"watch:latest"),
-    guardGet(env,"trade:revalidation")
-  ]);
+  const hb=await guardGet(env,"heartbeat");
   if(!hb) return {
     ok:false,healthy:false,mode:"CLOUDFLARE_1M_MARKET_GUARD",
     reason:env.DB ? "NO_HEARTBEAT_YET" : "D1_NOT_BOUND",
@@ -1749,7 +1470,6 @@ async function guardHealth(env){
   );
   return {
     ok:true,healthy,mode:"CLOUDFLARE_1M_MARKET_GUARD",
-    patchVersion:PATCH_VERSION,
     checkedAt:new Date(now).toISOString(),
     lastScheduledAt:hb.lastScheduledAt ? new Date(Number(hb.lastScheduledAt)).toISOString() : null,
     lastSuccessfulScan:last ? new Date(last).toISOString() : null,
@@ -1760,7 +1480,12 @@ async function guardHealth(env){
     lastRuntimeMs:Number(hb.lastRuntimeMs||0),
     lastUniverseCount:Number(hb.lastUniverseCount||0),
     lastCandidateCount:Number(hb.lastCandidateCount||0),
-    sourceStatus:hb.lastSourceStatus||null,
+    buyDecisionFresh:hb.buyDecisionFresh===true,
+    buyDecisionGeneratedAt:hb.buyDecisionGeneratedAt||null,
+    buyDecisionAgeMinutes:hb.buyDecisionAgeMs==null ? null : Math.round(Number(hb.buyDecisionAgeMs)/60000),
+    buyDecisionError:hb.buyDecisionError||null,
+    buyDecisionLastStaleAlertAt:hb.buyDecisionLastStaleAlertAt ? new Date(Number(hb.buyDecisionLastStaleAlertAt)).toISOString() : null,
+    buyDecisionLastAlertError:hb.buyDecisionLastAlertError||null,
     lastAlertAssets:Array.isArray(hb.lastAlertAssets)?hb.lastAlertAssets:[],
     consecutiveHealthyCycles:Number(hb.consecutiveHealthyCycles||0),
     notificationHealthy:hb.notificationHealthy!==false,
@@ -1770,30 +1495,6 @@ async function guardHealth(env){
     notificationBackoffUntil:hb.notificationBackoffUntil ? new Date(Number(hb.notificationBackoffUntil)).toISOString() : null,
     verificationNotifiedAt:hb.verificationNotifiedAt ? new Date(Number(hb.verificationNotifiedAt)).toISOString() : null,
     verificationNotifyError:hb.verificationNotifyError||null,
-    executionGuard:{
-      mode:"CLOUDFLARE_5M_EXECUTION_GUARD",
-      lastRunAt:hb.lastExecutionGuardAt ? new Date(Number(hb.lastExecutionGuardAt)).toISOString() : null,
-      evaluatedCount:Number(hb.lastExecutionGuardEvaluated||0),
-      buyAssets:Array.isArray(hb.lastExecutionGuardBuyAssets)?hb.lastExecutionGuardBuyAssets:[],
-      generatedAt:trade&&trade.generatedAt ? trade.generatedAt : null,
-      evaluated:trade&&Array.isArray(trade.evaluated) ? trade.evaluated.slice(0,5) : [],
-      buys:trade&&Array.isArray(trade.buys) ? trade.buys : [],
-      pendingBuy:pending&&pending.buy ? pending.buy : null
-    },
-    activeRevalidation:{
-      mode:"CLOUDFLARE_1M_ACTIVE_REVALIDATION",
-      generatedAt:revalidation&&revalidation.generatedAt ? revalidation.generatedAt : null,
-      checked:revalidation ? Boolean(revalidation.checked) : false,
-      asset:revalidation&&revalidation.asset ? revalidation.asset : null,
-      valid:revalidation&&typeof revalidation.valid==="boolean" ? revalidation.valid : null,
-      reason:revalidation&&revalidation.reason ? revalidation.reason : null,
-      price:revalidation&&revalidation.price!=null ? revalidation.price : null,
-      notify:revalidation&&revalidation.notify ? revalidation.notify : null
-    },
-    watchRadar:{
-      generatedAt:watch&&watch.generatedAt ? watch.generatedAt : null,
-      candidates:watch&&Array.isArray(watch.candidates) ? watch.candidates.slice(0,5) : []
-    },
     lastError:hb.lastError||null
   };
 }
