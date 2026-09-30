@@ -204,7 +204,12 @@ export default {
     const u=new URL(request.url);
     if (u.pathname==="/health") {
       await ensureDb(env);
-      const last=await getMeta(env,"last_radar");
+      let last=await getMeta(env,"last_radar");
+      if (!last && u.searchParams.get("bootstrap")==="1") {
+        try { await runScan(env); }
+        catch (e) { await recordError(env,e); }
+        last=await getMeta(env,"last_radar");
+      }
       const lastError=await getMeta(env,"last_error");
       const ageSeconds=last&&last.generatedAt?Math.round((Date.now()-Date.parse(last.generatedAt))/1000):null;
       return json({
