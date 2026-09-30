@@ -38,3 +38,29 @@ jobs:
         run: node scripts/cabal2_radar_regression.mjs
       - name: Live source smoke
         run: node scripts/cabal2_source_smoke.mjs
+
+      - name: Production scheduler probe
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/cabal2-radar/schedules"
+          curl -fsS "$api" -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -o /tmp/schedules.json
+          curl -fsS https://cabal2-radar.diondublin21.workers.dev/health -o /tmp/health.json
+          python - <<'PY'
+          import json
+          s=json.load(open('/tmp/schedules.json',encoding='utf-8'))
+          h=json.load(open('/tmp/health.json',encoding='utf-8'))
+          print('CABAL2 PROBE SCHEDULES',json.dumps(s.get('result') or {}))
+          print('CABAL2 PROBE HEALTH',json.dumps({
+              'version':h.get('version'),
+              'healthy':h.get('healthy'),
+              'schedulerHealthy':h.get('schedulerHealthy'),
+              'ageSeconds':h.get('ageSeconds'),
+              'schedulerAgeSeconds':h.get('schedulerAgeSeconds'),
+              'scheduler':h.get('scheduler'),
+              'lastGeneratedAt':(h.get('last') or {}).get('generatedAt'),
+              'lastError':h.get('lastError')
+          }))
+          PY
