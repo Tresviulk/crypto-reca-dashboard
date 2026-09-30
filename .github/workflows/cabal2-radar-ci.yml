@@ -1,0 +1,36 @@
+name: CABAL 2.0 Radar CI
+
+on:
+  push:
+    branches: ["cabal-2-clean-rebuild"]
+    paths:
+      - 'cloudflare/cabal2-radar/**'
+      - 'scripts/cabal2_radar_regression.mjs'
+      - 'docs/CABAL_2_0_ARCHITECTURE.md'
+      - '.github/workflows/cabal2-radar-ci.yml'
+  pull_request:
+    paths:
+      - 'cloudflare/cabal2-radar/**'
+      - 'scripts/cabal2_radar_regression.mjs'
+      - 'docs/CABAL_2_0_ARCHITECTURE.md'
+      - '.github/workflows/cabal2-radar-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check cloudflare/cabal2-radar/src/index.mjs
+          node --check cloudflare/cabal2-radar/src/radar-core.mjs
+      - name: Radar regression
+        run: node scripts/cabal2_radar_regression.mjs
