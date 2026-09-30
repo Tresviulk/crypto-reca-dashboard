@@ -1,6 +1,6 @@
 import { computeRadar, num } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.1";
+const VERSION = "CABAL2_RADAR_0.1.2";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -197,26 +197,70 @@ function json(data,status=200) {
 }
 
 export default {
-  async scheduled(event,env,ctx) {
-    ctx.waitUntil(runScan(env).catch(e=>recordError(env,e)));
+  async scheduled(event,env) {
+    const scheduledAt=new Date().toISOString();
+    const scheduledTime=Number.isFinite(Number(event && event.scheduledTime))
+      ? new Date(Number(event.scheduledTime)).toISOString()
+      : null;
+    const cron=String((event && event.cron) || "");
+    await ensureDb(env);
+    await setMeta(env,"scheduler_state",{
+      status:"RUNNING",
+      cron,
+      scheduledAt,
+      scheduledTime,
+      lastScheduledAt:scheduledAt
+    });
+    try {
+      const result=await runScan(env);
+      await setMeta(env,"scheduler_state",{
+        status:"PASS",
+        cron,
+        scheduledAt,
+        scheduledTime,
+        lastScheduledAt:scheduledAt,
+        lastCompletedAt:new Date().toISOString(),
+        radarGeneratedAt:result.generatedAt
+      });
+    } catch (e) {
+      const error=String(e&&e.stack||e&&e.message||e);
+      await recordError(env,e);
+      await setMeta(env,"scheduler_state",{
+        status:"FAIL",
+        cron,
+        scheduledAt,
+        scheduledTime,
+        lastScheduledAt:scheduledAt,
+        lastCompletedAt:new Date().toISOString(),
+        error
+      });
+      throw e;
+    }
   },
   async fetch(request,env) {
     const u=new URL(request.url);
     if (u.pathname==="/health") {
       await ensureDb(env);
       let last=await getMeta(env,"last_radar");
-      if (!last && u.searchParams.get("bootstrap")==="1") {
+      if (u.searchParams.get("bootstrap")==="1" && (!last || last.version!==VERSION)) {
         try { await runScan(env); }
         catch (e) { await recordError(env,e); }
         last=await getMeta(env,"last_radar");
       }
       const lastError=await getMeta(env,"last_error");
+      const scheduler=await getMeta(env,"scheduler_state");
       const ageSeconds=last&&last.generatedAt?Math.round((Date.now()-Date.parse(last.generatedAt))/1000):null;
+      const schedulerAgeSeconds=scheduler&&scheduler.lastScheduledAt
+        ? Math.round((Date.now()-Date.parse(scheduler.lastScheduledAt))/1000)
+        : null;
       return json({
-        healthy:!!last&&ageSeconds!==null&&ageSeconds<=150&&!(lastError&&lastError.error),
+        healthy:!!last&&last.version===VERSION&&ageSeconds!==null&&ageSeconds<=150&&!(lastError&&lastError.error),
+        schedulerHealthy:!!scheduler&&scheduler.status==="PASS"&&schedulerAgeSeconds!==null&&schedulerAgeSeconds<=150,
         version:VERSION,
         mode:"CABAL2_1M_MARKET_RADAR",
         ageSeconds,
+        schedulerAgeSeconds,
+        scheduler,
         lastError,
         last
       });
