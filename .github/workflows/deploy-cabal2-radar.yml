@@ -62,6 +62,57 @@ jobs:
           set -euo pipefail
           npx --yes wrangler@latest deploy --config wrangler.generated.jsonc
 
+      - name: Force and verify Cloudflare cron schedule via API
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/cabal2-radar/schedules"
+
+          curl -fsS "$api" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -o /tmp/cabal2-schedules-before.json
+
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/cabal2-schedules-before.json',encoding='utf-8'))
+          print('CABAL 2.0 SCHEDULES BEFORE',json.dumps(d.get('result') or {}))
+          if d.get('success') is not True:
+              raise SystemExit(f"Cloudflare schedule GET failed: {d}")
+          PY
+
+          curl -fsS -X PUT "$api" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '[{"cron":"* * * * *"}]' \
+            -o /tmp/cabal2-schedules-put.json
+
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/cabal2-schedules-put.json',encoding='utf-8'))
+          print('CABAL 2.0 SCHEDULES PUT',json.dumps(d.get('result') or {}))
+          if d.get('success') is not True:
+              raise SystemExit(f"Cloudflare schedule PUT failed: {d}")
+          schedules=(d.get('result') or {}).get('schedules') or []
+          if [x.get('cron') for x in schedules] != ['* * * * *']:
+              raise SystemExit(f"Cloudflare did not persist expected schedule: {d}")
+          PY
+
+          curl -fsS "$api" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -o /tmp/cabal2-schedules-after.json
+
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/cabal2-schedules-after.json',encoding='utf-8'))
+          print('CABAL 2.0 SCHEDULES AFTER',json.dumps(d.get('result') or {}))
+          schedules=(d.get('result') or {}).get('schedules') or []
+          if d.get('success') is not True or [x.get('cron') for x in schedules] != ['* * * * *']:
+              raise SystemExit(f"Cloudflare schedule verification failed: {d}")
+          PY
+
       - name: Verify live one-minute radar
         shell: bash
         run: |
