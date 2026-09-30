@@ -96,7 +96,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsS --retry 3 --retry-delay 3 --max-time 30 "https://cabal2-radar.diondublin21.workers.dev/health?bootstrap=1" -o /tmp/cabal2-health.json
+          echo "Waiting for workers.dev to serve CABAL2_RADAR_0.1.3..."
+          ready=0
+          for attempt in $(seq 1 24); do
+            curl -fsS --retry 2 --retry-delay 2 --max-time 20 "https://cabal2-radar.diondublin21.workers.dev/health?bootstrap=1" -o /tmp/cabal2-health.json
+            if python - <<'PY'
+          import json
+          d=json.load(open('/tmp/cabal2-health.json',encoding='utf-8'))
+          print('CABAL 2.0 VERSION PROPAGATION',d.get('version'))
+          raise SystemExit(0 if d.get('version')=='CABAL2_RADAR_0.1.3' else 1)
+          PY
+            then
+              ready=1
+              break
+            fi
+            sleep 5
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "workers.dev did not propagate CABAL2_RADAR_0.1.3"
+            cat /tmp/cabal2-health.json || true
+            exit 1
+          fi
           python - <<'PY'
           import json
           d=json.load(open('/tmp/cabal2-health.json',encoding='utf-8'))
