@@ -1,6 +1,6 @@
 import { computeRadar, num } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.0";
+const VERSION = "CABAL2_RADAR_0.1.1";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -36,20 +36,14 @@ async function kucoinRows() {
     const price = num(x.last);
     const turnover = num(x.volValue, 0);
     if (price === null || price <= 0) continue;
-    rows.push({
-      asset: base,
-      venue: "KUCOIN",
-      price,
-      turnover,
-      change24h: num(x.changeRate, 0) * 100
-    });
+    rows.push({asset:base,venue:"KUCOIN",price,turnover,change24h:num(x.changeRate,0)*100});
   }
   return rows;
 }
 
 async function coinbaseRows() {
   const url = "https://api.coinbase.com/api/v3/brokerage/market/products?limit=1000&product_type=SPOT";
-  const j = await fetchJson(url, {headers: {"User-Agent": "CABAL2-Radar/0.1"}});
+  const j = await fetchJson(url, {headers:{"User-Agent":"CABAL2-Radar/0.1"}});
   const rows = [];
   for (const x of (j.products || [])) {
     const product = String(x.product_id || "");
@@ -63,13 +57,7 @@ async function coinbaseRows() {
     const baseVolume = num(x.volume_24h, 0);
     const turnover = price === null ? 0 : baseVolume * price;
     if (price === null || price <= 0) continue;
-    rows.push({
-      asset: base,
-      venue: "COINBASE",
-      price,
-      turnover,
-      change24h: num(x.price_percentage_change_24h, 0)
-    });
+    rows.push({asset:base,venue:"COINBASE",price,turnover,change24h:num(x.price_percentage_change_24h,0)});
   }
   return rows;
 }
@@ -103,53 +91,9 @@ function mergeVenues(rows) {
 
 async function ensureDb(env) {
   await env.DB.exec(
-    "CREATE TABLE IF NOT EXISTS cabal2_asset_state (" +
-    "asset TEXT PRIMARY KEY, price REAL NOT NULL, turnover REAL NOT NULL, change24h REAL NOT NULL, " +
-    "venue TEXT NOT NULL, venue_count INTEGER NOT NULL, venue_spread REAL, history_json TEXT NOT NULL, updated_minute INTEGER NOT NULL)"
-  );
-  await env.DB.exec(
     "CREATE TABLE IF NOT EXISTS cabal2_meta (" +
     "k TEXT PRIMARY KEY, v TEXT NOT NULL, updated_at TEXT NOT NULL)"
   );
-}
-
-async function readState(env) {
-  const r = await env.DB.prepare("SELECT asset, history_json FROM cabal2_asset_state").all();
-  const map = new Map();
-  for (const row of (r.results || [])) {
-    try { map.set(row.asset, JSON.parse(row.history_json || "[]")); }
-    catch { map.set(row.asset, []); }
-  }
-  return map;
-}
-
-async function writeAssets(env, assets, minute, prior) {
-  const statements = [];
-  for (const a of assets) {
-    const history = Array.isArray(prior.get(a.asset)) ? prior.get(a.asset).slice() : [];
-    history.push({minute, price:a.price});
-    const dedup = [];
-    const seen = new Set();
-    for (let i=history.length-1; i>=0; i--) {
-      const h = history[i];
-      if (!h || seen.has(h.minute)) continue;
-      seen.add(h.minute);
-      dedup.push(h);
-      if (dedup.length >= 12) break;
-    }
-    dedup.reverse();
-    statements.push(
-      env.DB.prepare(
-        "INSERT INTO cabal2_asset_state(asset,price,turnover,change24h,venue,venue_count,venue_spread,history_json,updated_minute) " +
-        "VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(asset) DO UPDATE SET price=excluded.price,turnover=excluded.turnover," +
-        "change24h=excluded.change24h,venue=excluded.venue,venue_count=excluded.venue_count,venue_spread=excluded.venue_spread," +
-        "history_json=excluded.history_json,updated_minute=excluded.updated_minute"
-      ).bind(a.asset,a.price,a.turnover,a.change24h,a.venue,a.venueCount,a.venueSpreadPct,JSON.stringify(dedup),minute)
-    );
-  }
-  for (let i=0; i<statements.length; i+=80) {
-    await env.DB.batch(statements.slice(i,i+80));
-  }
 }
 
 async function setMeta(env, key, value) {
@@ -166,77 +110,116 @@ async function getMeta(env, key) {
   catch { return null; }
 }
 
+async function getAssetState(env) {
+  const r = await env.DB.prepare("SELECT v FROM cabal2_meta WHERE k='asset_state'").first();
+  if (!r) return {};
+  try {
+    const parsed = JSON.parse(r.v);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function nextAssetState(assets, minute, prior) {
+  const out = {};
+  for (const a of assets) {
+    const old = prior[a.asset] && Array.isArray(prior[a.asset].history) ? prior[a.asset].history : [];
+    const history = old.filter(h => h && Number.isFinite(Number(h.minute)) && Number.isFinite(Number(h.price)));
+    history.push({minute,price:a.price});
+    const dedup = [];
+    const seen = new Set();
+    for (let i=history.length-1; i>=0; i--) {
+      const h=history[i];
+      if (seen.has(h.minute)) continue;
+      seen.add(h.minute);
+      dedup.push(h);
+      if (dedup.length>=12) break;
+    }
+    dedup.reverse();
+    out[a.asset]={history:dedup};
+  }
+  return out;
+}
+
 async function runScan(env) {
   const started = Date.now();
   await ensureDb(env);
   const sourceStatus = {coinbase:"PENDING",kucoin:"PENDING"};
-  let cb=[], ku=[];
-  try { cb = await coinbaseRows(); sourceStatus.coinbase = cb.length ? "PASS" : "EMPTY"; }
-  catch (e) { sourceStatus.coinbase = "FAIL:" + String(e && e.message || e); }
-  try { ku = await kucoinRows(); sourceStatus.kucoin = ku.length ? "PASS" : "EMPTY"; }
-  catch (e) { sourceStatus.kucoin = "FAIL:" + String(e && e.message || e); }
+  let cb=[],ku=[];
+  try { cb=await coinbaseRows(); sourceStatus.coinbase=cb.length?"PASS":"EMPTY"; }
+  catch(e) { sourceStatus.coinbase="FAIL:"+String(e&&e.message||e); }
+  try { ku=await kucoinRows(); sourceStatus.kucoin=ku.length?"PASS":"EMPTY"; }
+  catch(e) { sourceStatus.kucoin="FAIL:"+String(e&&e.message||e); }
 
-  const merged = mergeVenues([...cb,...ku]).filter(x => x.turnover >= 75000);
-  const prior = await readState(env);
-  const minute = Math.floor(Date.now()/60000);
+  if (!cb.length && !ku.length) throw new Error("ALL_MARKET_SOURCES_FAILED");
 
-  const radar = merged.map(a => computeRadar(a, minute, prior.get(a.asset) || []));
-  radar.sort((a,b) => (b.detected-a.detected) || (b.radarScore-a.radarScore) || (b.turnover24h-a.turnover24h));
-  const detected = radar.filter(x => x.detected);
+  const merged=mergeVenues([...cb,...ku]).filter(x=>x.turnover>=75000);
+  const prior=await getAssetState(env);
+  const minute=Math.floor(Date.now()/60000);
 
-  await writeAssets(env, merged, minute, prior);
+  const radar=merged.map(a=>computeRadar(a,minute,(prior[a.asset]||{}).history||[]));
+  radar.sort((a,b)=>(Number(b.detected)-Number(a.detected))||(b.radarScore-a.radarScore)||(b.turnover24h-a.turnover24h));
+  const detected=radar.filter(x=>x.detected);
 
-  const result = {
-    version: VERSION,
-    generatedAt: new Date().toISOString(),
-    mode: "MARKET_RADAR_ONLY",
-    autoTrade: false,
+  await setMeta(env,"asset_state",nextAssetState(merged,minute,prior));
+
+  const result={
+    version:VERSION,
+    generatedAt:new Date().toISOString(),
+    mode:"MARKET_RADAR_ONLY",
+    autoTrade:false,
     sourceStatus,
-    universeCount: merged.length,
-    sourceCounts: {coinbase:cb.length, kucoin:ku.length},
-    detectionCount: detected.length,
-    scanDurationMs: Date.now()-started,
-    detected: detected.slice(0,100),
-    note: "Detection is intentionally independent of BUY quality. Extended movers remain visible and are flagged, not suppressed."
+    universeCount:merged.length,
+    sourceCounts:{coinbase:cb.length,kucoin:ku.length},
+    detectionCount:detected.length,
+    scanDurationMs:Date.now()-started,
+    detected:detected.slice(0,100),
+    note:"Detection is intentionally independent of BUY quality. Extended movers remain visible and are flagged, not suppressed."
   };
-  await setMeta(env, "last_radar", result);
+  await setMeta(env,"last_radar",result);
+  await setMeta(env,"last_error",{error:null,at:new Date().toISOString()});
   return result;
 }
 
-function json(data, status=200) {
-  return new Response(JSON.stringify(data,null,2), {
+async function recordError(env, error) {
+  try {
+    await ensureDb(env);
+    await setMeta(env,"last_error",{error:String(error&&error.stack||error&&error.message||error),at:new Date().toISOString()});
+  } catch {}
+}
+
+function json(data,status=200) {
+  return new Response(JSON.stringify(data,null,2),{
     status,
-    headers: {"content-type":"application/json; charset=utf-8","cache-control":"no-store"}
+    headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}
   });
 }
 
 export default {
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(runScan(env));
+  async scheduled(event,env,ctx) {
+    ctx.waitUntil(runScan(env).catch(e=>recordError(env,e)));
   },
-  async fetch(request, env) {
-    const u = new URL(request.url);
-    if (u.pathname === "/health") {
+  async fetch(request,env) {
+    const u=new URL(request.url);
+    if (u.pathname==="/health") {
       await ensureDb(env);
-      const last = await getMeta(env, "last_radar");
-      const ageSeconds = last && last.generatedAt ? Math.round((Date.now()-Date.parse(last.generatedAt))/1000) : null;
+      const last=await getMeta(env,"last_radar");
+      const lastError=await getMeta(env,"last_error");
+      const ageSeconds=last&&last.generatedAt?Math.round((Date.now()-Date.parse(last.generatedAt))/1000):null;
       return json({
-        healthy: !!last && ageSeconds !== null && ageSeconds <= 150,
-        version: VERSION,
-        mode: "CABAL2_1M_MARKET_RADAR",
+        healthy:!!last&&ageSeconds!==null&&ageSeconds<=150&&!(lastError&&lastError.error),
+        version:VERSION,
+        mode:"CABAL2_1M_MARKET_RADAR",
         ageSeconds,
+        lastError,
         last
       });
     }
-    if (u.pathname === "/radar") {
+    if (u.pathname==="/radar") {
       await ensureDb(env);
-      return json((await getMeta(env, "last_radar")) || {version:VERSION,status:"NO_SCAN_YET"});
+      return json((await getMeta(env,"last_radar"))||{version:VERSION,status:"NO_SCAN_YET"});
     }
-    return json({
-      service:"CABAL 2.0 Market Radar",
-      version:VERSION,
-      endpoints:["/health","/radar"],
-      autoTrade:false
-    });
+    return json({service:"CABAL 2.0 Market Radar",version:VERSION,endpoints:["/health","/radar"],autoTrade:false});
   }
 };
