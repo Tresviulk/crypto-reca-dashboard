@@ -89,3 +89,31 @@ jobs:
               'scanDurationMs':last.get('scanDurationMs')
           }))
           PY
+
+      - name: Verify scheduler advances without bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          first=$(python -c 'import json; d=json.load(open("/tmp/cabal2-health.json")); print((d.get("last") or {}).get("generatedAt") or "")')
+          sleep 75
+          curl -fsS --retry 3 --retry-delay 3 --max-time 20 https://cabal2-radar.diondublin21.workers.dev/health -o /tmp/cabal2-health-scheduled.json
+          python - "$first" <<'PY'
+          import json,sys
+          first=sys.argv[1]
+          d=json.load(open('/tmp/cabal2-health-scheduled.json',encoding='utf-8'))
+          last=d.get('last') or {}
+          second=last.get('generatedAt') or ''
+          print('CABAL 2.0 SCHEDULED HEALTH',json.dumps({
+              'healthy':d.get('healthy'),
+              'ageSeconds':d.get('ageSeconds'),
+              'firstGeneratedAt':first,
+              'secondGeneratedAt':second,
+              'universeCount':last.get('universeCount'),
+              'detectionCount':last.get('detectionCount'),
+              'scanDurationMs':last.get('scanDurationMs')
+          }))
+          if not first or not second or second==first:
+              raise SystemExit('1-minute scheduler did not advance radar state')
+          if d.get('healthy') is not True:
+              raise SystemExit(f"scheduled radar unhealthy: {d}")
+          PY
