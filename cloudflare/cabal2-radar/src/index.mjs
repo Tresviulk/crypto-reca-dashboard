@@ -1,9 +1,11 @@
+import { DurableObject } from "cloudflare:workers";
 import { computeRadar, num } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.2";
+const VERSION = "CABAL2_RADAR_0.1.3";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
+const ALARM_INTERVAL_MS = 60_000;
 
 function eligibleBase(base) {
   const a = String(base || "").toUpperCase();
@@ -196,6 +198,71 @@ function json(data,status=200) {
   });
 }
 
+export class Cabal2Scheduler extends DurableObject {
+  constructor(ctx,env) {
+    super(ctx,env);
+    this.ctx=ctx;
+    this.env=env;
+  }
+
+  async fetch() {
+    const current=await this.ctx.storage.getAlarm();
+    const now=Date.now();
+    if (current===null || current<=now+15_000) {
+      await this.ctx.storage.setAlarm(now+ALARM_INTERVAL_MS);
+    }
+    const armedFor=await this.ctx.storage.getAlarm();
+    return json({
+      scheduler:"DURABLE_OBJECT_ALARM",
+      armed:true,
+      armedFor:armedFor?new Date(armedFor).toISOString():null,
+      intervalMs:ALARM_INTERVAL_MS
+    });
+  }
+
+  async alarm(alarmInfo) {
+    const scheduledAt=new Date().toISOString();
+    await ensureDb(this.env);
+    await setMeta(this.env,"scheduler_state",{
+      source:"DURABLE_OBJECT_ALARM",
+      status:"RUNNING",
+      scheduledAt,
+      lastScheduledAt:scheduledAt,
+      retryCount:Number(alarmInfo&&alarmInfo.retryCount||0)
+    });
+    try {
+      const result=await runScan(this.env);
+      await setMeta(this.env,"scheduler_state",{
+        source:"DURABLE_OBJECT_ALARM",
+        status:"PASS",
+        scheduledAt,
+        lastScheduledAt:scheduledAt,
+        lastCompletedAt:new Date().toISOString(),
+        radarGeneratedAt:result.generatedAt,
+        retryCount:Number(alarmInfo&&alarmInfo.retryCount||0)
+      });
+      await this.ctx.storage.setAlarm(Date.now()+ALARM_INTERVAL_MS);
+    } catch (e) {
+      const error=String(e&&e.stack||e&&e.message||e);
+      await recordError(this.env,e);
+      await setMeta(this.env,"scheduler_state",{
+        source:"DURABLE_OBJECT_ALARM",
+        status:"FAIL",
+        scheduledAt,
+        lastScheduledAt:scheduledAt,
+        lastCompletedAt:new Date().toISOString(),
+        retryCount:Number(alarmInfo&&alarmInfo.retryCount||0),
+        error
+      });
+      if (Number(alarmInfo&&alarmInfo.retryCount||0)>=5) {
+        await this.ctx.storage.setAlarm(Date.now()+ALARM_INTERVAL_MS);
+        return;
+      }
+      throw e;
+    }
+  }
+}
+
 export default {
   async scheduled(event,env) {
     const scheduledAt=new Date().toISOString();
@@ -205,6 +272,7 @@ export default {
     const cron=String((event && event.cron) || "");
     await ensureDb(env);
     await setMeta(env,"scheduler_state",{
+      source:"CRON_TRIGGER",
       status:"RUNNING",
       cron,
       scheduledAt,
@@ -214,6 +282,7 @@ export default {
     try {
       const result=await runScan(env);
       await setMeta(env,"scheduler_state",{
+        source:"CRON_TRIGGER",
         status:"PASS",
         cron,
         scheduledAt,
@@ -226,6 +295,7 @@ export default {
       const error=String(e&&e.stack||e&&e.message||e);
       await recordError(env,e);
       await setMeta(env,"scheduler_state",{
+        source:"CRON_TRIGGER",
         status:"FAIL",
         cron,
         scheduledAt,
@@ -239,6 +309,11 @@ export default {
   },
   async fetch(request,env) {
     const u=new URL(request.url);
+    if (u.pathname==="/scheduler/start") {
+      const id=env.CABAL2_SCHEDULER.idFromName("primary");
+      const stub=env.CABAL2_SCHEDULER.get(id);
+      return await stub.fetch(new Request("https://cabal2-scheduler.internal/start"));
+    }
     if (u.pathname==="/health") {
       await ensureDb(env);
       let last=await getMeta(env,"last_radar");
@@ -269,7 +344,7 @@ export default {
       await ensureDb(env);
       return json((await getMeta(env,"last_radar"))||{version:VERSION,status:"NO_SCAN_YET"});
     }
-    return json({service:"CABAL 2.0 Market Radar",version:VERSION,endpoints:["/health","/radar"],autoTrade:false});
+    return json({service:"CABAL 2.0 Market Radar",version:VERSION,endpoints:["/health","/radar","/scheduler/start"],autoTrade:false});
   }
 };
 
