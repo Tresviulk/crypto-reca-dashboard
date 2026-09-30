@@ -223,3 +223,5 @@ export default {
     return json({service:"CABAL 2.0 Market Radar",version:VERSION,endpoints:["/health","/radar"],autoTrade:false});
   }
 };
+
+// Verification workflow deploy trigger
