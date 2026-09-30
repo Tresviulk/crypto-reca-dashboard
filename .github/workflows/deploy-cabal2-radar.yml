@@ -1,0 +1,91 @@
+name: Deploy CABAL 2.0 Radar
+
+on:
+  push:
+    branches: ["cabal-2-clean-rebuild"]
+    paths:
+      - 'cloudflare/cabal2-radar/**'
+      - 'scripts/cabal2_radar_regression.mjs'
+      - 'scripts/cabal2_source_smoke.mjs'
+      - '.github/workflows/deploy-cabal2-radar.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-cabal2-radar
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Validate CABAL 2.0 Radar
+        run: |
+          set -euo pipefail
+          node --check cloudflare/cabal2-radar/src/index.mjs
+          node --check cloudflare/cabal2-radar/src/radar-core.mjs
+          node scripts/cabal2_radar_regression.mjs
+          node scripts/cabal2_source_smoke.mjs
+
+      - name: Build isolated Wrangler config
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          src='cloudflare/cabal-scanner/wrangler.jsonc'
+          dst='cloudflare/cabal2-radar/wrangler.generated.jsonc'
+          d=json.load(open(src,encoding='utf-8'))
+          d['name']='cabal2-radar'
+          d['main']='src/index.mjs'
+          d['compatibility_date']='2026-09-30'
+          d['vars']={}
+          d['triggers']={'crons':['* * * * *']}
+          json.dump(d,open(dst,'w',encoding='utf-8'),indent=2)
+          print('generated',dst)
+          PY
+
+      - name: Deploy isolated CABAL 2.0 Radar
+        working-directory: cloudflare/cabal2-radar
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@latest deploy --config wrangler.generated.jsonc
+
+      - name: Verify live one-minute radar
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 75
+          curl -fsS --retry 4 --retry-delay 5 --max-time 15             https://cabal2-radar.diondublin21.workers.dev/health -o /tmp/cabal2-health.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/cabal2-health.json',encoding='utf-8'))
+          if d.get('version')!='CABAL2_RADAR_0.1.0':
+              raise SystemExit(f"wrong version: {d}")
+          if d.get('mode')!='CABAL2_1M_MARKET_RADAR':
+              raise SystemExit(f"wrong mode: {d}")
+          last=d.get('last') or {}
+          if last.get('autoTrade') is not False:
+              raise SystemExit('CABAL 2.0 Radar must be non-trading')
+          if int(last.get('universeCount') or 0)<100:
+              raise SystemExit(f"universe too small: {last}")
+          print('CABAL 2.0 LIVE RADAR PASS',json.dumps({
+              'healthy':d.get('healthy'),
+              'ageSeconds':d.get('ageSeconds'),
+              'universeCount':last.get('universeCount'),
+              'detectionCount':last.get('detectionCount'),
+              'sourceStatus':last.get('sourceStatus'),
+              'scanDurationMs':last.get('scanDurationMs')
+          }))
+          PY
