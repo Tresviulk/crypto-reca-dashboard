@@ -71,7 +71,8 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('/tmp/cabal2-health.json',encoding='utf-8'))
-          if d.get('version')!='CABAL2_RADAR_0.1.0':
+          print('CABAL 2.0 HEALTH RAW',json.dumps(d))
+          if d.get('version')!='CABAL2_RADAR_0.1.1':
               raise SystemExit(f"wrong version: {d}")
           if d.get('mode')!='CABAL2_1M_MARKET_RADAR':
               raise SystemExit(f"wrong mode: {d}")
