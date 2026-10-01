@@ -2,8 +2,8 @@
   "schemaVersion": "1.0",
   "module": "whalesMultichain",
   "version": "WHALES_MULTICHAIN_V3_1_2026-09-13",
-  "generatedAt": "2026-10-01T03:42:08.232Z",
-  "overallStatus": "PASS",
+  "generatedAt": "2026-10-01T10:29:35.491Z",
+  "overallStatus": "PARTIAL_SOLANA_RPC",
   "architecture": {
     "trackedEvmWallets": 11,
     "trackedSolanaWallets": 6,
@@ -12,7 +12,7 @@
       "base": "PASS",
       "arbitrum": "PASS",
       "hyperliquid": "PASS",
-      "solana": "PASS"
+      "solana": "PARTIAL"
     },
     "importantLimitation": "Solana has a configured independent whale cohort. A PARTIAL Solana status means public-RPC/provider degradation, not missing wallets. Raw TOKEN_FLOW remains contextual until trade-level confirmation."
   },
@@ -33,13 +33,13 @@
         "candidatesEndpoint": "/candidates",
         "deepAuthConfigured": true,
         "alchemyChain": "ethereum",
-        "timestamp": "2026-09-30T23:39:38.271Z"
+        "timestamp": "2026-10-01T05:37:00.260Z"
       },
       "summary": {
         "ok": true,
         "patchVersion": "WHALES_V3_2026-09-12",
         "rowsReadRequested": 300,
-        "signalCount": 274,
+        "signalCount": 156,
         "buys": [],
         "sells": [],
         "convergence": []
@@ -48,8 +48,8 @@
     "base": {
       "status": "PASS",
       "rpcUrl": "https://mainnet.base.org",
-      "latestBlock": 52018385,
-      "fromBlock": 52013385,
+      "latestBlock": 52030603,
+      "fromBlock": 52025603,
       "candidateTransactions": 0,
       "reconstructed": 0,
       "failed": 0,
@@ -58,8 +58,8 @@
     "arbitrum": {
       "status": "PASS",
       "rpcUrl": "https://arb1.arbitrum.io/rpc",
-      "latestBlock": 510543411,
-      "fromBlock": 510538411,
+      "latestBlock": 510632179,
+      "fromBlock": 510627179,
       "candidateTransactions": 0,
       "reconstructed": 0,
       "failed": 0,
@@ -72,7 +72,7 @@
       "fills": []
     },
     "solana": {
-      "status": "PASS",
+      "status": "PARTIAL",
       "mode": "RESILIENT_PUBLIC_RPC_FAILOVER",
       "rpcUrl": "https://solana-rpc.publicnode.com",
       "rpcProviders": [
@@ -81,16 +81,23 @@
       ],
       "providerStats": {
         "https://solana-rpc.publicnode.com": {
-          "calls": 34,
-          "successes": 34,
-          "failures": 0,
+          "calls": 30,
+          "successes": 28,
+          "failures": 2,
           "recoveredFallbacks": 0,
-          "lastError": null
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+        },
+        "https://api.mainnet-beta.solana.com": {
+          "calls": 2,
+          "successes": 0,
+          "failures": 2,
+          "recoveredFallbacks": 0,
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
         }
       },
       "walletCount": 6,
       "failed": 0,
-      "txFailures": 0,
+      "txFailures": 1,
       "fallbackRecoveries": 0,
       "perWallet": [
         {
@@ -99,7 +106,7 @@
           "status": "PASS",
           "signatureProvider": "https://solana-rpc.publicnode.com",
           "signaturesSeen": 25,
-          "txFetched": 14,
+          "txFetched": 13,
           "txFailures": 0
         },
         {
@@ -123,11 +130,11 @@
         {
           "label": "SOL-TRUNOEST",
           "address": "ardinRsN1mNYVeoJWTBsWeYeXvuR9UUDGMsCDKpb6AT",
-          "status": "PASS",
+          "status": "PARTIAL",
           "signatureProvider": "https://solana-rpc.publicnode.com",
           "signaturesSeen": 25,
           "txFetched": 0,
-          "txFailures": 0
+          "txFailures": 1
         },
         {
           "label": "SOL-CUPSEY",
@@ -144,21 +151,21 @@
           "status": "PASS",
           "signatureProvider": "https://solana-rpc.publicnode.com",
           "signaturesSeen": 25,
-          "txFetched": 14,
+          "txFetched": 9,
           "txFailures": 0
         }
       ],
       "signals": [
         {
           "chain": "solana",
-          "walletLabel": "SOL-GAKE",
-          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+          "walletLabel": "SOL-WEST",
+          "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "5LQCLVKtqdfH7jkiYLZYhS872kbFMhNZuKD6KajyUB5jp8gMz6TuM6Dsmi8ctmTmXyzTXLib9PcFhd27WwvBVEAB",
-          "blockTime": 1790825936,
+          "signature": "55xUte6QynGC8Hexr2bRd1Gv1Qt2qrFNVVdgFm4p2uvUMdjYwajh3s14pbtnCyxdetKpv4MC4FazmdSZB7vR9FtU",
+          "blockTime": 1790849247,
           "tokenFlows": [
             {
-              "mint": "9CpRDFevggadw6DYknRUspwTCtqNvCQs8RmWVWLupump",
+              "mint": "4Swpey4v1DRX2E2CDBY1ck7yr6eX4mgZu6VBsEGHpump",
               "delta": 10
             }
           ],
@@ -169,11 +176,11 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "JKsbFDCMZBa8T6vwKXyM76xyqgsMDsjwHFqXnZdC7bLWJ8M2zRLmiTEVqdbP7a9QUEwAJM3wEHDVFUtVHC5VzRE",
-          "blockTime": 1790825627,
+          "signature": "o8uLu8hmDmuhP1RLHXXvuDvL57iWzHFf5VYF39mQ2h8fxuhw3YZtysiLdDuHZ1VtM61XzDQeYte786MPCRHQpvL",
+          "blockTime": 1790848554,
           "tokenFlows": [
             {
-              "mint": "9CpRDFevggadw6DYknRUspwTCtqNvCQs8RmWVWLupump",
+              "mint": "BmZUamxnbF1bMEgQbDhPyow4NBPf5VsRCFWdBRukpump",
               "delta": 10
             }
           ],
@@ -184,41 +191,11 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "2K4WfJW8cfbqiUWA7aJJQ7LTHyqfDt15fhStsVYhQHLcesrNfNFZSzQLdwMa3f7LxxUJyS6zAmpgycnGzV1vXSv3",
-          "blockTime": 1790825598,
+          "signature": "4R9u9Ch9vPLeBC969vhsQ6jv7qpJo9hR4oHAewEfCykPwtK9vwJKFWtwxJPHzz8YLRDEAsr4XvtwP1yUxufzgAbn",
+          "blockTime": 1790847947,
           "tokenFlows": [
             {
-              "mint": "Ezx3CGiAXzYg2pQpmhckbr45BXy59Snnqc8zGUtmpump",
-              "delta": 10
-            }
-          ],
-          "rpcProvider": "https://solana-rpc.publicnode.com"
-        },
-        {
-          "chain": "solana",
-          "walletLabel": "SOL-GAKE",
-          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
-          "classification": "TOKEN_FLOW",
-          "signature": "5MjMVRaeSpn6dXRUqW1zEZfwahZkyPVEVh782VZo5gf3KaN5owQtk3kX3ASTxLMqaBJJP4apU44KNLZQo8n2dE8G",
-          "blockTime": 1790825130,
-          "tokenFlows": [
-            {
-              "mint": "J8PSdNP3QewKq2Z1JJJFDMaqF7KcaiJhR7gbr5KZpump",
-              "delta": -815536.307149
-            }
-          ],
-          "rpcProvider": "https://solana-rpc.publicnode.com"
-        },
-        {
-          "chain": "solana",
-          "walletLabel": "SOL-WEST",
-          "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-          "classification": "TOKEN_FLOW",
-          "signature": "4cfGW12ESbw64YM5j6E5yTDvdS7Fmx9bd287NXvWGApZGSk1pE2xKdmnjhedjGe7ZjE6bhi7EVqJG8tyzgrqkpXA",
-          "blockTime": 1790824471,
-          "tokenFlows": [
-            {
-              "mint": "GbaqqFPUU9vhHXGJ8nD3EFCcsZMufxYcSTuwMzeWpump",
+              "mint": "BhBcJpoUkCf8fybp67URHbo7P3dxiRa1bioTT7Jopump",
               "delta": 10
             }
           ],
@@ -229,26 +206,11 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "3dEqMSpkuLJThpREK9HPeQKj1QycFMLYFCpY13nHqEewyF9BPTb9cxzW5QrZbbzVUHANpf2F6u7tVM6vdNa8t9Gv",
-          "blockTime": 1790824053,
+          "signature": "4wxj4ffBstnP4M786fZRDQQ8euqhe79x27DxUkyPC9Ap6iDSG6GydQYwEWb94Hk6Yk162m3GFfw34eGxYGxkVMGc",
+          "blockTime": 1790846913,
           "tokenFlows": [
             {
-              "mint": "HvVW1ZriTSShJsWZrjqCscfkEWJwJKKhPViNxzSRpump",
-              "delta": 1
-            }
-          ],
-          "rpcProvider": "https://solana-rpc.publicnode.com"
-        },
-        {
-          "chain": "solana",
-          "walletLabel": "SOL-WEST",
-          "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-          "classification": "TOKEN_FLOW",
-          "signature": "VEjoxkDGtwrmJnbMD9CjJKPXTSZ5jE8jP7g15LxCLoPCJ5tVHF1VGEtp3W78UdvmxsLZJW12XkhyXRfNArZGK8s",
-          "blockTime": 1790823295,
-          "tokenFlows": [
-            {
-              "mint": "EQoTL7T8VFigYKqtfDxL6bqs7ZpqXRKrMbK49WvEpump",
+              "mint": "8T9eQZ2N5JKFwDr5vwEk8Y1Wjmr1vwmnUWmjLMiypump",
               "delta": 10
             }
           ],
@@ -259,11 +221,11 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "319tZtLiff7r3qM9VkNqTtagys2yzCR7AhJxpppZYXfAKEseRDGdLV2VpaJqptBntF9uPjstCwJn9zGQyrUY7pBd",
-          "blockTime": 1790822897,
+          "signature": "3NBLkoSD2v6m6nWbb7zQYEmZcaks9kuEFrF3pxPUZoRVS8GFCToZwtPnQ1viMQpL8Wqqm7fL2rq1bwtUPNi4BPL1",
+          "blockTime": 1790845327,
           "tokenFlows": [
             {
-              "mint": "43GH9ktJt58erbuGyqRzCwYsMirKYeiobtTP4cGepump",
+              "mint": "GstiyCpGk4Mz82eayrfvu7WzoB3Wtv17TJEj6vHMpump",
               "delta": 10
             }
           ],
@@ -274,26 +236,11 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "2EQbh1pztu95gZXJE9pbX2K24avuetNB4591QbNznvSXRUEzLFe73YVKConguKj6stAs8wbnTuZ4bkaAswqJeDP4",
-          "blockTime": 1790822070,
+          "signature": "UUrnWo9pirTS1jExTBn1QZ8kS3fszQnpXzbs5heyUFnPsMD4xmboj2AEMFSP8mJPXDV9MXMoWuRn463rCRFx4uW",
+          "blockTime": 1790844109,
           "tokenFlows": [
             {
-              "mint": "Fht8WJMoC66wrmLA5pzhtXc5JxLsWudJK6i3cPfvpump",
-              "delta": 1
-            }
-          ],
-          "rpcProvider": "https://solana-rpc.publicnode.com"
-        },
-        {
-          "chain": "solana",
-          "walletLabel": "SOL-WEST",
-          "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-          "classification": "TOKEN_FLOW",
-          "signature": "5NZYT5LAuf1wBbMcdFaT6tLPgZ1ocHpgjEqouEV3gm7w4xChueryyRVQHZL9ojprNXt6y9jQrPBorDyfYR7SWhvK",
-          "blockTime": 1790821505,
-          "tokenFlows": [
-            {
-              "mint": "9KRjpfkuZRPjLe7RZxwLegPWxDzPCrM8WzMkXwDkpump",
+              "mint": "XLnE3drovvmQG9zWNk8kbTQy2uPk1y1HspUM4k8pump",
               "delta": 10
             }
           ],
@@ -304,26 +251,11 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "47rvupGVL4uBPoFYKvBZJNcYuDD9f4TMFo1gjNg21hNaywjorJBj2ik7jaki9Lw6LMgPnm1mhTbui7YM1wRHu2Z9",
-          "blockTime": 1790820757,
+          "signature": "49TELEvf6YxonkUF1XoVaj8iGL2x4ZPwePuGyUyw93oVjGU3wHMmc5HP7jYvoUpi1VGwbQFM7VQMqjKg8Jfefa8C",
+          "blockTime": 1790843324,
           "tokenFlows": [
             {
-              "mint": "j7gPphMjdmzbAwdESAzY3KKwDTbtNWcivnDqhPQpump",
-              "delta": 1
-            }
-          ],
-          "rpcProvider": "https://solana-rpc.publicnode.com"
-        },
-        {
-          "chain": "solana",
-          "walletLabel": "SOL-WEST",
-          "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-          "classification": "TOKEN_FLOW",
-          "signature": "4pEKuWTKkr3vFXWFfsPGRFJ1PNERGwtnJQFQgKpjP5xZX6mVPAtW7BWSdESPRaqyXY6dyt1CegAdxF7a7ZcY9EhP",
-          "blockTime": 1790818124,
-          "tokenFlows": [
-            {
-              "mint": "4sjS4ZW7eGT5Rjx2n6UyevZTy7yXbQBapKo5WpF7pump",
+              "mint": "2Nerep1dvkFtcYk7ZqEjm3D6KTL8f123xXKb9kHHpump",
               "delta": 10
             }
           ],
@@ -334,11 +266,11 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "3rV9X4ufJrJrSjH7aniqZQKbwR9jAyAjrsM44VB2yweePLMLf89e35CULEhaw3VrNk41AEXEznc8dTPThxK6sK2n",
-          "blockTime": 1790817322,
+          "signature": "3yASQqxqmr3rEFcHJv4GB5bK1hiDoEU25uQkz22ScRp8xAgT2RxNNcptVPKDV7F9CdbQezNmjBCJyiQUxeDrEDEE",
+          "blockTime": 1790841866,
           "tokenFlows": [
             {
-              "mint": "5mv3Hh9hps7CdQZKmnrCTGp2apqGeA4rtGsDHNnRpump",
+              "mint": "5zQZdX8xkJ69sxirx1cd7kCL73jizW7aVJvvCGRPpump",
               "delta": 10
             }
           ],
@@ -349,27 +281,12 @@
           "walletLabel": "SOL-WEST",
           "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
           "classification": "TOKEN_FLOW",
-          "signature": "5E3tm2EJHK4gZngUK2bo4i4dPExzpQqCkxHJih3QspC69G9MMTG62keJgBGvKA4PgAWsd2aBmCnsZsaqAbrWL8jX",
-          "blockTime": 1790815878,
+          "signature": "2i2nZLjmKyvkvV8Aq8bk97ENbKToLE7BCfDK8WrvbFTTJe7iwop63ESjYDnqj2eN5CB1mztccgpNnvKj8JqKdCuv",
+          "blockTime": 1790841053,
           "tokenFlows": [
             {
-              "mint": "HMcC3e4yePVNZUQwxNHFacRwBpQaPyo7dB2MzR2dpump",
+              "mint": "7DbWUKo5kY1W5xCwZTdup1zsUizc9Skmr83v9w6Vpump",
               "delta": 10
-            }
-          ],
-          "rpcProvider": "https://solana-rpc.publicnode.com"
-        },
-        {
-          "chain": "solana",
-          "walletLabel": "SOL-WEST",
-          "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-          "classification": "TOKEN_FLOW",
-          "signature": "3UchbLMdi6AHrtkJY9cQLf4Z8ydGi8G1hP1fv38cyLcCusVauuVR43ASBXJGGnxgb6c6H9NkmNvSYt7xmgV8Txj2",
-          "blockTime": 1790815796,
-          "tokenFlows": [
-            {
-              "mint": "DHPyQ7GskqjRxJSuxseabJ1P8gGaLrkVLKUQAzZEpump",
-              "delta": 1
             }
           ],
           "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -385,7 +302,7 @@
     "providersConfigured": 2,
     "fallbackRecoveries": 0,
     "failedWallets": 0,
-    "txFailures": 0
+    "txFailures": 1
   },
   "statusSemantics": {
     "normalized": true,
