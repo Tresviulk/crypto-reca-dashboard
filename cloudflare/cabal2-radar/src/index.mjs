@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { computeRadar, num } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.4";
+const VERSION = "CABAL2_RADAR_0.1.5";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -184,11 +184,11 @@ async function emitEarlyWatch(env, detected) {
     "ACCION: WATCH; NO COMPRAR SOLO POR ESTE AVISO."
   ].join("\n");
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),6000);
+  const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),20000);
   let http=null,err=null;
   try {
     const response=await fetch(env.NTFY_URL,{
-      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag"},
+      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.5"},
       body:msg,signal:controller.signal
     });
     http=response.status;
