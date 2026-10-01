@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { computeRadar, num } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.3";
+const VERSION = "CABAL2_RADAR_0.1.4";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -136,12 +136,80 @@ function nextAssetState(assets, minute, prior) {
       if (seen.has(h.minute)) continue;
       seen.add(h.minute);
       dedup.push(h);
-      if (dedup.length>=12) break;
+      if (dedup.length>=8) break;
     }
     dedup.reverse();
     out[a.asset]={history:dedup};
   }
   return out;
+}
+
+
+/*
+ * CABAL 2.0 direct early-radar push. This is DISCOVERY only:
+ * no BUY, no auto-trading, no price target, and no implication that
+ * the canonical 15m confirmation / stop / no-chase rules have passed.
+ * Transport failures must never prevent the market scan being persisted.
+ */
+async function emitEarlyWatch(env, detected) {
+  const enabled=Boolean(env.NTFY_URL);
+  if (!enabled) return {enabled:false,status:"NOT_CONFIGURED"};
+  const candidates=detected.filter(x=>
+    x && Number.isFinite(x.move1mPct) && Number.isFinite(x.move3mPct) &&
+    x.move1mPct>=0.45 && x.move3mPct>=0.80 &&
+    x.turnover24h>=750000 && x.change24hPct<20 &&
+    x.radarScore>=15 &&
+    (x.venueSpreadPct===null || (Number.isFinite(x.venueSpreadPct) && x.venueSpreadPct<=5))
+  ).sort((a,b)=>b.radarScore-a.radarScore);
+  if (!candidates.length) return {enabled:true,status:"NONE_QUALIFIED"};
+  const now=Date.now();
+  const previous=(await getMeta(env,"early_watch_delivery"))||{};
+  const lastSent=Date.parse(previous.lastSentAt||"");
+  const backoff=Date.parse(previous.backoffUntil||"");
+  if (Number.isFinite(backoff)&&now<backoff) return {enabled:true,status:"BACKOFF",backoffUntil:previous.backoffUntil};
+  if (Number.isFinite(lastSent)&&now-lastSent<10*60_000) return {enabled:true,status:"GLOBAL_COOLDOWN"};
+  const lastByAsset=previous.lastByAsset&&typeof previous.lastByAsset==="object"?previous.lastByAsset:{};
+  const row=candidates.find(x=>{
+    const prev=Date.parse(lastByAsset[x.asset]||"");
+    return !Number.isFinite(prev)||now-prev>=90*60_000;
+  });
+  if (!row) return {enabled:true,status:"ASSET_COOLDOWN"};
+  const title="CABAL 2.0 - WATCH TEMPRANO";
+  const msg=[
+    "ATENCION: DETECCION TEMPRANA. NO ES ORDEN DE COMPRA.",
+    row.asset+" | "+row.venue+" | precio "+row.price,
+    "1m "+row.move1mPct+"% | 3m "+row.move3mPct+"% | 24h "+row.change24hPct+"%",
+    "Radar "+row.radarScore+"/100 | volumen 24h "+Math.round(row.turnover24h),
+    "Pendiente: validacion 15m, riesgo, stop y limite NO-CHASE.",
+    "ACCION: WATCH; NO COMPRAR SOLO POR ESTE AVISO."
+  ].join("\n");
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),6000);
+  let http=null,err=null;
+  try {
+    const response=await fetch(env.NTFY_URL,{
+      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag"},
+      body:msg,signal:controller.signal
+    });
+    http=response.status;
+    if (!response.ok) err="HTTP_"+http;
+  } catch (e) { err=String(e&&e.message||e); }
+  finally { clearTimeout(timer); }
+  const sent=!err;
+  const next={
+    lastAttemptAt:new Date(now).toISOString(),
+    lastSentAt:sent?new Date(now).toISOString():previous.lastSentAt||null,
+    lastAsset:row.asset,
+    lastHttp:http,
+    lastError:err,
+    backoffUntil:sent?null:new Date(now+15*60_000).toISOString(),
+    lastByAsset:sent?{...lastByAsset,[row.asset]:new Date(now).toISOString()}:lastByAsset
+  };
+  const entries=Object.entries(next.lastByAsset)
+    .sort((a,b)=>String(b[1]).localeCompare(String(a[1]))).slice(0,100);
+  next.lastByAsset=Object.fromEntries(entries);
+  await setMeta(env,"early_watch_delivery",next);
+  return {enabled:true,status:sent?"SENT":"FAILED",kind:"WATCH",asset:row.asset,http,error:err};
 }
 
 async function runScan(env) {
@@ -179,6 +247,8 @@ async function runScan(env) {
     detected:detected.slice(0,100),
     note:"Detection is intentionally independent of BUY quality. Extended movers remain visible and are flagged, not suppressed."
   };
+  try { result.earlyWatch=await emitEarlyWatch(env,detected); }
+  catch(e) { result.earlyWatch={enabled:true,status:"INTERNAL_ERROR",error:String(e&&e.message||e)}; }
   await setMeta(env,"last_radar",result);
   await setMeta(env,"last_error",{error:null,at:new Date().toISOString()});
   return result;
@@ -324,6 +394,7 @@ export default {
       }
       const lastError=await getMeta(env,"last_error");
       const scheduler=await getMeta(env,"scheduler_state");
+      const earlyWatchDelivery=await getMeta(env,"early_watch_delivery");
       const ageSeconds=last&&last.generatedAt?Math.round((Date.now()-Date.parse(last.generatedAt))/1000):null;
       const schedulerAgeSeconds=scheduler&&scheduler.lastScheduledAt
         ? Math.round((Date.now()-Date.parse(scheduler.lastScheduledAt))/1000)
@@ -336,6 +407,7 @@ export default {
         ageSeconds,
         schedulerAgeSeconds,
         scheduler,
+        earlyWatchDelivery,
         lastError,
         last
       });
