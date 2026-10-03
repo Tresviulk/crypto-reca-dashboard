@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_14_2026-10-03_NTFY_RETRY";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_15_2026-10-03_NTFY_QUOTA";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1774,7 +1774,16 @@ async function guardVerifyTransportOnce(env){
   const id=env.NTFY_VERIFICATION_ID;
   if(!id || !env.NTFY_URL) return;
   const previous=await guardGet(env,"transport:verification");
-  if(previous && previous.id===id) return;
+  if(previous && previous.id===id){
+    if(String(previous.attemptedAt).slice(0,10)===new Date(Date.now()).toISOString().slice(0,10) && !previous.ok && previous.status===429 && /daily.*message|message.*daily/i.test(previous.error||"")){
+      const transport=await guardGet(env,"trade:notify:state")||{};
+      if(Number(transport.lastSuccessAt||0)<=Date.parse(previous.attemptedAt)){
+        const backoffUntil=Date.now()+guardTransportBackoffMs({status:429},previous.error);
+        await guardPut(env,"trade:notify:state",{...transport,lastStatus:429,lastError:previous.error,backoffUntil});
+      }
+    }
+    return;
+  }
   // Mark before sending: deployment retries must never flood the topic.
   const result={id,attemptedAt:new Date().toISOString(),ok:false,status:null,error:null};
   await guardPut(env,"transport:verification",result);
@@ -1911,6 +1920,7 @@ async function guardHealth(env){
     patchVersion:PATCH_VERSION,
     fundamentalBlocks:["NEON","BLAST"],
     fundamentalCoverage:"MANUAL_KNOWN_BLOCKS_ONLY",
+    transportState:await guardGet(env,"trade:notify:state"),
     transportVerification:await guardGet(env,"transport:verification"),
     checkedAt:new Date(now).toISOString(),
     lastScheduledAt:hb.lastScheduledAt ? new Date(Number(hb.lastScheduledAt)).toISOString() : null,
