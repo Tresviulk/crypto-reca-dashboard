@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 let source=fs.readFileSync('cloudflare/cabal-scanner/src/index.js','utf8').replace(/export default\s*\{/,'globalThis.__worker = {');
-source+='\nglobalThis.test={guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade};';
+source+='\nglobalThis.test={guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade,guardRetryAfterMs,guardTransportBackoffMs,guardVerifyTransportOnce};';
 let clock=1800000000000;
 class Clock extends Date {static now(){return clock;}}
 const store=new Map();
@@ -47,3 +47,20 @@ assert.equal(closed.ok,true,'entry-window closure must pass actual header valida
 assert.equal(notifications.length,2);
 assert(notifications[0].body.includes('SPOT manual'),'BUY remains manual');
 console.log('CABAL NOTIFICATION HEADER REGRESSION PASS: BUY and closure HTTP headers');
+
+assert.equal(context.test.guardRetryAfterMs(new Response('',{status:429,headers:{'Retry-After':'7200'}})),7200000,'server backoff must not be capped below Retry-After');
+clock+=7*60*60*1000;
+context.fetch=async()=>{throw Error('transient timeout');};
+const failed=await context.test.guardTradeNotify({NTFY_URL:'https://example.invalid'},{generatedAt:new Date(clock).toISOString(),buys:[{asset:'RETRYTEST',price:100,entryMax:100.4,stop:98}]});
+assert.equal(failed.backoffUntil-clock,60000,'transient outage must retry on the next minute');
+console.log('NTFY RETRY REGRESSION PASS');
+
+const throttledCancel=await context.test.guardCancelActiveTrade({NTFY_URL:'https://example.invalid'},{asset:'TEST'},'ORIGINAL_STOP_BROKEN',97);
+assert.equal(throttledCancel.error,'NTFY_BACKOFF_ACTIVE','CANCEL cannot hammer the server during backoff');
+assert(context.test.guardTransportBackoffMs(new Response('',{status:429}),'daily message limit reached')>60000,'daily quota must wait for UTC reset');
+let probes=0;
+context.fetch=async()=>{probes++;return new Response('{"id":"probe-id"}',{status:200});};
+await context.test.guardVerifyTransportOnce({NTFY_URL:'https://example.invalid',NTFY_VERIFICATION_ID:'test-one'});
+await context.test.guardVerifyTransportOnce({NTFY_URL:'https://example.invalid',NTFY_VERIFICATION_ID:'test-one'});
+assert.equal(probes,1,'transport verification must only send once');
+console.log('NTFY QUOTA AND ONE-TIME VERIFICATION PASS');

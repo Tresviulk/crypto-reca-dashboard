@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_13_2026-10-03_WIND_DOWN_BLOCKS";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_14_2026-10-03_NTFY_RETRY";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1282,10 +1282,21 @@ function guardRetryAfterMs(response){
   const raw=response && response.headers ? response.headers.get("Retry-After") : null;
   if(!raw) return null;
   const seconds=Number(raw);
-  if(Number.isFinite(seconds) && seconds>=0) return Math.min(GUARD_NTFY_BACKOFF_MAX_MS,Math.max(5_000,seconds*1000));
+  if(Number.isFinite(seconds) && seconds>=0) return Math.max(5_000,seconds*1000);
   const when=Date.parse(raw);
-  if(Number.isFinite(when)) return Math.min(GUARD_NTFY_BACKOFF_MAX_MS,Math.max(5_000,when-Date.now()));
+  if(Number.isFinite(when)) return Math.max(5_000,when-Date.now());
   return null;
+}
+
+function guardTransportBackoffMs(response,body=""){
+  const retry=guardRetryAfterMs(response);
+  if(retry!==null) return retry;
+  if(response && response.status===429 && /daily.*message|message.*daily/i.test(body)){
+    const now=Date.now();
+    const next=new Date(now);next.setUTCHours(24,0,0,0);
+    return next.getTime()-now;
+  }
+  return response && response.status===429 ? 15*60_000 : 60_000;
 }
 
 async function guardNotify(env,candidates){
@@ -1613,15 +1624,14 @@ async function guardTradeNotify(env,state){
     },20000);
     if(!r.ok){ try{responseText=(await r.text()).slice(0,300);}catch(_){} }
   }catch(e){
-    const state2={lastAttemptAt:now,lastStatus:null,lastError:String(e),backoffUntil:now+10*60*1000};
+    const state2={lastAttemptAt:now,lastStatus:null,lastError:String(e),backoffUntil:now+60*1000};
     await guardPut(env,"trade:notify:state",state2);
     await guardPut(env,"trade:pending",{generatedAt:state.generatedAt,buy:x});
     return {ok:false,kind:"BUY",asset:x.asset,error:String(e),backoffUntil:state2.backoffUntil};
   }
 
   if(!r.ok){
-    const retry=guardRetryAfterMs(r);
-    const backoff=retry||Math.min(60*60*1000,(r.status===429?30:10)*60*1000);
+    const backoff=guardTransportBackoffMs(r,responseText);
     const state2={
       lastAttemptAt:now,lastStatus:r.status,
       lastError:"HTTP_"+r.status+(responseText?":"+responseText:""),
@@ -1642,6 +1652,9 @@ async function guardTradeNotify(env,state){
 async function guardCancelActiveTrade(env,active,reason,price){
   const now=Date.now();
   if(!env.NTFY_URL) return {ok:false,kind:"CANCEL",asset:active.asset,error:"NTFY_URL_NOT_CONFIGURED"};
+
+  const notifyState=await guardGet(env,"trade:notify:state")||{};
+  if(Number(notifyState.backoffUntil||0)>now) return {ok:false,kind:"CANCEL",asset:active.asset,error:"NTFY_BACKOFF_ACTIVE",backoffUntil:notifyState.backoffUntil};
 
   const reasonText=reason==="ORIGINAL_STOP_BROKEN"
     ? "El precio ha roto el STOP estructural de la alerta original."
@@ -1664,9 +1677,14 @@ async function guardCancelActiveTrade(env,active,reason,price){
       await guardPut(env,"trade:active",{asset:null,clearedAt:now,previousAsset:active.asset,reason});
       return {ok:true,kind:"CANCEL",asset:active.asset,status:r.status,reason};
     }
-    return {ok:false,kind:"CANCEL",asset:active.asset,status:r.status,error:"HTTP_"+r.status,reason};
+    const body=(await r.text()).slice(0,300);
+    const backoffUntil=now+guardTransportBackoffMs(r,body);
+    await guardPut(env,"trade:notify:state",{lastAttemptAt:now,lastStatus:r.status,lastError:"HTTP_"+r.status+":"+body,backoffUntil});
+    return {ok:false,kind:"CANCEL",asset:active.asset,status:r.status,error:"HTTP_"+r.status,reason,backoffUntil};
   }catch(e){
-    return {ok:false,kind:"CANCEL",asset:active.asset,error:String(e),reason};
+    const backoffUntil=now+60_000;
+    await guardPut(env,"trade:notify:state",{lastAttemptAt:now,lastStatus:null,lastError:String(e),backoffUntil});
+    return {ok:false,kind:"CANCEL",asset:active.asset,error:String(e),reason,backoffUntil};
   }
 }
 
@@ -1752,6 +1770,29 @@ async function guardRevalidateActiveTrade(env,current,history){
   await guardPut(env,"trade:revalidation",state);
   return state;
 }
+async function guardVerifyTransportOnce(env){
+  const id=env.NTFY_VERIFICATION_ID;
+  if(!id || !env.NTFY_URL) return;
+  const previous=await guardGet(env,"transport:verification");
+  if(previous && previous.id===id) return;
+  // Mark before sending: deployment retries must never flood the topic.
+  const result={id,attemptedAt:new Date().toISOString(),ok:false,status:null,error:null};
+  await guardPut(env,"transport:verification",result);
+  try{
+    const response=await fetchTimed(env.NTFY_URL,{
+      method:"POST",headers:{"Title":"CABAL - PRUEBA DESDE MOTOR","Priority":"low"},
+      body:"PRUEBA TECNICA DESDE CLOUDFLARE. NO ES WATCH NI ORDEN DE COMPRA. Verificacion del transporte NTFY."
+    },20000);
+    result.status=response.status;
+    result.ok=response.ok;
+    const body=(await response.text()).slice(0,500);
+    if(response.ok){try{result.messageId=JSON.parse(body).id||null;}catch(_){}}
+    else result.error=body||"HTTP_"+response.status;
+  }catch(e){result.error=String(e);}
+  result.completedAt=new Date().toISOString();
+  await guardPut(env,"transport:verification",result);
+}
+
 async function runMarketGuard(event,env){
   const started=Date.now();
   const scheduledAt=Number(event && event.scheduledTime)||started;
@@ -1772,6 +1813,7 @@ async function runMarketGuard(event,env){
   await guardPut(env,"heartbeat",hb);
 
   try{
+    await guardVerifyTransportOnce(env);
     const current=await guardBuildSnapshot();
     const h=await guardGet(env,"history");
     let history=Array.isArray(h && h.items) ? h.items : [];
@@ -1869,6 +1911,7 @@ async function guardHealth(env){
     patchVersion:PATCH_VERSION,
     fundamentalBlocks:["NEON","BLAST"],
     fundamentalCoverage:"MANUAL_KNOWN_BLOCKS_ONLY",
+    transportVerification:await guardGet(env,"transport:verification"),
     checkedAt:new Date(now).toISOString(),
     lastScheduledAt:hb.lastScheduledAt ? new Date(Number(hb.lastScheduledAt)).toISOString() : null,
     lastSuccessfulScan:last ? new Date(last).toISOString() : null,
