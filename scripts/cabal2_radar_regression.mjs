@@ -61,7 +61,8 @@ const changed=nextAssetState([{asset:'ATH',price:110,venue:'COINBASE',venueSymbo
 assert(changed.ATH.history.length===1,'market switch must reset incompatible price history');
 await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[gentle3]);
 await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[second]);
-assert(posts.length===2,'new independent asset must not wait ten minutes after first alert');
+assert(posts.length===1,'WATCH must preserve notification quota with a global cooldown');
+assert((await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[second])).status==='GLOBAL_WATCH_COOLDOWN','quota cooldown must be explicit');
 assert(posts.every(x=>x.includes('NO ES ORDEN DE COMPRA')),'WATCH cannot masquerade as BUY');
 console.log('CABAL RADAR INTEGRATION PASS: venue count/history, independent NTFY dispatch');
 
@@ -80,3 +81,8 @@ const beforeNeon=posts.length;
 await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[{...gentle3,asset:'NEON'}]);
 assert(posts.length===beforeNeon,'NEON must not reach NTFY');
 console.log('NEON FUNDAMENTAL BLOCK PASS');
+
+const blastBlocked=computeRadar({asset:"BLAST",price:110,turnover:5000000,change24h:-40,venue:"KUCOIN"},100,[{minute:99,price:100},{minute:97,price:99},{minute:95,price:98}]);
+assert(blastBlocked.detected===false,"BLAST detection blocked");
+assert(earlyWatchCandidates([{...blastBlocked,detected:true,radarScore:90,venueSpreadPct:0}]).length===0,"cached BLAST blocked");
+console.log("BLAST discovery and cached WATCH blocked");

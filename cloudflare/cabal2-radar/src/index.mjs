@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { computeRadar, num, earlyWatchCandidates, notificationBackoffMs } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.9";
+const VERSION = "CABAL2_RADAR_0.1.10";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -9,7 +9,7 @@ const ALARM_INTERVAL_MS = 60_000;
 
 function eligibleBase(base) {
   const a = String(base || "").toUpperCase();
-  if (!a || a === "NEON" || STABLES.has(a) || WRAPPED.has(a)) return false;
+  if (!a || ["NEON","BLAST"].includes(a) || STABLES.has(a) || WRAPPED.has(a)) return false;
   if (/(UP|DOWN|BULL|BEAR|[235]L|[235]S)$/.test(a)) return false;
   return true;
 }
@@ -162,6 +162,8 @@ async function emitEarlyWatch(env, detected) {
     ? Math.min(Date.parse(previous.backoffUntil||""),Date.parse(previous.lastAttemptAt)+60_000)
     : Date.parse(previous.backoffUntil||"");
   if (Number.isFinite(backoff)&&now<backoff) return {enabled:true,status:"BACKOFF",backoffUntil:previous.backoffUntil};
+  const lastSent=Date.parse(previous.lastSentAt||"");
+  if(Number.isFinite(lastSent)&&now-lastSent<30*60_000) return {enabled:true,status:"GLOBAL_WATCH_COOLDOWN",nextAttemptAt:new Date(lastSent+30*60_000).toISOString()};
   const lastByAsset=previous.lastByAsset&&typeof previous.lastByAsset==="object"?previous.lastByAsset:{};
   const candidates=earlyWatchCandidates(detected,lastByAsset,now);
   if (!candidates.length) return {enabled:true,status:"NONE_QUALIFIED_OR_ASSET_COOLDOWN"};
@@ -237,7 +239,8 @@ async function runScan(env) {
     mode:"MARKET_RADAR_ONLY",
     autoTrade:false,
     sourceStatus,
-    fundamentalBlocks:{NEON:{reason:"PROJECT_WIND_DOWN",source:"https://neonevm.org/"}},
+    fundamentalBlocks:{NEON:{reason:"PROJECT_WIND_DOWN",source:"https://neonevm.org/"},BLAST:{reason:"REPORTED_PROJECT_WIND_DOWN",source:"https://www.kucoin.com/news/flash/blast-to-shut-down-ethereum-layer-2-sets-october-26-withdrawal-deadline"}},
+    fundamentalCoverage:"MANUAL_KNOWN_BLOCKS_ONLY",
     universeCount:merged.length,
     sourceCounts:{coinbase:cb.length,kucoin:ku.length},
     detectionCount:detected.length,
