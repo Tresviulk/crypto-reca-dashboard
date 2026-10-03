@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { computeRadar, num, earlyWatchCandidates, notificationBackoffMs } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.10";
+const VERSION = "CABAL2_RADAR_0.1.11";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -178,7 +178,7 @@ async function emitEarlyWatch(env, detected) {
   ].join("\n");
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),20000);
-  let http=null,err=null,retryAfter=null,messageId=null;
+  let http=null,err=null,retryAfter=null,messageId=null,responseBody="";
   try {
     const response=await fetch(env.NTFY_URL,{
       method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.8"},
@@ -186,7 +186,7 @@ async function emitEarlyWatch(env, detected) {
     });
     http=response.status;
     retryAfter=response.headers.get("retry-after");
-    if (!response.ok) err="HTTP_"+http;
+    if (!response.ok){ responseBody=(await response.text()).slice(0,500); err="HTTP_"+http+":"+responseBody; }
     else {
       try { messageId=(await response.json()).id||null; } catch {}
     }
@@ -201,7 +201,7 @@ async function emitEarlyWatch(env, detected) {
     lastHttp:http,
     messageId,
     lastError:err,
-    backoffUntil:sent?null:new Date(now+notificationBackoffMs(http,retryAfter,now)).toISOString(),
+    backoffUntil:sent?null:new Date(now+notificationBackoffMs(http,retryAfter,now,responseBody)).toISOString(),
     lastByAsset:sent?{...lastByAsset,...Object.fromEntries(candidates.map(x=>[x.asset,new Date(now).toISOString()]))}:lastByAsset
   };
   const entries=Object.entries(next.lastByAsset)

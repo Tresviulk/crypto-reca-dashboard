@@ -86,3 +86,5 @@ const blastBlocked=computeRadar({asset:"BLAST",price:110,turnover:5000000,change
 assert(blastBlocked.detected===false,"BLAST detection blocked");
 assert(earlyWatchCandidates([{...blastBlocked,detected:true,radarScore:90,venueSpreadPct:0}]).length===0,"cached BLAST blocked");
 console.log("BLAST discovery and cached WATCH blocked");
+
+assert(notificationBackoffMs(429,null,Date.parse('2026-10-03T04:00:00Z'),'daily message quota reached')===20*60*60*1000,'daily quota waits until UTC reset');
