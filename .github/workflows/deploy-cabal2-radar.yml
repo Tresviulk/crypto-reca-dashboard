@@ -98,7 +98,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "Waiting for workers.dev to serve CABAL2_RADAR_0.1.5..."
+          echo "Waiting for workers.dev to serve CABAL2_RADAR_0.1.6..."
           ready=0
           for attempt in $(seq 1 24); do
             curl -fsS --retry 2 --retry-delay 2 --max-time 20 "https://cabal2-radar.diondublin21.workers.dev/health?bootstrap=1" -o /tmp/cabal2-health.json
@@ -106,7 +106,7 @@ jobs:
           import json
           d=json.load(open('/tmp/cabal2-health.json',encoding='utf-8'))
           print('CABAL 2.0 VERSION PROPAGATION',d.get('version'))
-          raise SystemExit(0 if d.get('version')=='CABAL2_RADAR_0.1.5' else 1)
+          raise SystemExit(0 if d.get('version')=='CABAL2_RADAR_0.1.6' else 1)
           PY
             then
               ready=1
@@ -115,7 +115,7 @@ jobs:
             sleep 5
           done
           if [ "$ready" -ne 1 ]; then
-            echo "workers.dev did not propagate CABAL2_RADAR_0.1.5"
+            echo "workers.dev did not propagate CABAL2_RADAR_0.1.6"
             cat /tmp/cabal2-health.json || true
             exit 1
           fi
@@ -123,12 +123,12 @@ jobs:
           import json
           d=json.load(open('/tmp/cabal2-health.json',encoding='utf-8'))
           print('CABAL 2.0 HEALTH RAW',json.dumps(d))
-          if d.get('version')!='CABAL2_RADAR_0.1.5':
+          if d.get('version')!='CABAL2_RADAR_0.1.6':
               raise SystemExit(f"wrong version: {d}")
           if d.get('mode')!='CABAL2_1M_MARKET_RADAR':
               raise SystemExit(f"wrong mode: {d}")
           last=d.get('last') or {}
-          if last.get('version')!='CABAL2_RADAR_0.1.5':
+          if last.get('version')!='CABAL2_RADAR_0.1.6':
               raise SystemExit(f"live radar state is not current deployment: {last}")
           if last.get('autoTrade') is not False:
               raise SystemExit('CABAL 2.0 Radar must be non-trading')

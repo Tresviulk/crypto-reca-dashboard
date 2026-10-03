@@ -1,4 +1,5 @@
 export function num(v, fallback=null) {
+  if (v === null || v === undefined || v === "") return fallback;
   const x = Number(v);
   return Number.isFinite(x) ? x : fallback;
 }
@@ -85,4 +86,13 @@ export function computeRadar(asset, currentMinute, previousHistory=[]) {
     extended24h: change24h >= 20,
     radarScore: Number(cap(score, 0, 100).toFixed(2))
   };
+}
+
+export function earlyWatchCandidates(detected, lastByAsset={}, now=Date.now()) {
+  return detected.filter(x =>
+    x && x.detected && x.turnover24h>=750000 && x.change24hPct<20 &&
+    x.radarScore>=15 &&
+    (x.venueSpreadPct===null || (Number.isFinite(x.venueSpreadPct) && x.venueSpreadPct<=5)) &&
+    (!Number.isFinite(Date.parse(lastByAsset[x.asset]||"")) || now-Date.parse(lastByAsset[x.asset])>=90*60_000)
+  ).sort((a,b)=>b.radarScore-a.radarScore).slice(0,3);
 }

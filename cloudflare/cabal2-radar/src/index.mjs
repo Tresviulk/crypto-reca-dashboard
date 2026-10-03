@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
-import { computeRadar, num } from "./radar-core.mjs";
+import { computeRadar, num, earlyWatchCandidates } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.5";
+const VERSION = "CABAL2_RADAR_0.1.6";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -38,7 +38,7 @@ async function kucoinRows() {
     const price = num(x.last);
     const turnover = num(x.volValue, 0);
     if (price === null || price <= 0) continue;
-    rows.push({asset:base,venue:"KUCOIN",price,turnover,change24h:num(x.changeRate,0)*100});
+    rows.push({asset:base,venueSymbol:s,venue:"KUCOIN",price,turnover,change24h:num(x.changeRate,0)*100});
   }
   return rows;
 }
@@ -59,7 +59,7 @@ async function coinbaseRows() {
     const baseVolume = num(x.volume_24h, 0);
     const turnover = price === null ? 0 : baseVolume * price;
     if (price === null || price <= 0) continue;
-    rows.push({asset:base,venue:"COINBASE",price,turnover,change24h:num(x.price_percentage_change_24h,0)});
+    rows.push({asset:base,venueSymbol:product,venue:"COINBASE",price,turnover,change24h:num(x.price_percentage_change_24h,0)});
   }
   return rows;
 }
@@ -84,7 +84,8 @@ function mergeVenues(rows) {
       turnover: Math.max(...venues.map(v => v.turnover || 0)),
       change24h: preferred.change24h,
       venue: preferred.venue,
-      venueCount: venues.length,
+      venueSymbol: preferred.venueSymbol,
+      venueCount: new Set(venues.map(v=>v.venue)).size,
       venueSpreadPct: spread
     });
   }
@@ -126,7 +127,7 @@ async function getAssetState(env) {
 function nextAssetState(assets, minute, prior) {
   const out = {};
   for (const a of assets) {
-    const old = prior[a.asset] && Array.isArray(prior[a.asset].history) ? prior[a.asset].history : [];
+    const old = prior[a.asset] && prior[a.asset].market===a.venue+":"+a.venueSymbol && Array.isArray(prior[a.asset].history) ? prior[a.asset].history : [];
     const history = old.filter(h => h && Number.isFinite(Number(h.minute)) && Number.isFinite(Number(h.price)));
     history.push({minute,price:a.price});
     const dedup = [];
@@ -139,7 +140,7 @@ function nextAssetState(assets, minute, prior) {
       if (dedup.length>=8) break;
     }
     dedup.reverse();
-    out[a.asset]={history:dedup};
+    out[a.asset]={market:a.venue+":"+a.venueSymbol,history:dedup};
   }
   return out;
 }
@@ -154,32 +155,19 @@ function nextAssetState(assets, minute, prior) {
 async function emitEarlyWatch(env, detected) {
   const enabled=Boolean(env.NTFY_URL);
   if (!enabled) return {enabled:false,status:"NOT_CONFIGURED"};
-  const candidates=detected.filter(x=>
-    x && Number.isFinite(x.move1mPct) && Number.isFinite(x.move3mPct) &&
-    x.move1mPct>=0.45 && x.move3mPct>=0.80 &&
-    x.turnover24h>=750000 && x.change24hPct<20 &&
-    x.radarScore>=15 &&
-    (x.venueSpreadPct===null || (Number.isFinite(x.venueSpreadPct) && x.venueSpreadPct<=5))
-  ).sort((a,b)=>b.radarScore-a.radarScore);
-  if (!candidates.length) return {enabled:true,status:"NONE_QUALIFIED"};
   const now=Date.now();
   const previous=(await getMeta(env,"early_watch_delivery"))||{};
-  const lastSent=Date.parse(previous.lastSentAt||"");
   const backoff=Date.parse(previous.backoffUntil||"");
   if (Number.isFinite(backoff)&&now<backoff) return {enabled:true,status:"BACKOFF",backoffUntil:previous.backoffUntil};
-  if (Number.isFinite(lastSent)&&now-lastSent<10*60_000) return {enabled:true,status:"GLOBAL_COOLDOWN"};
   const lastByAsset=previous.lastByAsset&&typeof previous.lastByAsset==="object"?previous.lastByAsset:{};
-  const row=candidates.find(x=>{
-    const prev=Date.parse(lastByAsset[x.asset]||"");
-    return !Number.isFinite(prev)||now-prev>=90*60_000;
-  });
-  if (!row) return {enabled:true,status:"ASSET_COOLDOWN"};
+  const candidates=earlyWatchCandidates(detected,lastByAsset,now);
+  if (!candidates.length) return {enabled:true,status:"NONE_QUALIFIED_OR_ASSET_COOLDOWN"};
+  const row=candidates[0];
   const title="CABAL 2.0 - WATCH TEMPRANO";
   const msg=[
     "ATENCION: DETECCION TEMPRANA. NO ES ORDEN DE COMPRA.",
-    row.asset+" | "+row.venue+" | precio "+row.price,
-    "1m "+row.move1mPct+"% | 3m "+row.move3mPct+"% | 24h "+row.change24hPct+"%",
-    "Radar "+row.radarScore+"/100 | volumen 24h "+Math.round(row.turnover24h),
+    ...candidates.map(x=>x.asset+" | "+x.venue+" | precio "+x.price+
+      " | 1m "+x.move1mPct+"% | 3m "+x.move3mPct+"% | 5m "+x.move5mPct+"% | 24h "+x.change24hPct+"%"),
     "Pendiente: validacion 15m, riesgo, stop y limite NO-CHASE.",
     "ACCION: WATCH; NO COMPRAR SOLO POR ESTE AVISO."
   ].join("\n");
@@ -188,7 +176,7 @@ async function emitEarlyWatch(env, detected) {
   let http=null,err=null;
   try {
     const response=await fetch(env.NTFY_URL,{
-      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.5"},
+      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.6"},
       body:msg,signal:controller.signal
     });
     http=response.status;
@@ -203,13 +191,13 @@ async function emitEarlyWatch(env, detected) {
     lastHttp:http,
     lastError:err,
     backoffUntil:sent?null:new Date(now+15*60_000).toISOString(),
-    lastByAsset:sent?{...lastByAsset,[row.asset]:new Date(now).toISOString()}:lastByAsset
+    lastByAsset:sent?{...lastByAsset,...Object.fromEntries(candidates.map(x=>[x.asset,new Date(now).toISOString()]))}:lastByAsset
   };
   const entries=Object.entries(next.lastByAsset)
     .sort((a,b)=>String(b[1]).localeCompare(String(a[1]))).slice(0,100);
   next.lastByAsset=Object.fromEntries(entries);
   await setMeta(env,"early_watch_delivery",next);
-  return {enabled:true,status:sent?"SENT":"FAILED",kind:"WATCH",asset:row.asset,http,error:err};
+  return {enabled:true,status:sent?"SENT":"FAILED",kind:"WATCH",asset:row.asset,assets:candidates.map(x=>x.asset),http,error:err};
 }
 
 async function runScan(env) {
@@ -228,7 +216,7 @@ async function runScan(env) {
   const prior=await getAssetState(env);
   const minute=Math.floor(Date.now()/60000);
 
-  const radar=merged.map(a=>computeRadar(a,minute,(prior[a.asset]||{}).history||[]));
+  const radar=merged.map(a=>computeRadar(a,minute,prior[a.asset]?.market===a.venue+":"+a.venueSymbol ? prior[a.asset].history : []));
   radar.sort((a,b)=>(Number(b.detected)-Number(a.detected))||(b.radarScore-a.radarScore)||(b.turnover24h-a.turnover24h));
   const detected=radar.filter(x=>x.detected);
 
@@ -401,6 +389,7 @@ export default {
         : null;
       return json({
         healthy:!!last&&last.version===VERSION&&ageSeconds!==null&&ageSeconds<=150&&!(lastError&&lastError.error),
+        coverageHealthy:!!last&&last.sourceStatus.coinbase==="PASS"&&last.sourceStatus.kucoin==="PASS",
         schedulerHealthy:!!scheduler&&scheduler.status==="PASS"&&schedulerAgeSeconds!==null&&schedulerAgeSeconds<=150,
         version:VERSION,
         mode:"CABAL2_1M_MARKET_RADAR",
