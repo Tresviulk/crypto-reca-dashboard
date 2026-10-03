@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_15_2026-10-03_NTFY_QUOTA";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_16_2026-10-03_CPU_HISTORY";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1083,6 +1083,25 @@ async function guardPut(env,key,value){
   return true;
 }
 
+// Keep each snapshot in its own row to avoid decoding/encoding seven full universes per cycle.
+async function guardLoadHistory(env, now){
+  if(!env.DB) return [];
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS cabal_guard_snapshots (t INTEGER PRIMARY KEY, v TEXT NOT NULL)").run();
+  const targets=[now-60_000,now-180_000,now-300_000];
+  const result=await env.DB.prepare(
+    "SELECT v FROM cabal_guard_snapshots WHERE (t BETWEEN ?1 AND ?2) OR (t BETWEEN ?3 AND ?4) OR (t BETWEEN ?5 AND ?6) ORDER BY t"
+  ).bind(...targets.flatMap(t=>[t-20_000,t+20_000])).all();
+  return (result.results||[]).map(row=>JSON.parse(row.v));
+}
+
+async function guardSaveSnapshot(env, current){
+  if(!env.DB) return;
+  await env.DB.batch([
+    env.DB.prepare("INSERT OR REPLACE INTO cabal_guard_snapshots (t,v) VALUES (?1,?2)").bind(current.t,JSON.stringify(current)),
+    env.DB.prepare("DELETE FROM cabal_guard_snapshots WHERE t < ?1").bind(current.t-GUARD_HISTORY_MINUTES*60_000)
+  ]);
+}
+
 function guardPct(a,b){
   return Number.isFinite(a) && Number.isFinite(b) && b>0 ? (a/b-1)*100 : null;
 }
@@ -1824,9 +1843,7 @@ async function runMarketGuard(event,env){
   try{
     await guardVerifyTransportOnce(env);
     const current=await guardBuildSnapshot();
-    const h=await guardGet(env,"history");
-    let history=Array.isArray(h && h.items) ? h.items : [];
-    history=history.filter(x=>x && x.t>=started-GUARD_HISTORY_MINUTES*60_000);
+    const history=await guardLoadHistory(env,current.t);
     const candidates=guardCandidates(current,history);
 
     // Validate current candidates every minute: a short-lived acceleration must
@@ -1837,9 +1854,7 @@ async function runMarketGuard(event,env){
     const activeRevalidation=await guardRevalidateActiveTrade(env,current,history);
     const tradeResult=await guardEvaluateTrades(env,candidates);
 
-    history.push(current);
-    history=history.slice(-GUARD_HISTORY_MINUTES);
-    await guardPut(env,"history",{items:history});
+    await guardSaveSnapshot(env,current);
 
     const finished=Date.now();
     const cycleHealthy=Boolean(

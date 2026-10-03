@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 let source=fs.readFileSync('cloudflare/cabal-scanner/src/index.js','utf8').replace(/export default\s*\{/,'globalThis.__worker = {');
-source+='\nglobalThis.test={guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade,guardRetryAfterMs,guardTransportBackoffMs,guardVerifyTransportOnce};';
+source+='\nglobalThis.test={guardLoadHistory,guardSaveSnapshot,guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade,guardRetryAfterMs,guardTransportBackoffMs,guardVerifyTransportOnce};';
 let clock=1800000000000;
 class Clock extends Date {static now(){return clock;}}
 const store=new Map();
@@ -64,3 +64,18 @@ await context.test.guardVerifyTransportOnce({NTFY_URL:'https://example.invalid',
 await context.test.guardVerifyTransportOnce({NTFY_URL:'https://example.invalid',NTFY_VERIFICATION_ID:'test-one'});
 assert.equal(probes,1,'transport verification must only send once');
 console.log('NTFY QUOTA AND ONE-TIME VERIFICATION PASS');
+
+// SQL history uses the original observation time and 20s jitter window.
+const snapshots=new Map();
+const db={prepare(sql){return {args:[],bind(...args){this.args=args;return this;},async run(){
+  if(sql.startsWith('INSERT')) snapshots.set(this.args[0],this.args[1]);
+  if(sql.startsWith('DELETE')) for(const t of snapshots.keys()) if(t<this.args[0]) snapshots.delete(t);
+},async all(){return {results:[...snapshots].filter(([t])=>this.args.some((v,i)=>i%2===0&&t>=v&&t<=this.args[i+1])).sort((a,b)=>a[0]-b[0]).map(([,v])=>({v}))};}};},async batch(statements){for(const q of statements) await q.run();}};
+await context.test.guardLoadHistory({DB:db},clock);
+for(const offset of [480000,360000,301000,181000,61000,0]) await context.test.guardSaveSnapshot({DB:db},{t:clock-offset,a:{TEST:[100,1e6,0,'KUCOIN','TEST-USDT']}});
+const selected=await context.test.guardLoadHistory({DB:db},clock);
+assert.equal(selected.length,3,'only 1m/3m/5m snapshots are decoded');
+assert.equal(context.test.guardFindAsset(selected,'TEST',clock-60000)[0],100,'jitter preserved');
+assert(!snapshots.has(clock-480000),'expired snapshot removed');
+assert(!source.includes('guardGet(env,"history")'),'legacy full-history JSON cannot be decoded');
+console.log('CABAL CPU HISTORY REGRESSION PASS: selective reads, jitter, expiry, no legacy blob');
