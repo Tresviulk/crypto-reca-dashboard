@@ -96,3 +96,13 @@ export function earlyWatchCandidates(detected, lastByAsset={}, now=Date.now()) {
     (!Number.isFinite(Date.parse(lastByAsset[x.asset]||"")) || now-Date.parse(lastByAsset[x.asset])>=90*60_000)
   ).sort((a,b)=>b.radarScore-a.radarScore).slice(0,3);
 }
+
+export function notificationBackoffMs(status, retryAfter, now=Date.now()) {
+  if (retryAfter) {
+    const seconds=Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds>=0) return Math.max(60_000,seconds*1000);
+    const until=Date.parse(retryAfter);
+    if (Number.isFinite(until)) return Math.max(60_000,until-now);
+  }
+  return status===429 ? 15*60_000 : 60_000;
+}

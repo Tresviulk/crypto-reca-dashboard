@@ -34,7 +34,7 @@ assert(extended.extended24h===true,"extended mover must be flagged");
 
 console.log("CABAL 2.0 RADAR REGRESSION PASS");
 
-const {num,earlyWatchCandidates}=await import('../cloudflare/cabal2-radar/src/radar-core.mjs');
+const {num,earlyWatchCandidates,notificationBackoffMs}=await import('../cloudflare/cabal2-radar/src/radar-core.mjs');
 assert(num(null)===null,'missing data must not become zero');
 const gentle3=computeRadar({...base,price:101},now,hist([[1,100.9],[3,100],[5,100]],now));
 assert(gentle3.move1mPct<0.45,'fixture: gradual acceleration');
@@ -50,7 +50,7 @@ let worker=fs.readFileSync('cloudflare/cabal2-radar/src/index.mjs','utf8');
 worker=worker.replace(/^import .*;\n/gm,'').replace('export class Cabal2Scheduler','class Cabal2Scheduler').replace('export default {','globalThis.worker = {');
 worker+='\nglobalThis.hooks={mergeVenues,nextAssetState,emitEarlyWatch};';
 const metadata=new Map();let posts=[];
-const sandbox={DurableObject:class{},computeRadar,num,earlyWatchCandidates,Date,URL,Response,AbortController,setTimeout,clearTimeout,console,fetch:async(url,options)=>{posts.push(options.body);return new Response('{}',{status:200});},get:async(_,key)=>metadata.get(key)||null,put:async(_,key,value)=>metadata.set(key,value)};
+const sandbox={DurableObject:class{},computeRadar,num,earlyWatchCandidates,notificationBackoffMs,Date,URL,Response,AbortController,setTimeout,clearTimeout,console,fetch:async(url,options)=>{posts.push(options.body);return new Response('{}',{status:200});},get:async(_,key)=>metadata.get(key)||null,put:async(_,key,value)=>metadata.set(key,value)};
 vm.createContext(sandbox);vm.runInContext(worker,sandbox);
 vm.runInContext('getMeta=get; setMeta=put;',sandbox);
 const {mergeVenues,nextAssetState,emitEarlyWatch}=sandbox.hooks;
@@ -64,3 +64,10 @@ await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[second]);
 assert(posts.length===2,'new independent asset must not wait ten minutes after first alert');
 assert(posts.every(x=>x.includes('NO ES ORDEN DE COMPRA')),'WATCH cannot masquerade as BUY');
 console.log('CABAL RADAR INTEGRATION PASS: venue count/history, independent NTFY dispatch');
+
+assert(notificationBackoffMs(522,null)===60000,'transient gateway error must not silence radar for fifteen minutes');
+assert(notificationBackoffMs(429,'120')===120000,'server rate limit must be respected');
+metadata.set('early_watch_delivery',{lastHttp:522,lastError:'HTTP_522',lastAttemptAt:new Date(Date.now()-120000).toISOString(),backoffUntil:new Date(Date.now()+900000).toISOString()});
+const recovered=await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[gentle3]);
+assert(recovered.status==='SENT','old transient backoff must recover');
+console.log('CABAL NOTIFICATION BACKOFF REGRESSION PASS');

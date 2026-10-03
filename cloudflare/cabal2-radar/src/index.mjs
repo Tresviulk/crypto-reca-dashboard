@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
-import { computeRadar, num, earlyWatchCandidates } from "./radar-core.mjs";
+import { computeRadar, num, earlyWatchCandidates, notificationBackoffMs } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.6";
+const VERSION = "CABAL2_RADAR_0.1.7";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -157,7 +157,10 @@ async function emitEarlyWatch(env, detected) {
   if (!enabled) return {enabled:false,status:"NOT_CONFIGURED"};
   const now=Date.now();
   const previous=(await getMeta(env,"early_watch_delivery"))||{};
-  const backoff=Date.parse(previous.backoffUntil||"");
+  // Existing 15-minute transient-error state must not keep silencing fresh movers.
+  const backoff=!previous.backoffPolicyVersion && previous.lastHttp!==429 && previous.lastError && previous.lastAttemptAt
+    ? Math.min(Date.parse(previous.backoffUntil||""),Date.parse(previous.lastAttemptAt)+60_000)
+    : Date.parse(previous.backoffUntil||"");
   if (Number.isFinite(backoff)&&now<backoff) return {enabled:true,status:"BACKOFF",backoffUntil:previous.backoffUntil};
   const lastByAsset=previous.lastByAsset&&typeof previous.lastByAsset==="object"?previous.lastByAsset:{};
   const candidates=earlyWatchCandidates(detected,lastByAsset,now);
@@ -172,32 +175,38 @@ async function emitEarlyWatch(env, detected) {
     "ACCION: WATCH; NO COMPRAR SOLO POR ESTE AVISO."
   ].join("\n");
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),20000);
-  let http=null,err=null;
+  const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),6500);
+  let http=null,err=null,retryAfter=null,messageId=null;
   try {
     const response=await fetch(env.NTFY_URL,{
-      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.6"},
+      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.7"},
       body:msg,signal:controller.signal
     });
     http=response.status;
+    retryAfter=response.headers.get("retry-after");
     if (!response.ok) err="HTTP_"+http;
+    else {
+      try { messageId=(await response.json()).id||null; } catch {}
+    }
   } catch (e) { err=String(e&&e.message||e); }
   finally { clearTimeout(timer); }
   const sent=!err;
   const next={
+    backoffPolicyVersion:1,
     lastAttemptAt:new Date(now).toISOString(),
     lastSentAt:sent?new Date(now).toISOString():previous.lastSentAt||null,
     lastAsset:row.asset,
     lastHttp:http,
+    messageId,
     lastError:err,
-    backoffUntil:sent?null:new Date(now+15*60_000).toISOString(),
+    backoffUntil:sent?null:new Date(now+notificationBackoffMs(http,retryAfter,now)).toISOString(),
     lastByAsset:sent?{...lastByAsset,...Object.fromEntries(candidates.map(x=>[x.asset,new Date(now).toISOString()]))}:lastByAsset
   };
   const entries=Object.entries(next.lastByAsset)
     .sort((a,b)=>String(b[1]).localeCompare(String(a[1]))).slice(0,100);
   next.lastByAsset=Object.fromEntries(entries);
   await setMeta(env,"early_watch_delivery",next);
-  return {enabled:true,status:sent?"SENT":"FAILED",kind:"WATCH",asset:row.asset,assets:candidates.map(x=>x.asset),http,error:err};
+  return {enabled:true,status:sent?"SENT":"FAILED",kind:"WATCH",asset:row.asset,assets:candidates.map(x=>x.asset),http,messageId,error:err};
 }
 
 async function runScan(env) {
