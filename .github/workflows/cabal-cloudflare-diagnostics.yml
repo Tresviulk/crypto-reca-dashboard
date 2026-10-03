@@ -52,7 +52,7 @@ jobs:
               print("CLOUDFLARE_METRICS UNAVAILABLE: repository secrets absent")
               raise SystemExit(0)
           end=datetime.datetime.now(datetime.timezone.utc)
-          start=end-datetime.timedelta(hours=4)
+          start=end-datetime.timedelta(minutes=30)
           q="""query GetWorkersAnalytics($accountTag: string, $datetimeStart: string, $datetimeEnd: string, $scriptName: string) {
             viewer {
               accounts(filter: {accountTag: $accountTag}) {
@@ -95,7 +95,7 @@ jobs:
                       counts[key]+=int(sum_.get("requests") or 0)
                       counts["ERROR_COUNT"]+=int(sum_.get("errors") or 0)
                       p99=max(p99,float((row.get("quantiles") or {}).get("cpuTimeP99") or 0))
-                  print("CLOUDFLARE_METRICS",name,"last_4h",json.dumps({"sampledRows":len(records or []),"byStatus":dict(counts),"cpuTimeP99MaxRaw":p99}))
+                  print("CLOUDFLARE_METRICS",name,"last_30m",json.dumps({"sampledRows":len(records or []),"byStatus":dict(counts),"cpuTimeP99MaxRaw":p99}))
               except Exception as e:
                   print("CLOUDFLARE_METRICS",name,"UNAVAILABLE",str(e))
           PY
