@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_9_2026-09-29_QNT_RECOVERY";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_10_2026-10-03_MINUTE_VALIDATION";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1098,13 +1098,13 @@ function guardSnapshotAsset(m){
 }
 
 function guardFindAsset(history,base,targetMs){
-  let best=null;
+  let best=null, gap=Infinity;
   for(const snap of history||[]){
-    if(!snap || !snap.t || snap.t>targetMs) continue;
-    if(!snap.a || !snap.a[base]) continue;
-    if(!best || snap.t>best.t) best=snap;
+    if(!snap || !snap.t || !snap.a || !snap.a[base]) continue;
+    const distance=Math.abs(snap.t-targetMs);
+    if(distance<=20_000 && distance<gap){ best=snap; gap=distance; }
   }
-  return best && best.a ? best.a[base] : null;
+  return best ? best.a[base] : null;
 }
 
 async function guardBuildSnapshot(){
@@ -1150,9 +1150,12 @@ function guardCandidates(current,history){
     const price=Number(x[0]), turn=Number(x[1]), p24=Number(x[2]), venue=String(x[3]||""), venueSymbol=String(x[4]||"");
     if(!(price>0) || !(turn>=GUARD_MIN_TURNOVER)) continue;
 
-    const x1=guardFindAsset(history,base,now-60_000);
-    const x3=guardFindAsset(history,base,now-180_000);
-    const x5=guardFindAsset(history,base,now-300_000);
+    const h1=guardFindAsset(history,base,now-60_000);
+  const x1=h1 && h1[3]===venue && h1[4]===venueSymbol ? h1 : null;
+    const h3=guardFindAsset(history,base,now-180_000);
+  const x3=h3 && h3[3]===venue && h3[4]===venueSymbol ? h3 : null;
+    const h5=guardFindAsset(history,base,now-300_000);
+  const x5=h5 && h5[3]===venue && h5[4]===venueSymbol ? h5 : null;
     const p1=x1 ? guardPct(price,Number(x1[0])) : null;
     const p3=x3 ? guardPct(price,Number(x3[0])) : null;
     const p5=x5 ? guardPct(price,Number(x5[0])) : null;
@@ -1213,9 +1216,12 @@ function guardCandidateSnapshot(current,history,base){
   const venue=String(x[3]||""), venueSymbol=String(x[4]||"");
   if(!(price>0) || !(turn>=GUARD_MIN_TURNOVER) || !venue || !venueSymbol) return null;
 
-  const x1=guardFindAsset(history,base,now-60_000);
-  const x3=guardFindAsset(history,base,now-180_000);
-  const x5=guardFindAsset(history,base,now-300_000);
+  const h1=guardFindAsset(history,base,now-60_000);
+  const x1=h1 && h1[3]===venue && h1[4]===venueSymbol ? h1 : null;
+  const h3=guardFindAsset(history,base,now-180_000);
+  const x3=h3 && h3[3]===venue && h3[4]===venueSymbol ? h3 : null;
+  const h5=guardFindAsset(history,base,now-300_000);
+  const x5=h5 && h5[3]===venue && h5[4]===venueSymbol ? h5 : null;
   const p1=x1 ? guardPct(price,Number(x1[0])) : null;
   const p3=x3 ? guardPct(price,Number(x3[0])) : null;
   const p5=x5 ? guardPct(price,Number(x5[0])) : null;
@@ -1477,7 +1483,7 @@ async function guardQualifyBuySignals(env,evaluated){
     .slice(0,3);
 
   // A failed execution check resets persistence for that asset. A BUY must be
-  // confirmed again on a later 5-minute execution cycle before it is actionable.
+  // confirmed on a separate cycle at least 60 seconds later before action.
   for(const x of (evaluated||[])){
     if(!x || !x.asset || x.buy) continue;
     await guardPut(env,"trade:qualification:"+x.asset,{
@@ -1493,14 +1499,15 @@ async function guardQualifyBuySignals(env,evaluated){
     const prev=await guardGet(env,key)||{};
     const priorAt=Number(prev.lastConfirmedAt||0);
     const continuous=priorAt>0 && (now-priorAt)<=GUARD_BUY_CONFIRMATION_MAX_GAP_MS;
-    const confirmations=continuous ? Number(prev.confirmations||0)+1 : 1;
+    const separateCycle=continuous && now-priorAt>=60_000;
+    const confirmations=continuous ? Number(prev.confirmations||0)+(separateCycle?1:0) : 1;
     const required=x.asset==="BTC" ? 1 : GUARD_BUY_CONFIRMATIONS_REQUIRED_NON_BTC;
     const firstConfirmedAt=continuous ? Number(prev.firstConfirmedAt||priorAt) : now;
     const q={...x,confirmations,requiredConfirmations:required};
 
     await guardPut(env,key,{
       asset:x.asset,confirmations,requiredConfirmations:required,
-      firstConfirmedAt,lastConfirmedAt:now,
+      firstConfirmedAt,lastConfirmedAt:continuous&&!separateCycle?priorAt:now,
       reason:x.reason,price:x.price,score:x.score
     });
 
@@ -1524,7 +1531,7 @@ async function guardEvaluateTrades(env,candidates){
   const buys=qualification.qualified;
   const state={
     generatedAt:new Date().toISOString(),
-    mode:"CLOUDFLARE_5M_EXECUTION_GUARD",
+    mode:"CLOUDFLARE_1M_EXECUTION_GUARD",
     evaluated,
     rawBuys:qualification.rawBuys,
     stagedBuys:qualification.staged,
@@ -1597,7 +1604,7 @@ async function guardTradeNotify(env,state){
 
   let r=null, responseText="";
   try{
-    r=await fetch(env.NTFY_URL,{
+    r=await fetchTimed(env.NTFY_URL,{
       method:"POST",
       headers:{"Title":"🚨 CABAL — COMPRAR AHORA","Priority":"high","Tags":"chart_with_upwards_trend"},
       body:guardTradeCard(x)
@@ -1639,7 +1646,7 @@ async function guardCancelActiveTrade(env,active,reason,price){
     : "El precio ha superado la COMPRA MÁX. de la alerta original; no perseguir la entrada.";
 
   try{
-    const r=await fetch(env.NTFY_URL,{
+    const r=await fetchTimed(env.NTFY_URL,{
       method:"POST",
       headers:{"Title":"🟠 CABAL — VENTANA DE ENTRADA CERRADA","Priority":"high","Tags":"warning"},
       body:[
@@ -1766,23 +1773,13 @@ async function runMarketGuard(event,env){
     history=history.filter(x=>x && x.t>=started-GUARD_HISTORY_MINUTES*60_000);
     const candidates=guardCandidates(current,history);
 
-    // WATCH data is persisted every minute. Every fifth scheduled minute the
-    // autonomous execution guard performs completed 15m/1h validation and can
-    // emit a strict PILOT BUY without waiting for GitHub Actions.
+    // Validate current candidates every minute: a short-lived acceleration must
+    // not disappear between five-minute decision slots. Entry/stop/volume rules
+    // and separate-cycle confirmation count remain enforced.
     const notifyResult=await guardNotify(env,candidates);
-    const minuteSlot=Math.floor(scheduledAt/60_000);
-    const lastExecutionAt=Number(prev.lastExecutionGuardAt||0);
-    const executionDue=(minuteSlot%5)===0 || !lastExecutionAt || (started-lastExecutionAt)>=5*60_000;
-    let tradeResult=null;
-    let activeRevalidation=null;
-    if(executionDue){
-      tradeResult=await guardEvaluateTrades(env,candidates);
-    }else{
-      // Any BUY already delivered to the user is checked EVERY MINUTE against
-      // the original hard execution limits. Soft momentum/RS decay is telemetry,
-      // not a retrospective contradiction of an already committed BUY window.
-      activeRevalidation=await guardRevalidateActiveTrade(env,current,history);
-    }
+    // Revalidate the original entry limits even when a new decision is due.
+    const activeRevalidation=await guardRevalidateActiveTrade(env,current,history);
+    const tradeResult=await guardEvaluateTrades(env,candidates);
 
     history.push(current);
     history=history.slice(-GUARD_HISTORY_MINUTES);
@@ -1813,7 +1810,7 @@ async function runMarketGuard(event,env){
       notificationBackoffUntil:tradeNotify ? (tradeNotify.backoffUntil||null) : prev.notificationBackoffUntil||null,
       notificationHealthy:tradeNotify ? tradeNotify.ok!==false : (prev.notificationHealthy!==false),
       notificationMode:tradeNotify ? ("TRADE_"+tradeNotify.kind) : notifyResult.skipped||"WATCH_PERSIST_ONLY",
-      lastExecutionGuardAt:executionDue ? finished : (prev.lastExecutionGuardAt||null),
+      lastExecutionGuardAt:finished,
       lastExecutionGuardBuyAssets:tradeResult ? tradeResult.buys.map(x=>x.asset) : (prev.lastExecutionGuardBuyAssets||[]),
       lastExecutionGuardEvaluated:tradeResult ? tradeResult.evaluated.length : (prev.lastExecutionGuardEvaluated||0),
       lastActiveRevalidationAt:activeRevalidation&&activeRevalidation.checked ? Date.now() : (prev.lastActiveRevalidationAt||null),
@@ -1876,6 +1873,7 @@ async function guardHealth(env){
     lastUniverseCount:Number(hb.lastUniverseCount||0),
     lastCandidateCount:Number(hb.lastCandidateCount||0),
     sourceStatus:hb.lastSourceStatus||null,
+    coverageHealthy:Boolean(hb.lastSourceStatus && hb.lastSourceStatus.kucoin==="PASS" && hb.lastSourceStatus.bybit==="PASS"),
     lastAlertAssets:Array.isArray(hb.lastAlertAssets)?hb.lastAlertAssets:[],
     consecutiveHealthyCycles:Number(hb.consecutiveHealthyCycles||0),
     notificationHealthy:hb.notificationHealthy!==false,
@@ -1886,7 +1884,7 @@ async function guardHealth(env){
     verificationNotifiedAt:hb.verificationNotifiedAt ? new Date(Number(hb.verificationNotifiedAt)).toISOString() : null,
     verificationNotifyError:hb.verificationNotifyError||null,
     executionGuard:{
-      mode:"CLOUDFLARE_5M_EXECUTION_GUARD",
+      mode:"CLOUDFLARE_1M_EXECUTION_GUARD",
       lastRunAt:hb.lastExecutionGuardAt ? new Date(Number(hb.lastExecutionGuardAt)).toISOString() : null,
       evaluatedCount:Number(hb.lastExecutionGuardEvaluated||0),
       buyAssets:Array.isArray(hb.lastExecutionGuardBuyAssets)?hb.lastExecutionGuardBuyAssets:[],

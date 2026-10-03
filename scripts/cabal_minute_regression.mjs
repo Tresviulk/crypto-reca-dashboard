@@ -1,0 +1,34 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+let source=fs.readFileSync('cloudflare/cabal-scanner/src/index.js','utf8').replace(/export default\s*\{/,'globalThis.__worker = {');
+source+='\nglobalThis.test={guardFindAsset,guardQualifyBuySignals,runMarketGuard};';
+let clock=1800000000000;
+class Clock extends Date {static now(){return clock;}}
+const store=new Map();
+const context={console,URL,Date:Clock,Math,JSON,Number,String,Boolean,Array,Object,Set,Map,Promise,RegExp,Error,TypeError,parseInt,parseFloat,isFinite,setTimeout,clearTimeout,AbortController,fetch:async()=>{throw Error('network disabled');}};
+vm.createContext(context);vm.runInContext(source,context);
+context.getStore=async(_,key)=>store.get(key)||null;
+context.putStore=async(_,key,value)=>{store.set(key,value);};
+vm.runInContext('guardGet=getStore; guardPut=putStore;',context);
+const {guardFindAsset,guardQualifyBuySignals,runMarketGuard}=context.test;
+assert.equal(guardFindAsset([{t:clock-180000,a:{ATH:[100]}}],'ATH',clock-60000),null,'stale return must not masquerade as 1m');
+assert.equal(guardFindAsset([{t:clock-59000,a:{ATH:[100]}}],'ATH',clock-60000)[0],100,'scheduler jitter must not skip the matching snapshot');
+const buy={asset:'ATH',buy:true,score:80};
+let q=await guardQualifyBuySignals({},[buy]);assert.equal(q.qualified.length,0);
+q=await guardQualifyBuySignals({},[buy]);assert.equal(q.qualified.length,0,'same-cycle replay must not qualify');
+clock+=59000;q=await guardQualifyBuySignals({},[buy]);assert.equal(q.qualified.length,0,'59 seconds is not a separate confirmation');
+// A same-cycle retry must not move the last-confirmed timestamp.
+clock+=1000;q=await guardQualifyBuySignals({},[buy]);assert.equal(q.qualified.length,1,'fresh independent minute must qualify');
+await guardQualifyBuySignals({},[{asset:'ATH',buy:false,reason:'DATA_GAP'}]);
+clock+=60000;q=await guardQualifyBuySignals({},[buy]);assert.equal(q.qualified.length,0,'data gap resets confirmations');
+let runs=0,revalidations=0;
+context.snapshot=async()=>({t:clock,a:{},count:100,sourceStatus:{kucoin:'PASS',bybit:'PASS'}});
+context.execute=async()=>{runs++;return {buys:[],evaluated:[],notify:{ok:true,kind:'NONE'}};};
+context.revalidate=async()=>{revalidations++;return {checked:false};};
+vm.runInContext('guardBuildSnapshot=snapshot; guardEvaluateTrades=execute; guardRevalidateActiveTrade=revalidate;',context);
+await runMarketGuard({scheduledTime:clock},{});
+clock+=60000;await runMarketGuard({scheduledTime:clock},{});
+assert.equal(runs,2,'decision cannot wait for fifth minute');
+assert.equal(revalidations,2,'active entry must still be checked on decision minutes');
+console.log('CABAL MINUTE REGRESSION PASS: stale/jitter, independent confirmations, data-gap reset, minute decisions and active revalidation');
