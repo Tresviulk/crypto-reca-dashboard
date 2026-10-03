@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 let source=fs.readFileSync('cloudflare/cabal-scanner/src/index.js','utf8').replace(/export default\s*\{/,'globalThis.__worker = {');
-source+='\nglobalThis.test={guardFindAsset,guardQualifyBuySignals,runMarketGuard};';
+source+='\nglobalThis.test={guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade};';
 let clock=1800000000000;
 class Clock extends Date {static now(){return clock;}}
 const store=new Map();
@@ -32,3 +32,18 @@ clock+=60000;await runMarketGuard({scheduledTime:clock},{});
 assert.equal(runs,2,'decision cannot wait for fifth minute');
 assert.equal(revalidations,2,'active entry must still be checked on decision minutes');
 console.log('CABAL MINUTE REGRESSION PASS: stale/jitter, independent confirmations, data-gap reset, minute decisions and active revalidation');
+
+const notifications=[];
+context.fetch=async(url,options)=>{
+  new Headers(options.headers); // Enforce real HTTP header validation, not a permissive mock.
+  notifications.push(options);
+  return new Response('{}',{status:200});
+};
+const delivered=await context.test.guardTradeNotify({NTFY_URL:'https://example.invalid'},{generatedAt:new Date(clock).toISOString(),buys:[{asset:'TEST',price:100,entryMax:100.4,stop:98,stopDistancePct:2,confirmations:2,requiredConfirmations:2}]});
+assert.equal(delivered.ok,true,'BUY must pass actual HTTP header validation');
+assert.equal(delivered.kind,'BUY');
+const closed=await context.test.guardCancelActiveTrade({NTFY_URL:'https://example.invalid'},{asset:'TEST'},'ORIGINAL_STOP_BROKEN',97);
+assert.equal(closed.ok,true,'entry-window closure must pass actual header validation');
+assert.equal(notifications.length,2);
+assert(notifications[0].body.includes('SPOT manual'),'BUY remains manual');
+console.log('CABAL NOTIFICATION HEADER REGRESSION PASS: BUY and closure HTTP headers');
