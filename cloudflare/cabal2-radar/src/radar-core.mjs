@@ -50,7 +50,7 @@ export function computeRadar(asset, currentMinute, previousHistory=[]) {
   const move3 = p3 !== null && p3 >= 0.80;
   const move5 = p5 !== null && p5 >= 1.50;
   const freshContinuation = change24h >= 3 && change24h < 25 && p1 !== null && p1 >= 0.20;
-  const detected = liquidEnough && (move1 || move3 || move5 || freshContinuation);
+  const detected = String(asset.asset || "").trim().toUpperCase() !== "NEON" && liquidEnough && (move1 || move3 || move5 || freshContinuation);
 
   let state = "QUIET";
   if (detected) {
@@ -90,7 +90,7 @@ export function computeRadar(asset, currentMinute, previousHistory=[]) {
 
 export function earlyWatchCandidates(detected, lastByAsset={}, now=Date.now()) {
   return detected.filter(x =>
-    x && x.detected && x.turnover24h>=750000 && x.change24hPct<20 &&
+    x && String(x.asset || "").trim().toUpperCase() !== "NEON" && x.detected && x.turnover24h>=750000 && x.change24hPct<20 &&
     x.radarScore>=15 &&
     (x.venueSpreadPct===null || (Number.isFinite(x.venueSpreadPct) && x.venueSpreadPct<=5)) &&
     (!Number.isFinite(Date.parse(lastByAsset[x.asset]||"")) || now-Date.parse(lastByAsset[x.asset])>=90*60_000)
@@ -106,3 +106,4 @@ export function notificationBackoffMs(status, retryAfter, now=Date.now()) {
   }
   return status===429 ? 15*60_000 : 60_000;
 }
+

@@ -71,3 +71,12 @@ metadata.set('early_watch_delivery',{lastHttp:522,lastError:'HTTP_522',lastAttem
 const recovered=await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[gentle3]);
 assert(recovered.status==='SENT','old transient backoff must recover');
 console.log('CABAL NOTIFICATION BACKOFF REGRESSION PASS');
+
+
+const neon=computeRadar({...base,asset:"NEON",price:102,change24h:-18},now,hist([[1,100],[3,99],[5,98]],now));
+assert(neon.detected===false,"NEON wind-down must override a strong rebound");
+assert(earlyWatchCandidates([{...gentle3,asset:"neon"}]).length===0,"cached NEON detection must never be notified");
+const beforeNeon=posts.length;
+await emitEarlyWatch({NTFY_URL:'https://example.invalid'},[{...gentle3,asset:'NEON'}]);
+assert(posts.length===beforeNeon,'NEON must not reach NTFY');
+console.log('NEON FUNDAMENTAL BLOCK PASS');

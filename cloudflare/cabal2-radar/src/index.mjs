@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { computeRadar, num, earlyWatchCandidates, notificationBackoffMs } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.8";
+const VERSION = "CABAL2_RADAR_0.1.9";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -9,7 +9,7 @@ const ALARM_INTERVAL_MS = 60_000;
 
 function eligibleBase(base) {
   const a = String(base || "").toUpperCase();
-  if (!a || STABLES.has(a) || WRAPPED.has(a)) return false;
+  if (!a || a === "NEON" || STABLES.has(a) || WRAPPED.has(a)) return false;
   if (/(UP|DOWN|BULL|BEAR|[235]L|[235]S)$/.test(a)) return false;
   return true;
 }
@@ -237,6 +237,7 @@ async function runScan(env) {
     mode:"MARKET_RADAR_ONLY",
     autoTrade:false,
     sourceStatus,
+    fundamentalBlocks:{NEON:{reason:"PROJECT_WIND_DOWN",source:"https://neonevm.org/"}},
     universeCount:merged.length,
     sourceCounts:{coinbase:cb.length,kucoin:ku.length},
     detectionCount:detected.length,
@@ -419,3 +420,4 @@ export default {
 };
 
 // Verification workflow deploy trigger
+
