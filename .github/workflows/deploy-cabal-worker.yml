@@ -38,7 +38,7 @@ jobs:
           node --check cloudflare/cabal-scanner/src/index.js
           grep -q 'async scheduled' cloudflare/cabal-scanner/src/index.js
           grep -q 'CLOUDFLARE_1M_MARKET_GUARD' cloudflare/cabal-scanner/src/index.js
-          grep -q 'CLOUDFLARE_5M_EXECUTION_GUARD' cloudflare/cabal-scanner/src/index.js
+          grep -q 'CLOUDFLARE_1M_EXECUTION_GUARD' cloudflare/cabal-scanner/src/index.js
           grep -q 'CLOUDFLARE_1M_ACTIVE_REVALIDATION' cloudflare/cabal-scanner/src/index.js
           grep -q 'WATCH_PERSIST_ONLY' cloudflare/cabal-scanner/src/index.js
           grep -q 'EXTERNAL_FETCH_TIMEOUT_MS' cloudflare/cabal-scanner/src/index.js
@@ -54,6 +54,7 @@ jobs:
           python scripts/cabal_regression_v2.py
           python scripts/cabal_ntfy_regression_v2.py
           node scripts/cabal_worker_regression_v3.mjs
+          node scripts/cabal_minute_regression.mjs
 
       - name: Neutralize Cloudflare Workers Builds production promotion
         shell: bash
@@ -196,10 +197,10 @@ jobs:
               raise SystemExit(f'health missing keys: {missing}')
           if d.get('mode')!='CLOUDFLARE_1M_MARKET_GUARD':
               raise SystemExit(f"unexpected guard mode: {d.get('mode')}")
-          if d.get('patchVersion')!='CABAL_WHALES_V3_1_9_2026-09-29_QNT_RECOVERY':
+          if d.get('patchVersion')!='CABAL_WHALES_V3_1_10_2026-10-03_MINUTE_VALIDATION':
               raise SystemExit(f"wrong worker version served: {d.get('patchVersion')}")
           eg=d.get('executionGuard') or {}
-          if eg.get('mode')!='CLOUDFLARE_5M_EXECUTION_GUARD':
+          if eg.get('mode')!='CLOUDFLARE_1M_EXECUTION_GUARD':
               raise SystemExit(f"execution guard missing/wrong: {eg}")
           ar=d.get('activeRevalidation') or {}
           if ar.get('mode')!='CLOUDFLARE_1M_ACTIVE_REVALIDATION':
@@ -234,13 +235,13 @@ jobs:
           last=rows[-1]
           if int(last.get('consecutiveHealthyCycles') or 0)<3:
               raise SystemExit(f"insufficient consecutive healthy cycles: {last}")
-          expected='CABAL_WHALES_V3_1_9_2026-09-29_QNT_RECOVERY'
+          expected='CABAL_WHALES_V3_1_10_2026-10-03_MINUTE_VALIDATION'
           versions={r.get('patchVersion') for r in rows}
           if versions!={expected}:
               raise SystemExit(f'mixed worker versions served during verification: {versions}')
           execution_runs=[(r.get('executionGuard') or {}).get('lastRunAt') for r in rows]
           if not any(execution_runs):
-              raise SystemExit(f'5-minute execution guard did not run during verification: {execution_runs}')
+              raise SystemExit(f'1-minute execution guard did not run during verification: {execution_runs}')
           latest_exec=max((x for x in execution_runs if x), default=None)
           checked=last.get('checkedAt')
           if latest_exec and checked:
@@ -248,8 +249,8 @@ jobs:
               def iso_ms(x):
                   return datetime.fromisoformat(x.replace('Z','+00:00')).timestamp()*1000
               exec_age=(iso_ms(checked)-iso_ms(latest_exec))/1000
-              if exec_age>420:
-                  raise SystemExit(f'5-minute execution guard stale after deployment: age={exec_age:.1f}s runs={execution_runs}')
+              if exec_age>150:
+                  raise SystemExit(f'1-minute execution guard stale after deployment: age={exec_age:.1f}s runs={execution_runs}')
           # NTFY transport is not part of scanner structural health. Quota/backoff
           # may degrade push delivery without invalidating the 1-minute market guard.
           if not last.get('verificationNotifiedAt') or last.get('verificationNotifyError'):
