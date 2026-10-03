@@ -461,7 +461,7 @@ def evaluate(row):
     }
 
 
-    if asset.strip() == "NEON":
+    if asset.strip().upper() in {"NEON", "BLAST"}:
         for key in list(result):
             if key.endswith("Eligible"):
                 result[key] = False

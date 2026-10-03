@@ -26,3 +26,6 @@ liquid=dict(base,asset="TEST",volume24h=500_000)
 assert m.execution_valid(liquid) is True, "liquid equivalent should pass relay execution gate"
 
 print("CABAL NTFY regression: PASS")
+
+for asset in ("NEON", "BLAST", " blast "):
+    assert not m.execution_valid(dict(liquid,asset=asset)), "blocked cached BUY leaked"

@@ -358,3 +358,8 @@ r=evaluate(base("NEON"))
 assert r["decisionTier"] == "NONE" and r["decisionReason"] == "PROJECT_WIND_DOWN"
 assert not any(v for k,v in r.items() if k.endswith("Eligible"))
 print("NEON ALL DECISION LANES BLOCKED")
+
+r=evaluate(base("BLAST"))
+assert r["decisionTier"] == "NONE" and r["decisionReason"] == "PROJECT_WIND_DOWN"
+assert not any(v for k,v in r.items() if k.endswith("Eligible"))
+print("BLAST ALL DECISION LANES BLOCKED")

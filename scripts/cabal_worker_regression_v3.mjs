@@ -71,3 +71,8 @@ if(guardPilotDecision({base:"NEON"},{}).buy!==false) throw new Error("NEON BUY l
 const neonSnapshot={...qntCurrent,a:{NEON:qntCurrent.a.QNT}};
 if(guardCandidates(neonSnapshot,qntHistory).some(x=>x.base==="NEON")) throw new Error("NEON WATCH leaked");
 console.log("NEON WORKER BLOCK PASS");
+
+if(guardPilotDecision({base:"BLAST"},{}).buy!==false) throw new Error("BLAST BUY leaked");
+const blastSnapshot={...qntCurrent,a:{BLAST:qntCurrent.a.QNT}};
+if(guardCandidates(blastSnapshot,qntHistory).some(x=>x.base==="BLAST")) throw new Error("BLAST WATCH leaked");
+console.log("BLAST WORKER BLOCK PASS");

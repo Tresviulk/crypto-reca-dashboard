@@ -93,7 +93,7 @@ def execution_valid(row):
     if row.get("decisionTier")!="BUY_NOW" or row.get("buyNowEligible") is not True or row.get("notifyBuyEligible") is not True:
         return False
     asset=str(row.get("asset") or "").upper()
-    if asset.strip() == "NEON":
+    if asset.strip().upper() in {"NEON", "BLAST"}:
         return False
     quality=num(row.get("qualityScore"))
     classification=str(row.get("baseClassification") or row.get("classification") or "").upper()
@@ -223,7 +223,7 @@ def build():
 
     watches=[
         dict(x) for x in (cabal.get("watchCandidates") or [])
-        if str(x.get("asset") or "").strip().upper() != "NEON"
+        if str(x.get("asset") or "").strip().upper() not in {"NEON", "BLAST"}
         if x.get("decisionTier")=="WATCH"
         and x.get("runnerCandidateEligible") is True
         and x.get("notifyWatchEligible") is True
