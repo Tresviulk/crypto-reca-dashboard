@@ -197,7 +197,7 @@ jobs:
               raise SystemExit(f'health missing keys: {missing}')
           if d.get('mode')!='CLOUDFLARE_1M_MARKET_GUARD':
               raise SystemExit(f"unexpected guard mode: {d.get('mode')}")
-          if d.get('patchVersion')!='CABAL_WHALES_V3_1_11_2026-10-03_TRANSPORT_TIMEOUT':
+          if d.get('patchVersion')!='CABAL_WHALES_V3_1_12_2026-10-03_NOTIFICATION_HEADERS':
               raise SystemExit(f"wrong worker version served: {d.get('patchVersion')}")
           eg=d.get('executionGuard') or {}
           if eg.get('mode')!='CLOUDFLARE_1M_EXECUTION_GUARD':
@@ -235,7 +235,7 @@ jobs:
           last=rows[-1]
           if int(last.get('consecutiveHealthyCycles') or 0)<3:
               raise SystemExit(f"insufficient consecutive healthy cycles: {last}")
-          expected='CABAL_WHALES_V3_1_11_2026-10-03_TRANSPORT_TIMEOUT'
+          expected='CABAL_WHALES_V3_1_12_2026-10-03_NOTIFICATION_HEADERS'
           versions={r.get('patchVersion') for r in rows}
           if versions!={expected}:
               raise SystemExit(f'mixed worker versions served during verification: {versions}')

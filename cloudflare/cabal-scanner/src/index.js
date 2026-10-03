@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_11_2026-10-03_TRANSPORT_TIMEOUT";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_12_2026-10-03_NOTIFICATION_HEADERS";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1606,7 +1606,7 @@ async function guardTradeNotify(env,state){
   try{
     r=await fetchTimed(env.NTFY_URL,{
       method:"POST",
-      headers:{"Title":"🚨 CABAL — COMPRAR AHORA","Priority":"high","Tags":"chart_with_upwards_trend"},
+      headers:{"Title":"CABAL - COMPRAR AHORA","Priority":"high","Tags":"chart_with_upwards_trend"},
       body:guardTradeCard(x)
     },20000);
     if(!r.ok){ try{responseText=(await r.text()).slice(0,300);}catch(_){} }
@@ -1648,7 +1648,7 @@ async function guardCancelActiveTrade(env,active,reason,price){
   try{
     const r=await fetchTimed(env.NTFY_URL,{
       method:"POST",
-      headers:{"Title":"🟠 CABAL — VENTANA DE ENTRADA CERRADA","Priority":"high","Tags":"warning"},
+      headers:{"Title":"CABAL - VENTANA DE ENTRADA CERRADA","Priority":"high","Tags":"warning"},
       body:[
         active.asset,
         "MOTIVO OBJETIVO: "+reason,
