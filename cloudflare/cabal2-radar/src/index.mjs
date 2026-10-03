@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { computeRadar, num, earlyWatchCandidates, notificationBackoffMs } from "./radar-core.mjs";
 
-const VERSION = "CABAL2_RADAR_0.1.7";
+const VERSION = "CABAL2_RADAR_0.1.8";
 const STABLES = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAPPED = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 const FETCH_TIMEOUT_MS = 8000;
@@ -175,11 +175,11 @@ async function emitEarlyWatch(env, detected) {
     "ACCION: WATCH; NO COMPRAR SOLO POR ESTE AVISO."
   ].join("\n");
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),6500);
+  const timer=setTimeout(()=>controller.abort("NTFY_TIMEOUT"),20000);
   let http=null,err=null,retryAfter=null,messageId=null;
   try {
     const response=await fetch(env.NTFY_URL,{
-      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.7"},
+      method:"POST",headers:{"Title":title,"Priority":"default","Tags":"mag","Content-Type":"text/plain; charset=utf-8","User-Agent":"CABAL2-Radar/0.1.8"},
       body:msg,signal:controller.signal
     });
     http=response.status;
@@ -308,7 +308,7 @@ export class Cabal2Scheduler extends DurableObject {
         radarGeneratedAt:result.generatedAt,
         retryCount:Number(alarmInfo&&alarmInfo.retryCount||0)
       });
-      await this.ctx.storage.setAlarm(Date.now()+ALARM_INTERVAL_MS);
+      await this.ctx.storage.setAlarm(Math.max(Date.now()+1000,Date.parse(scheduledAt)+ALARM_INTERVAL_MS));
     } catch (e) {
       const error=String(e&&e.stack||e&&e.message||e);
       await recordError(this.env,e);
@@ -322,7 +322,7 @@ export class Cabal2Scheduler extends DurableObject {
         error
       });
       if (Number(alarmInfo&&alarmInfo.retryCount||0)>=5) {
-        await this.ctx.storage.setAlarm(Date.now()+ALARM_INTERVAL_MS);
+        await this.ctx.storage.setAlarm(Math.max(Date.now()+1000,Date.parse(scheduledAt)+ALARM_INTERVAL_MS));
         return;
       }
       throw e;
