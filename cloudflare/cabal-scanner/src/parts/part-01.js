@@ -104,7 +104,7 @@ async function mapLimit(items, concurrency, fn){
 }
 
 function eligibleBase(base){
-  if(!base) return false;
+  if(!base || String(base).trim().toUpperCase()==="NEON") return false;
   if(STABLES.has(base)) return false;
   if(WRAPPED.has(base)) return false;
   if(/(UP|DOWN|BULL|BEAR|[235]L|[235]S)$/.test(base)) return false;

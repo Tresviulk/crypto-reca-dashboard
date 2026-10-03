@@ -352,3 +352,9 @@ assert mew_late_result["notifyWatchEligible"] is False
 assert mew_late_result["userWatchSuppressedLateMove"] is True
 
 print("CABAL v2 regression: PASS")
+
+
+r=evaluate(base("NEON"))
+assert r["decisionTier"] == "NONE" and r["decisionReason"] == "PROJECT_WIND_DOWN"
+assert not any(v for k,v in r.items() if k.endswith("Eligible"))
+print("NEON ALL DECISION LANES BLOCKED")

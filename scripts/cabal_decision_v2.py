@@ -432,7 +432,7 @@ def evaluate(row):
     if buy and entry_max is None and price is not None:
         entry_max=min(no_chase*0.995 if no_chase else price*1.005, price*1.005)
 
-    return {
+    result = {
         "decisionTier":tier,
         "decisionReason":reason,
         "buyNowEligible":buy,
@@ -459,3 +459,13 @@ def evaluate(row):
         "rejectReasons":reject,
         "isCoreAsset":core,
     }
+
+
+    if asset.strip() == "NEON":
+        for key in list(result):
+            if key.endswith("Eligible"):
+                result[key] = False
+        result.update(decisionTier="NONE", decisionReason="PROJECT_WIND_DOWN",
+                      signalLane="INTERNAL", decisionEntryMax=None, decisionStop=None,
+                      runnerCandidateStage=None, rejectReasons=["PROJECT_WIND_DOWN"])
+    return result

@@ -65,3 +65,9 @@ const wodDecision=guardPilotDecision(wod,wodMetrics);
 if(wodDecision.buy!==false) throw new Error("WOD thin-liquidity BUY was not blocked");
 
 console.log("CABAL worker regression: PASS — QNT recovery caught, WOD thin BUY blocked");
+
+
+if(guardPilotDecision({base:"NEON"},{}).buy!==false) throw new Error("NEON BUY leaked");
+const neonSnapshot={...qntCurrent,a:{NEON:qntCurrent.a.QNT}};
+if(guardCandidates(neonSnapshot,qntHistory).some(x=>x.base==="NEON")) throw new Error("NEON WATCH leaked");
+console.log("NEON WORKER BLOCK PASS");

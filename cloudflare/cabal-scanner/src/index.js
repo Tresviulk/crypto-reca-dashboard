@@ -104,7 +104,7 @@ async function mapLimit(items, concurrency, fn){
 }
 
 function eligibleBase(base){
-  if(!base) return false;
+  if(!base || String(base).trim().toUpperCase()==="NEON") return false;
   if(STABLES.has(base)) return false;
   if(WRAPPED.has(base)) return false;
   if(/(UP|DOWN|BULL|BEAR|[235]L|[235]S)$/.test(base)) return false;
@@ -1147,6 +1147,7 @@ function guardCandidates(current,history){
   const out=[];
   const now=current.t;
   for(const [base,x] of Object.entries(current.a||{})){
+    if(String(base).trim().toUpperCase()==="NEON") continue;
     const price=Number(x[0]), turn=Number(x[1]), p24=Number(x[2]), venue=String(x[3]||""), venueSymbol=String(x[4]||"");
     if(!(price>0) || !(turn>=GUARD_MIN_TURNOVER)) continue;
 
@@ -1390,6 +1391,7 @@ async function guardExecutionMetrics(c){
 }
 
 function guardPilotDecision(c,m){
+  if(String(c.base || "").trim().toUpperCase()==="NEON") return {asset:c.base,buy:false,reason:"PROJECT_WIND_DOWN",entryMax:null,stop:null,recoveryBuyEligible:false};
   const p15=Number(m.p15), p1=Number(m.p1), p4=Number(m.p4);
   const rs1=Number(m.rs1), rs4=Number(m.rs4);
   const r15=Number(m.rvol15m), r1=Number(m.rvol1h);
@@ -1560,7 +1562,7 @@ function guardTradeCard(x){
 
 async function guardTradeNotify(env,state){
   const now=Date.now();
-  const buys=Array.isArray(state&&state.buys)?state.buys:[];
+  const buys=(Array.isArray(state&&state.buys)?state.buys:[]).filter(x=>String(x.asset || "").trim().toUpperCase()!=="NEON");
   const active=await guardGet(env,"trade:active");
 
   // Once COMPRAR AHORA is delivered, ordinary momentum/RS softening does NOT
