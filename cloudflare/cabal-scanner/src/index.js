@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_10_2026-10-03_MINUTE_VALIDATION";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_11_2026-10-03_TRANSPORT_TIMEOUT";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1608,7 +1608,7 @@ async function guardTradeNotify(env,state){
       method:"POST",
       headers:{"Title":"🚨 CABAL — COMPRAR AHORA","Priority":"high","Tags":"chart_with_upwards_trend"},
       body:guardTradeCard(x)
-    });
+    },20000);
     if(!r.ok){ try{responseText=(await r.text()).slice(0,300);}catch(_){} }
   }catch(e){
     const state2={lastAttemptAt:now,lastStatus:null,lastError:String(e),backoffUntil:now+10*60*1000};
@@ -1657,7 +1657,7 @@ async function guardCancelActiveTrade(env,active,reason,price){
         "SI NO ENTRASTE: NO ENTRAR.",
         "SI YA ENTRASTE: NO ES ORDEN DE VENTA; gestionar la posición con el STOP estructural comunicado en la alerta original."
       ].filter(Boolean).join("\n")
-    });
+    },20000);
     if(r.ok){
       await guardPut(env,"trade:active",{asset:null,clearedAt:now,previousAsset:active.asset,reason});
       return {ok:true,kind:"CANCEL",asset:active.asset,status:r.status,reason};
