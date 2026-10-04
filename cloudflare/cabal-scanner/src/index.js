@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_17_2026-10-04_RUNNER_FOLLOWUP";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_18_2026-10-04_SOURCE_FAILOVER";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -76,11 +76,37 @@ function upper(v){
 
 const EXTERNAL_FETCH_TIMEOUT_MS = 6500;
 
+const marketSourceBackoff=new Map();
+let coinbaseNextRequestAt=0;
+
+function marketRateBackoff(response,now=Date.now()){
+  const retry=response.headers.get("retry-after");
+  const seconds=retry===null ? NaN : Number(retry);
+  const reset=Number(response.headers.get("gw-ratelimit-reset"));
+  if(Number.isFinite(seconds) && seconds>=0) return Math.max(1000,seconds*1000);
+  if(retry && Number.isFinite(Date.parse(retry))) return Math.max(1000,Date.parse(retry)-now);
+  if(reset>0) return Math.max(1000,reset);
+  return response.status===403 ? 5*60_000 : 60_000;
+}
+
 async function fetchTimed(url, options={}, timeoutMs=EXTERNAL_FETCH_TIMEOUT_MS){
+  const host=new URL(url).hostname;
+  const limited=["api.kucoin.com","api.bybit.com","api.exchange.coinbase.com"].includes(host);
+  const blocked=marketSourceBackoff.get(host);
+  if(limited && blocked && blocked.until>Date.now()) throw Error("SOURCE_BACKOFF "+host+" HTTP "+blocked.status);
+  if(host==="api.exchange.coinbase.com"){
+    const now=Date.now(), wait=Math.max(0,coinbaseNextRequestAt-now);
+    coinbaseNextRequestAt=Math.max(now,coinbaseNextRequestAt)+350;
+    if(wait) await new Promise(resolve=>setTimeout(resolve,wait));
+  }
   const controller = new AbortController();
   const timer = setTimeout(()=>controller.abort("CABAL_FETCH_TIMEOUT"), timeoutMs);
   try{
-    return await fetch(url,{...options,signal:controller.signal});
+    const response=await fetch(url,{...options,signal:controller.signal});
+    if(limited && [429,403].includes(response.status)){
+      marketSourceBackoff.set(host,{status:response.status,until:Date.now()+marketRateBackoff(response)});
+    }
+    return response;
   }finally{
     clearTimeout(timer);
   }
@@ -601,9 +627,47 @@ async function kucoinKline(symbol, interval, limit){
     .slice(-limit);
 }
 
+async function coinbaseKline(symbol,interval,limit){
+  const granularity=INT_MS[interval]/1000;
+  if(![60,300,900,3600,21600,86400].includes(granularity)) throw Error("COINBASE_INTERVAL_UNSUPPORTED");
+  const end=new Date().toISOString();
+  const start=new Date(Date.now()-(limit+2)*INT_MS[interval]).toISOString();
+  const url="https://api.exchange.coinbase.com/products/"+encodeURIComponent(symbol)+"/candles?granularity="+granularity+"&start="+encodeURIComponent(start)+"&end="+encodeURIComponent(end);
+  const r=await fetchTimed(url);
+  if(!r.ok) throw Error("Coinbase candles "+symbol+" "+r.status);
+  const j=await r.json();
+  if(!Array.isArray(j)) throw Error("COINBASE_INVALID_CANDLES");
+  return j.map(x=>({t:Number(x[0])*1000,l:Number(x[1]),h:Number(x[2]),o:Number(x[3]),c:Number(x[4]),v:Number(x[5])}))
+    .filter(x=>Object.values(x).every(Number.isFinite) && x.t+INT_MS[interval]<=Date.now())
+    .sort((a,b)=>a.t-b.t).slice(-limit);
+}
+
+async function guardCoinbaseMarket(base){
+  if(!eligibleBase(base)) throw Error("COINBASE_BASE_EXCLUDED");
+  const symbol=base+"-USD";
+  const root="https://api.exchange.coinbase.com/products/"+encodeURIComponent(symbol);
+  const productResponse=await fetchTimed(root);
+  if(!productResponse.ok) throw Error("Coinbase product "+symbol+" "+productResponse.status);
+  const product=await productResponse.json();
+  if(product.base_currency!==base || product.quote_currency!=="USD" || product.status!=="online" || product.trading_disabled || product.cancel_only || product.post_only || product.limit_only) throw Error("COINBASE_PRODUCT_NOT_EXECUTABLE");
+  const tickerResponse=await fetchTimed(root+"/ticker");
+  if(!tickerResponse.ok) throw Error("Coinbase ticker "+symbol+" "+tickerResponse.status);
+  const ticker=await tickerResponse.json();
+  const at=Date.parse(ticker.time), price=Number(ticker.price);
+  if(!Number.isFinite(at) || Math.abs(Date.now()-at)>120_000 || !(price>0)) throw Error("COINBASE_STALE_PRICE");
+  const statsResponse=await fetchTimed(root+"/stats");
+  if(!statsResponse.ok) throw Error("Coinbase stats "+symbol+" "+statsResponse.status);
+  const stats=await statsResponse.json();
+  const open=Number(stats.open), volume=Number(stats.volume);
+  if(!(open>0) || !(volume>0)) throw Error("COINBASE_STATS_INVALID");
+  return {base,quote:"USD",venue:"COINBASE",venueSymbol:symbol,lastPrice:price,
+    turnover24h:volume*price,price24hPct:(price/open-1)*100};
+}
+
 async function klineOnMarket(market, interval, limit){
   if(market.venue === "BYBIT") return bybitKline(market.venueSymbol, interval, limit);
   if(market.venue === "KUCOIN") return kucoinKline(market.venueSymbol, interval, limit);
+  if(market.venue === "COINBASE") return coinbaseKline(market.venueSymbol,interval,limit);
   throw new Error("Unsupported venue " + market.venue);
 }
 
@@ -1181,7 +1245,7 @@ function guardFollowupCandidates(current,history,detected,items){
   return result;
 }
 
-async function guardBuildSnapshot(followup=[]){
+async function guardBuildSnapshot(followup=[],env){
   const src=await Promise.allSettled([bybitTickers(),kucoinTickers()]);
   const bybit=src[0].status==="fulfilled" ? src[0].value : [];
   let kucoin=src[1].status==="fulfilled" ? src[1].value : [];
@@ -1189,11 +1253,19 @@ async function guardBuildSnapshot(followup=[]){
   const kucoinError=src[1].status==="rejected" ? String(src[1].reason||"KUCOIN_FAILED") : null;
   const targeted=!kucoin.length && followup.length ? await guardTargetedKucoin(followup) : [];
   if(targeted.length) kucoin=targeted;
-  if(!bybit.length && !kucoin.length) throw new Error("GUARD_NO_SPOT_SOURCE | BYBIT="+bybitError+" | KUCOIN="+kucoinError);
+  let coinbase=[];
+  if(!bybit.length && !kucoin.length){
+    const watch=env ? await guardGet(env,"watch:latest") : null;
+    const recent=watch && Date.now()-Date.parse(watch.generatedAt)<10*60_000 ? watch.candidates||[] : [];
+    const active=env ? await guardGet(env,"trade:active") : null;
+    const bases=[...new Set([...(active&&active.asset?[active.asset]:[]),...followup.map(x=>x.base),...recent.map(x=>x.base),"BTC","ETH","SOL","XRP","AVAX","HBAR","ONDO"])].filter(eligibleBase).slice(0,6);
+    coinbase=(await mapLimit(bases,1,async base=>{try{return await guardCoinbaseMarket(base);}catch(_){return null;}})).filter(Boolean);
+  }
+  if(!bybit.length && !kucoin.length && !coinbase.length) throw new Error("GUARD_NO_SPOT_SOURCE | BYBIT="+bybitError+" | KUCOIN="+kucoinError);
 
   // The one-minute guard must not inherit a Bybit outage when KuCoin is healthy.
   // Prefer KuCoin for assets present on both venues; keep Bybit-only names as fallback.
-  const eligible=[...bybit,...kucoin]
+  const eligible=[...bybit,...kucoin,...coinbase]
     .filter(x=>(x.turnover24h||0)>=GUARD_MIN_TURNOVER)
     .sort((a,b)=>(b.turnover24h||0)-(a.turnover24h||0));
   const preferredByBase=new Map();
@@ -1212,6 +1284,7 @@ async function guardBuildSnapshot(followup=[]){
   return {
     t:Date.now(),a,count:ded.length,bybit:bybit.length,kucoin:kucoin.length,
     sourceStatus:{
+      coinbase:coinbase.length?"TARGETED_ONLY":"NOT_USED",
       bybit:bybit.length?"PASS":"FAIL",
       kucoin:targeted.length?"TARGETED_ONLY":(kucoin.length?"PASS":"FAIL"),
       bybitError,kucoinError
@@ -1293,11 +1366,12 @@ function guardCandidateSnapshot(current,history,base){
   const venue=String(x[3]||""), venueSymbol=String(x[4]||"");
   if(!(price>0) || !(turn>=GUARD_MIN_TURNOVER) || !venue || !venueSymbol) return null;
 
-  const h1=guardFindAsset(history,base,now-60_000);
+  const sameMarketHistory=(history||[]).filter(s=>s.a && s.a[base] && s.a[base][3]===venue && s.a[base][4]===venueSymbol);
+  const h1=guardFindAsset(sameMarketHistory,base,now-60_000);
   const x1=h1 && h1[3]===venue && h1[4]===venueSymbol ? h1 : null;
-  const h3=guardFindAsset(history,base,now-180_000);
+  const h3=guardFindAsset(sameMarketHistory,base,now-180_000);
   const x3=h3 && h3[3]===venue && h3[4]===venueSymbol ? h3 : null;
-  const h5=guardFindAsset(history,base,now-300_000);
+  const h5=guardFindAsset(sameMarketHistory,base,now-300_000);
   const x5=h5 && h5[3]===venue && h5[4]===venueSymbol ? h5 : null;
   const p1=x1 ? guardPct(price,Number(x1[0])) : null;
   const p3=x3 ? guardPct(price,Number(x3[0])) : null;
@@ -1436,7 +1510,7 @@ async function guardClosedCandles(env,market,interval,limit){
 }
 
 async function guardExecutionMetricsOnMarket(c,market,env){
-  const btcSymbol=market.venue==="BYBIT" ? "BTCUSDT" : "BTC-USDT";
+  const btcSymbol=market.venue==="BYBIT" ? "BTCUSDT" : (market.venue==="COINBASE" ? "BTC-USD" : "BTC-USDT");
   const btcMarket={venue:market.venue,venueSymbol:btcSymbol};
 
   const [a15,a60,btc60]=await Promise.all([
@@ -1446,6 +1520,12 @@ async function guardExecutionMetricsOnMarket(c,market,env){
   ]);
   if(a15.length<20 || a60.length<30 || btc60.length<6) throw new Error("GUARD_EXECUTION_INSUFFICIENT_BARS");
 
+  if(market.venue==="COINBASE"){
+    for(const [bars,interval] of [[a15,"15"],[a60,"60"],[btc60,"60"]]){
+      const ms=INT_MS[interval], expected=(Math.floor(Date.now()/ms)-1)*ms;
+      if(bars[bars.length-1].t!==expected || bars.slice(-24).some((x,i,a)=>i>0 && x.t-a[i-1].t!==ms)) throw Error("COINBASE_CANDLE_GAP");
+    }
+  }
   const last15=a15[a15.length-1], last60=a60[a60.length-1], btcLast=btc60[btc60.length-1];
   const p15=pct(last15.c,last15.o);
   const p1=pct(last60.c,a60[a60.length-2].c);
@@ -1474,24 +1554,29 @@ async function guardExecutionMetrics(c,env){
   if(!c || !c.base || !c.venue || !c.venueSymbol) throw new Error("GUARD_EXECUTION_SYMBOL_MISSING");
   const alternatives=[{venue:c.venue,venueSymbol:c.venueSymbol}];
   if(c.venue!=="KUCOIN") alternatives.push({venue:"KUCOIN",venueSymbol:c.base+"-USDT"});
-  if(c.venue!=="BYBIT") alternatives.push({venue:"BYBIT",venueSymbol:c.base+"USDT"});
-
-  const seen=new Set();
+  if(c.venue!=="COINBASE") alternatives.push({venue:"COINBASE",venueSymbol:c.base+"-USD"});
   const errors=[];
   for(const market of alternatives){
-    const key=market.venue+":"+market.venueSymbol;
-    if(seen.has(key)) continue;
-    seen.add(key);
     try{
-      return await guardExecutionMetricsOnMarket(c,market,env);
-    }catch(e){
-      errors.push(key+"="+String(e));
-    }
+      let execution=c;
+      if(market.venue!==c.venue || market.venueSymbol!==c.venueSymbol){
+        const row=market.venue==="COINBASE" ? await guardCoinbaseMarket(c.base) : (await guardTargetedKucoin([{base:c.base}]))[0];
+        if(!row) throw Error("ALTERNATIVE_LIVE_PRICE_MISSING");
+        const current={t:Date.now(),a:{[c.base]:guardSnapshotAsset(row)}};
+        const history=env ? await guardLoadHistory(env,current.t) : [];
+        execution=guardCandidateSnapshot(current,history,c.base);
+        if(!execution) throw Error("ALTERNATIVE_MARKET_NOT_EXECUTABLE");
+        if(env) await guardSaveSnapshot(env,current);
+      }
+      const metrics=await guardExecutionMetricsOnMarket(execution,market,env);
+      return {...metrics,executionCandidate:execution};
+    }catch(e){errors.push(market.venue+":"+market.venueSymbol+"="+String(e));}
   }
   throw new Error("GUARD_EXECUTION_DATA_GAP "+c.base+" | "+errors.join(" | "));
 }
 
 function guardPilotDecision(c,m){
+  if(m.executionCandidate) c=m.executionCandidate;
   if(["NEON","BLAST"].includes(String(c.base || "").trim().toUpperCase())) return {asset:c.base,buy:false,reason:"PROJECT_WIND_DOWN",entryMax:null,stop:null,recoveryBuyEligible:false};
   const p15=Number(m.p15), p1=Number(m.p1), p4=Number(m.p4);
   const rs1=Number(m.rs1), rs4=Number(m.rs4);
@@ -1601,7 +1686,8 @@ async function guardQualifyBuySignals(env,evaluated){
     const key="trade:qualification:"+x.asset;
     const prev=await guardGet(env,key)||{};
     const priorAt=Number(prev.lastConfirmedAt||0);
-    const continuous=priorAt>0 && (now-priorAt)<=GUARD_BUY_CONFIRMATION_MAX_GAP_MS;
+    const market=String(x.venue||"")+":"+String(x.venueSymbol||"");
+    const continuous=prev.market===market && priorAt>0 && (now-priorAt)<=GUARD_BUY_CONFIRMATION_MAX_GAP_MS;
     const separateCycle=continuous && now-priorAt>=60_000;
     const confirmations=continuous ? Number(prev.confirmations||0)+(separateCycle?1:0) : 1;
     const required=x.asset==="BTC" ? 1 : GUARD_BUY_CONFIRMATIONS_REQUIRED_NON_BTC;
@@ -1610,7 +1696,7 @@ async function guardQualifyBuySignals(env,evaluated){
 
     await guardPut(env,key,{
       asset:x.asset,confirmations,requiredConfirmations:required,
-      firstConfirmedAt,lastConfirmedAt:continuous&&!separateCycle?priorAt:now,
+      market,firstConfirmedAt,lastConfirmedAt:continuous&&!separateCycle?priorAt:now,
       reason:x.reason,price:x.price,score:x.score
     });
 
@@ -1803,7 +1889,15 @@ async function guardRevalidateActiveTrade(env,current,history){
     return state;
   }
 
-  const c=guardCandidateSnapshot(current,history,active.asset);
+  const candidate=guardCandidateSnapshot(current,history,active.asset);
+  let c=candidate && (!active.venue || candidate.venue===active.venue) ? candidate : null;
+  if(!c && active.venue==="COINBASE"){
+    try{
+      const row=await guardCoinbaseMarket(active.asset);
+      const snapshot={t:Date.now(),a:{[active.asset]:guardSnapshotAsset(row)}};
+      c=guardCandidateSnapshot(snapshot,history,active.asset);
+    }catch(_){}
+  }
   let decision=null;
   let hardInvalidation=null;
   let reason="COMMITTED_WINDOW";
@@ -1914,7 +2008,7 @@ async function runMarketGuard(event,env){
   try{
     await guardVerifyTransportOnce(env);
     const followup=await guardRunnerFollowup(env);
-    const current=await guardBuildSnapshot(followup);
+    const current=await guardBuildSnapshot(followup,env);
     const history=await guardLoadHistory(env,current.t);
     const candidates=guardFollowupCandidates(current,history,guardCandidates(current,history),followup);
 
@@ -2392,6 +2486,22 @@ async function handleScan(request, env){
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
+    if(url.pathname==="/source-health"){
+      const base=upper(url.searchParams.get("asset")||"AKT");
+      if(!/^[A-Z0-9]{2,12}$/.test(base) || !eligibleBase(base)) return new Response('Invalid asset',{status:400});
+      const key="source:probe:"+base;
+      let result=await guardGet(env,key);
+      if(!result || Date.now()-Date.parse(result.checkedAt)>60_000){
+        try{
+          const row=await guardCoinbaseMarket(base);
+          const c={base,venue:row.venue,venueSymbol:row.venueSymbol,price:row.lastPrice,change24h:row.price24hPct,turnover24h:row.turnover24h};
+          const metrics=await guardExecutionMetricsOnMarket(c,row,env);
+          result={ok:true,asset:base,venue:row.venue,price:row.lastPrice,metrics,checkedAt:new Date().toISOString(),autoTrade:false};
+        }catch(e){result={ok:false,asset:base,error:String(e),checkedAt:new Date().toISOString(),autoTrade:false};}
+        await guardPut(env,key,result);
+      }
+      return new Response(JSON.stringify(result),{headers:{"content-type":"application/json","cache-control":"no-store"}});
+    }
     if(url.pathname==="/health"){
       const h=await guardHealth(env);
       return new Response(JSON.stringify(h,null,2),{
