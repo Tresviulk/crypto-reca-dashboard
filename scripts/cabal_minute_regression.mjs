@@ -82,7 +82,7 @@ console.log('CABAL CPU HISTORY REGRESSION PASS: selective reads, jitter, expiry,
 
 // RUNNER identities survive a quiet minute; prices must always be live.
 store.clear();
-context.fetch=async()=>new Response(JSON.stringify({generatedAt:new Date(clock).toISOString(),watchCandidates:[{asset:'AKT',runnerCandidateEligible:true},{asset:'NEON',runnerCandidateEligible:true}]}),{status:200});
+context.fetch=async()=>new Response(JSON.stringify({events:[{kind:'RUNNER',cabalGeneratedAt:new Date(clock).toISOString(),message:'🚀 AKT — RUNNER TEMPRANO\n🚀 NEON — RUNNER TEMPRANO'}]}),{status:200});
 const followed=await context.test.guardRunnerFollowup({});
 assert.equal(followed.length,1);assert.equal(followed[0].base,'AKT');
 assert.equal(followed[0].price,undefined,'old machine price must not be retained');

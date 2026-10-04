@@ -1131,18 +1131,19 @@ async function guardRunnerFollowup(env){
   const now=Date.now();
   const prior=await guardGet(env,"runner:followup")||{};
   let items=(prior.items||[]).filter(x=>x.expiresAt>now && eligibleBase(x.base));
-  if(!prior.refreshedAt || now-prior.refreshedAt>=5*60_000){
+  if(!prior.refreshedAt || now-prior.refreshedAt>=60_000){
     try{
-      const r=await fetchTimed("https://raw.githubusercontent.com/Tresviulk/crypto-reca-dashboard/main/data/cabal-machine.json");
+      const r=await fetchTimed("https://raw.githubusercontent.com/Tresviulk/crypto-reca-dashboard/main/data/ntfy-alert-log.json");
       if(!r.ok) throw Error("RUNNER_SOURCE_"+r.status);
       const j=await r.json();
-      const at=Date.parse(j.generatedAt);
-      if(Number.isFinite(at) && at<=now && now-at<30*60_000){
-        const rows=(j.watchCandidates||[]).filter(x=>x.runnerCandidateEligible && eligibleBase(x.asset));
-        for(const x of rows){
-          if(items.some(y=>y.base===x.asset && y.scanAt===at)) continue;
-          items=items.filter(y=>y.base!==x.asset);
-          items.push({base:x.asset,scanAt:at,expiresAt:at+30*60_000});
+      for(const event of (j.events||[]).slice(-20)){
+        const at=Date.parse(event.cabalGeneratedAt);
+        if(event.kind!=="RUNNER" || !Number.isFinite(at) || at>now || now-at>=30*60_000) continue;
+        const rows=[...String(event.message||"").matchAll(/^🚀 ([A-Z0-9]+) —/gm)].map(m=>m[1]);
+        for(const base of rows){
+          if(!eligibleBase(base) || items.some(y=>y.base===base && y.scanAt>=at)) continue;
+          items=items.filter(y=>y.base!==base);
+          items.push({base,scanAt:at,expiresAt:at+30*60_000});
         }
       }
       await guardPut(env,"runner:followup",{items,refreshedAt:now,error:null});
