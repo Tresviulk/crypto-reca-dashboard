@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_16_2026-10-03_CPU_HISTORY";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_17_2026-10-04_RUNNER_FOLLOWUP";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1126,12 +1126,68 @@ function guardFindAsset(history,base,targetMs){
   return best ? best.a[base] : null;
 }
 
-async function guardBuildSnapshot(){
+// Persist identities, never reuse an old price or an old BUY decision.
+async function guardRunnerFollowup(env){
+  const now=Date.now();
+  const prior=await guardGet(env,"runner:followup")||{};
+  let items=(prior.items||[]).filter(x=>x.expiresAt>now && eligibleBase(x.base));
+  if(!prior.refreshedAt || now-prior.refreshedAt>=5*60_000){
+    try{
+      const r=await fetchTimed("https://raw.githubusercontent.com/Tresviulk/crypto-reca-dashboard/main/data/cabal-machine.json");
+      if(!r.ok) throw Error("RUNNER_SOURCE_"+r.status);
+      const j=await r.json();
+      const at=Date.parse(j.generatedAt);
+      if(Number.isFinite(at) && at<=now && now-at<30*60_000){
+        const rows=(j.watchCandidates||[]).filter(x=>x.runnerCandidateEligible && eligibleBase(x.asset));
+        for(const x of rows){
+          if(items.some(y=>y.base===x.asset && y.scanAt===at)) continue;
+          items=items.filter(y=>y.base!==x.asset);
+          items.push({base:x.asset,scanAt:at,expiresAt:at+30*60_000});
+        }
+      }
+      await guardPut(env,"runner:followup",{items,refreshedAt:now,error:null});
+    }catch(e){
+      await guardPut(env,"runner:followup",{items,refreshedAt:now,error:String(e)});
+    }
+  }
+  return items.slice(0,6);
+}
+
+async function guardTargetedKucoin(items){
+  return (await mapLimit(items,2,async x=>{
+    try{
+      const symbol=x.base+"-USDT";
+      const r=await fetchTimed("https://api.kucoin.com/api/v1/market/stats?symbol="+encodeURIComponent(symbol));
+      if(!r.ok) return null;
+      const j=await r.json(), d=j.data;
+      if(j.code!=="200000" || !d || !(Number(d.last)>0)) return null;
+      // Exchange timestamp is mandatory: stale data cannot become a new snapshot.
+      if(!Number.isFinite(Number(d.time)) || Math.abs(Date.now()-Number(d.time))>120_000) return null;
+      return {base:x.base,quote:"USDT",venue:"KUCOIN",venueSymbol:symbol,
+        lastPrice:Number(d.last),turnover24h:Number(d.volValue),
+        price24hPct:Number(d.changeRate)*100};
+    }catch(_){return null;}
+  })).filter(Boolean);
+}
+
+function guardFollowupCandidates(current,history,detected,items){
+  const result=[...detected];
+  for(const x of items){
+    if(result.some(c=>c.base===x.base)) continue;
+    const c=guardCandidateSnapshot(current,history,x.base);
+    if(c && eligibleBase(c.base)) result.unshift({...c,runnerFollowup:true});
+  }
+  return result;
+}
+
+async function guardBuildSnapshot(followup=[]){
   const src=await Promise.allSettled([bybitTickers(),kucoinTickers()]);
   const bybit=src[0].status==="fulfilled" ? src[0].value : [];
-  const kucoin=src[1].status==="fulfilled" ? src[1].value : [];
+  let kucoin=src[1].status==="fulfilled" ? src[1].value : [];
   const bybitError=src[0].status==="rejected" ? String(src[0].reason||"BYBIT_FAILED") : null;
   const kucoinError=src[1].status==="rejected" ? String(src[1].reason||"KUCOIN_FAILED") : null;
+  const targeted=!kucoin.length && followup.length ? await guardTargetedKucoin(followup) : [];
+  if(targeted.length) kucoin=targeted;
   if(!bybit.length && !kucoin.length) throw new Error("GUARD_NO_SPOT_SOURCE | BYBIT="+bybitError+" | KUCOIN="+kucoinError);
 
   // The one-minute guard must not inherit a Bybit outage when KuCoin is healthy.
@@ -1156,7 +1212,7 @@ async function guardBuildSnapshot(){
     t:Date.now(),a,count:ded.length,bybit:bybit.length,kucoin:kucoin.length,
     sourceStatus:{
       bybit:bybit.length?"PASS":"FAIL",
-      kucoin:kucoin.length?"PASS":"FAIL",
+      kucoin:targeted.length?"TARGETED_ONLY":(kucoin.length?"PASS":"FAIL"),
       bybitError,kucoinError
     }
   };
@@ -1842,9 +1898,10 @@ async function runMarketGuard(event,env){
 
   try{
     await guardVerifyTransportOnce(env);
-    const current=await guardBuildSnapshot();
+    const followup=await guardRunnerFollowup(env);
+    const current=await guardBuildSnapshot(followup);
     const history=await guardLoadHistory(env,current.t);
-    const candidates=guardCandidates(current,history);
+    const candidates=guardFollowupCandidates(current,history,guardCandidates(current,history),followup);
 
     // Validate current candidates every minute: a short-lived acceleration must
     // not disappear between five-minute decision slots. Entry/stop/volume rules

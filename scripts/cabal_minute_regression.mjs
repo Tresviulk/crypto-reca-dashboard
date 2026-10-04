@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 let source=fs.readFileSync('cloudflare/cabal-scanner/src/index.js','utf8').replace(/export default\s*\{/,'globalThis.__worker = {');
-source+='\nglobalThis.test={guardLoadHistory,guardSaveSnapshot,guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade,guardRetryAfterMs,guardTransportBackoffMs,guardVerifyTransportOnce};';
+source+='\nglobalThis.test={guardRunnerFollowup,guardTargetedKucoin,guardFollowupCandidates,guardBuildSnapshot,guardLoadHistory,guardSaveSnapshot,guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade,guardRetryAfterMs,guardTransportBackoffMs,guardVerifyTransportOnce};';
 let clock=1800000000000;
 class Clock extends Date {static now(){return clock;}}
 const store=new Map();
@@ -79,3 +79,22 @@ assert.equal(context.test.guardFindAsset(selected,'TEST',clock-60000)[0],100,'ji
 assert(!snapshots.has(clock-480000),'expired snapshot removed');
 assert(!source.includes('guardGet(env,"history")'),'legacy full-history JSON cannot be decoded');
 console.log('CABAL CPU HISTORY REGRESSION PASS: selective reads, jitter, expiry, no legacy blob');
+
+// RUNNER identities survive a quiet minute; prices must always be live.
+store.clear();
+context.fetch=async()=>new Response(JSON.stringify({generatedAt:new Date(clock).toISOString(),watchCandidates:[{asset:'AKT',runnerCandidateEligible:true},{asset:'NEON',runnerCandidateEligible:true}]}),{status:200});
+const followed=await context.test.guardRunnerFollowup({});
+assert.equal(followed.length,1);assert.equal(followed[0].base,'AKT');
+assert.equal(followed[0].price,undefined,'old machine price must not be retained');
+const quiet={t:clock,a:{AKT:[0.7079,4330669,7.2997,'KUCOIN','AKT-USDT']}};
+const tracking=context.test.guardFollowupCandidates(quiet,[],[],followed);
+assert.equal(tracking[0].price,0.7079);assert.equal(tracking[0].runnerFollowup,true);
+assert.equal(context.test.guardFollowupCandidates({t:clock,a:{}},[],[],followed).length,0,'missing live price cannot be evaluated');
+context.fetch=async()=>new Response(JSON.stringify({code:'200000',data:{last:'0.71',volValue:'4330669',changeRate:'0.07',time:clock}}),{status:200});
+assert.equal((await context.test.guardTargetedKucoin(followed))[0].lastPrice,0.71);
+context.fetch=async()=>new Response(JSON.stringify({code:'200000',data:{last:'0.71',time:clock-180000}}),{status:200});
+assert.equal((await context.test.guardTargetedKucoin(followed)).length,0,'stale exchange tick rejected');
+clock+=31*60000;
+context.fetch=async()=>{throw Error('source unavailable');};
+assert.equal((await context.test.guardRunnerFollowup({})).length,0,'expired runner cannot be revived by source failure');
+console.log('RUNNER FOLLOWUP PASS: live prices, quiet minutes, targeted fallback, expiry and fundamental exclusions');
