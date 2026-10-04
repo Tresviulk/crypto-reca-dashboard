@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_18_2026-10-04_SOURCE_FAILOVER";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_19_2026-10-04_ADVANCED_SOURCE_FAILOVER";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -91,10 +91,10 @@ function marketRateBackoff(response,now=Date.now()){
 
 async function fetchTimed(url, options={}, timeoutMs=EXTERNAL_FETCH_TIMEOUT_MS){
   const host=new URL(url).hostname;
-  const limited=["api.kucoin.com","api.bybit.com","api.exchange.coinbase.com"].includes(host);
+  const limited=["api.kucoin.com","api.bybit.com","api.coinbase.com"].includes(host);
   const blocked=marketSourceBackoff.get(host);
   if(limited && blocked && blocked.until>Date.now()) throw Error("SOURCE_BACKOFF "+host+" HTTP "+blocked.status);
-  if(host==="api.exchange.coinbase.com"){
+  if(host==="api.coinbase.com"){
     const now=Date.now(), wait=Math.max(0,coinbaseNextRequestAt-now);
     coinbaseNextRequestAt=Math.max(now,coinbaseNextRequestAt)+350;
     if(wait) await new Promise(resolve=>setTimeout(resolve,wait));
@@ -628,16 +628,16 @@ async function kucoinKline(symbol, interval, limit){
 }
 
 async function coinbaseKline(symbol,interval,limit){
-  const granularity=INT_MS[interval]/1000;
-  if(![60,300,900,3600,21600,86400].includes(granularity)) throw Error("COINBASE_INTERVAL_UNSUPPORTED");
-  const end=new Date().toISOString();
-  const start=new Date(Date.now()-(limit+2)*INT_MS[interval]).toISOString();
-  const url="https://api.exchange.coinbase.com/products/"+encodeURIComponent(symbol)+"/candles?granularity="+granularity+"&start="+encodeURIComponent(start)+"&end="+encodeURIComponent(end);
+  const granularity={"1":"ONE_MINUTE","5":"FIVE_MINUTE","15":"FIFTEEN_MINUTE","60":"ONE_HOUR","120":"TWO_HOUR","240":"FOUR_HOUR","360":"SIX_HOUR","D":"ONE_DAY"}[interval];
+  if(!granularity || !INT_MS[interval]) throw Error("COINBASE_INTERVAL_UNSUPPORTED");
+  const end=Math.floor(Date.now()/1000);
+  const start=end-Math.ceil((limit+2)*INT_MS[interval]/1000);
+  const url="https://api.coinbase.com/api/v3/brokerage/market/products/"+encodeURIComponent(symbol)+"/candles?granularity="+granularity+"&start="+start+"&end="+end+"&limit="+Math.min(350,limit+2);
   const r=await fetchTimed(url);
   if(!r.ok) throw Error("Coinbase candles "+symbol+" "+r.status);
   const j=await r.json();
-  if(!Array.isArray(j)) throw Error("COINBASE_INVALID_CANDLES");
-  return j.map(x=>({t:Number(x[0])*1000,l:Number(x[1]),h:Number(x[2]),o:Number(x[3]),c:Number(x[4]),v:Number(x[5])}))
+  if(!Array.isArray(j.candles)) throw Error("COINBASE_INVALID_CANDLES");
+  return j.candles.map(x=>({t:Number(x.start)*1000,l:Number(x.low),h:Number(x.high),o:Number(x.open),c:Number(x.close),v:Number(x.volume)}))
     .filter(x=>Object.values(x).every(Number.isFinite) && x.t+INT_MS[interval]<=Date.now())
     .sort((a,b)=>a.t-b.t).slice(-limit);
 }
@@ -645,23 +645,21 @@ async function coinbaseKline(symbol,interval,limit){
 async function guardCoinbaseMarket(base){
   if(!eligibleBase(base)) throw Error("COINBASE_BASE_EXCLUDED");
   const symbol=base+"-USD";
-  const root="https://api.exchange.coinbase.com/products/"+encodeURIComponent(symbol);
+  const root="https://api.coinbase.com/api/v3/brokerage/market/products/"+encodeURIComponent(symbol);
   const productResponse=await fetchTimed(root);
   if(!productResponse.ok) throw Error("Coinbase product "+symbol+" "+productResponse.status);
   const product=await productResponse.json();
-  if(product.base_currency!==base || product.quote_currency!=="USD" || product.status!=="online" || product.trading_disabled || product.cancel_only || product.post_only || product.limit_only) throw Error("COINBASE_PRODUCT_NOT_EXECUTABLE");
-  const tickerResponse=await fetchTimed(root+"/ticker");
+  if(product.product_id!==symbol || product.base_currency_id!==base || product.quote_currency_id!=="USD" || product.product_type!=="SPOT" || product.is_disabled || product.view_only || product.trading_disabled || product.cancel_only || product.post_only || product.limit_only || product.auction_mode) throw Error("COINBASE_PRODUCT_NOT_EXECUTABLE");
+  const tickerResponse=await fetchTimed(root+"/ticker?limit=1");
   if(!tickerResponse.ok) throw Error("Coinbase ticker "+symbol+" "+tickerResponse.status);
   const ticker=await tickerResponse.json();
-  const at=Date.parse(ticker.time), price=Number(ticker.price);
-  if(!Number.isFinite(at) || Math.abs(Date.now()-at)>120_000 || !(price>0)) throw Error("COINBASE_STALE_PRICE");
-  const statsResponse=await fetchTimed(root+"/stats");
-  if(!statsResponse.ok) throw Error("Coinbase stats "+symbol+" "+statsResponse.status);
-  const stats=await statsResponse.json();
-  const open=Number(stats.open), volume=Number(stats.volume);
-  if(!(open>0) || !(volume>0)) throw Error("COINBASE_STATS_INVALID");
+  const trade=ticker.trades?.[0];
+  const at=Date.parse(trade?.time), price=Number(trade?.price);
+  if(trade?.product_id!==symbol || !Number.isFinite(at) || Math.abs(Date.now()-at)>120_000 || !(price>0)) throw Error("COINBASE_STALE_PRICE");
+  const volume=Number(product.volume_24h), change=parseFloat(product.price_percentage_change_24h);
+  if(!(volume>0) || !Number.isFinite(change)) throw Error("COINBASE_STATS_INVALID");
   return {base,quote:"USD",venue:"COINBASE",venueSymbol:symbol,lastPrice:price,
-    turnover24h:volume*price,price24hPct:(price/open-1)*100};
+    turnover24h:volume*price,price24hPct:change};
 }
 
 async function klineOnMarket(market, interval, limit){

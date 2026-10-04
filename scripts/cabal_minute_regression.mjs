@@ -114,16 +114,21 @@ console.log('CLOSED CANDLE CACHE PASS: reuse immutable bars; refresh on each clo
 
 store.clear();
 const originalFetch=context.fetch;
+const cbProduct={product_id:'AKT-USD',base_currency_id:'AKT',quote_currency_id:'USD',product_type:'SPOT',volume_24h:'2000000',price_percentage_change_24h:'7.14%'};
 context.fetch=async url=>{
-  if(url.endsWith('/ticker')) return new Response(JSON.stringify({price:'0.75',time:new Date(clock).toISOString()}),{status:200});
-  if(url.endsWith('/stats')) return new Response(JSON.stringify({open:'0.70',volume:'2000000'}),{status:200});
-  return new Response(JSON.stringify({base_currency:'AKT',quote_currency:'USD',status:'online',trading_disabled:false}),{status:200});
+  assert.ok(url.startsWith('https://api.coinbase.com/api/v3/brokerage/market/products/'));
+  if(url.endsWith('/ticker?limit=1')) return new Response(JSON.stringify({trades:[{product_id:'AKT-USD',price:'0.75',time:new Date(clock).toISOString()}]}),{status:200});
+  return new Response(JSON.stringify(cbProduct),{status:200});
 };
 const cb=await context.test.guardCoinbaseMarket('AKT');
-assert.equal(cb.lastPrice,0.75);assert.equal(cb.turnover24h,1500000);assert.equal(cb.venue,'COINBASE');
-context.fetch=async url=>url.endsWith('/ticker') ? new Response(JSON.stringify({price:'0.75',time:new Date(clock-180000).toISOString()}),{status:200}) : new Response(JSON.stringify({base_currency:'AKT',quote_currency:'USD',status:'online'}),{status:200});
+assert.equal(cb.lastPrice,0.75);assert.equal(cb.turnover24h,1500000);assert.equal(cb.venue,'COINBASE');assert.equal(cb.price24hPct,7.14);
+context.fetch=async url=>url.endsWith('/ticker?limit=1') ? new Response(JSON.stringify({trades:[{product_id:'AKT-USD',price:'0.75',time:new Date(clock-180000).toISOString()}]}),{status:200}) : new Response(JSON.stringify(cbProduct),{status:200});
 await assert.rejects(()=>context.test.guardCoinbaseMarket('AKT'),/STALE_PRICE/);
-context.fetch=async()=>new Response(JSON.stringify([[Math.floor(clock/900000)*900,1,2,1.1,1.5,99],[Math.floor(clock/900000)*900-900,1,2,1.1,1.5,99]]),{status:200});
+context.fetch=async url=>{
+  assert.ok(url.includes('granularity=FIFTEEN_MINUTE'));
+  assert.ok(/start=\d+&end=\d+/.test(url));
+  return new Response(JSON.stringify({candles:[0,-900].map(offset=>({start:String(Math.floor(clock/900000)*900+offset),low:'1',high:'2',open:'1.1',close:'1.5',volume:'99'}))}),{status:200});
+};
 const candles=await context.test.coinbaseKline('AKT-USD','15',60);
 assert.equal(candles.length,1,'live candle excluded');assert.equal(candles[0].c,1.5);assert.equal(candles[0].v,99);
 store.clear();
