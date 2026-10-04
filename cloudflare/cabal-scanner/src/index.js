@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_19_2026-10-04_ADVANCED_SOURCE_FAILOVER";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_20_2026-10-04_RESERVED_SOURCE_FAILOVER";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1252,14 +1252,18 @@ async function guardBuildSnapshot(followup=[],env){
   const targeted=!kucoin.length && followup.length ? await guardTargetedKucoin(followup) : [];
   if(targeted.length) kucoin=targeted;
   let coinbase=[];
+  const coinbaseErrors=[];
   if(!bybit.length && !kucoin.length){
     const watch=env ? await guardGet(env,"watch:latest") : null;
     const recent=watch && Date.now()-Date.parse(watch.generatedAt)<10*60_000 ? watch.candidates||[] : [];
     const active=env ? await guardGet(env,"trade:active") : null;
-    const bases=[...new Set([...(active&&active.asset?[active.asset]:[]),...followup.map(x=>x.base),...recent.map(x=>x.base),"BTC","ETH","SOL","XRP","AVAX","HBAR","ONDO"])].filter(eligibleBase).slice(0,6);
-    coinbase=(await mapLimit(bases,1,async base=>{try{return await guardCoinbaseMarket(base);}catch(_){return null;}})).filter(Boolean);
+    const tracked=[...new Set([...(active&&active.asset?[active.asset]:[]),...followup.map(x=>x.base),...recent.map(x=>x.base)])].filter(eligibleBase).slice(0,7);
+    // Tracked names may have no Coinbase listing. Reserve liquid reference markets
+    // independently so those names cannot consume every fallback slot.
+    const bases=[...new Set([...tracked,"BTC","ETH"])];
+    coinbase=(await mapLimit(bases,1,async base=>{try{return await guardCoinbaseMarket(base);}catch(e){coinbaseErrors.push(base+":"+String(e));return null;}})).filter(Boolean);
   }
-  if(!bybit.length && !kucoin.length && !coinbase.length) throw new Error("GUARD_NO_SPOT_SOURCE | BYBIT="+bybitError+" | KUCOIN="+kucoinError);
+  if(!bybit.length && !kucoin.length && !coinbase.length) throw new Error("GUARD_NO_SPOT_SOURCE | BYBIT="+bybitError+" | KUCOIN="+kucoinError+" | COINBASE="+coinbaseErrors.join("; "));
 
   // The one-minute guard must not inherit a Bybit outage when KuCoin is healthy.
   // Prefer KuCoin for assets present on both venues; keep Bybit-only names as fallback.
@@ -1285,7 +1289,7 @@ async function guardBuildSnapshot(followup=[],env){
       coinbase:coinbase.length?"TARGETED_ONLY":"NOT_USED",
       bybit:bybit.length?"PASS":"FAIL",
       kucoin:targeted.length?"TARGETED_ONLY":(kucoin.length?"PASS":"FAIL"),
-      bybitError,kucoinError
+      bybitError,kucoinError,coinbaseErrors
     }
   };
 }

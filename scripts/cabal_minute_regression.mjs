@@ -154,3 +154,17 @@ const altHistory=[{t:clock-60000,a:{AKT:[0.7079,4000000,7,'KUCOIN','AKT-USDT']}}
 const altCandidate=context.test.guardCandidateSnapshot(altNow,altHistory,'AKT');
 assert(Math.abs(altCandidate.change1m-(0.75/0.74-1)*100)<1e-8,'short momentum uses same exchange history');
 console.log('SAME EXCHANGE HISTORY PASS');
+
+// A crowded set of KuCoin-only runners must not displace the Coinbase references.
+store.clear();
+context.failTickers=async()=>{throw Error('exchange unavailable');};
+context.coinbaseFallback=async base=>{
+  if(base!=='BTC' && base!=='ETH') throw Error('not listed');
+  return {base,quote:'USD',venue:'COINBASE',venueSymbol:base+'-USD',lastPrice:100,turnover24h:50000000,price24hPct:1};
+};
+vm.runInContext('bybitTickers=failTickers;kucoinTickers=failTickers;guardCoinbaseMarket=coinbaseFallback;',context);
+const backup=await context.test.guardBuildSnapshot(['AAA','BBB','CCC','DDD','EEE','FFF'].map(base=>({base})),{});
+assert.equal(backup.sourceStatus.coinbase,'TARGETED_ONLY');
+assert.ok(backup.a.BTC && backup.a.ETH,'references survive unsupported tracked names');
+assert.equal(backup.sourceStatus.coinbaseErrors.length,6);
+console.log('CROWDED SOURCE FAILOVER PASS: independent reference slots and per-asset errors');
