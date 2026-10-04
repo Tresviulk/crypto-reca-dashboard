@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 let source=fs.readFileSync('cloudflare/cabal-scanner/src/index.js','utf8').replace(/export default\s*\{/,'globalThis.__worker = {');
-source+='\nglobalThis.test={guardRunnerFollowup,guardTargetedKucoin,guardFollowupCandidates,guardBuildSnapshot,guardLoadHistory,guardSaveSnapshot,guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade,guardRetryAfterMs,guardTransportBackoffMs,guardVerifyTransportOnce};';
+source+='\nglobalThis.test={guardClosedCandles,guardRunnerFollowup,guardTargetedKucoin,guardFollowupCandidates,guardBuildSnapshot,guardLoadHistory,guardSaveSnapshot,guardFindAsset,guardQualifyBuySignals,runMarketGuard,guardTradeNotify,guardCancelActiveTrade,guardRetryAfterMs,guardTransportBackoffMs,guardVerifyTransportOnce};';
 let clock=1800000000000;
 class Clock extends Date {static now(){return clock;}}
 const store=new Map();
@@ -98,3 +98,16 @@ clock+=31*60000;
 context.fetch=async()=>{throw Error('source unavailable');};
 assert.equal((await context.test.guardRunnerFollowup({})).length,0,'expired runner cannot be revived by source failure');
 console.log('RUNNER FOLLOWUP PASS: live prices, quiet minutes, targeted fallback, expiry and fundamental exclusions');
+
+store.clear();
+let candleReads=0;
+context.readBars=async()=>{candleReads++;return [{t:(Math.floor(clock/900000)-1)*900000,c:1}];};
+vm.runInContext('klineOnMarket=readBars;',context);
+const market={venue:'KUCOIN',venueSymbol:'AKT-USDT'};
+await context.test.guardClosedCandles({},market,'15',60);
+await context.test.guardClosedCandles({},market,'15',60);
+assert.equal(candleReads,1,'unchanged completed bars must be reused');
+clock+=900000;
+await context.test.guardClosedCandles({},market,'15',60);
+assert.equal(candleReads,2,'new close must force a fresh exchange read');
+console.log('CLOSED CANDLE CACHE PASS: reuse immutable bars; refresh on each close');

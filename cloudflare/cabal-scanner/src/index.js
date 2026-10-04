@@ -1420,14 +1420,28 @@ function guardStopFrom15m(price,a15){
   return stops[0];
 }
 
-async function guardExecutionMetricsOnMarket(c,market){
+// Closed candles are immutable until the next interval closes. Reuse only within
+// that exact bucket; never carry stale bars across a new 15m/1h close.
+async function guardClosedCandles(env,market,interval,limit){
+  const bucket=Math.floor(Date.now()/INT_MS[interval]);
+  const key="execution:bars:"+market.venue+":"+market.venueSymbol+":"+interval+":"+limit;
+  const cached=env ? await guardGet(env,key) : null;
+  if(cached && cached.bucket===bucket && Array.isArray(cached.bars)) return cached.bars;
+  const bars=await klineOnMarket(market,interval,limit);
+  if(env && bars.length && bars[bars.length-1].t===(bucket-1)*INT_MS[interval]){
+    await guardPut(env,key,{bucket,bars});
+  }
+  return bars;
+}
+
+async function guardExecutionMetricsOnMarket(c,market,env){
   const btcSymbol=market.venue==="BYBIT" ? "BTCUSDT" : "BTC-USDT";
   const btcMarket={venue:market.venue,venueSymbol:btcSymbol};
 
   const [a15,a60,btc60]=await Promise.all([
-    klineOnMarket(market,"15",60),
-    klineOnMarket(market,"60",180),
-    klineOnMarket(btcMarket,"60",30)
+    guardClosedCandles(env,market,"15",60),
+    guardClosedCandles(env,market,"60",180),
+    guardClosedCandles(env,btcMarket,"60",30)
   ]);
   if(a15.length<20 || a60.length<30 || btc60.length<6) throw new Error("GUARD_EXECUTION_INSUFFICIENT_BARS");
 
@@ -1455,7 +1469,7 @@ async function guardExecutionMetricsOnMarket(c,market){
   };
 }
 
-async function guardExecutionMetrics(c){
+async function guardExecutionMetrics(c,env){
   if(!c || !c.base || !c.venue || !c.venueSymbol) throw new Error("GUARD_EXECUTION_SYMBOL_MISSING");
   const alternatives=[{venue:c.venue,venueSymbol:c.venueSymbol}];
   if(c.venue!=="KUCOIN") alternatives.push({venue:"KUCOIN",venueSymbol:c.base+"-USDT"});
@@ -1468,7 +1482,7 @@ async function guardExecutionMetrics(c){
     if(seen.has(key)) continue;
     seen.add(key);
     try{
-      return await guardExecutionMetricsOnMarket(c,market);
+      return await guardExecutionMetricsOnMarket(c,market,env);
     }catch(e){
       errors.push(key+"="+String(e));
     }
@@ -1609,7 +1623,7 @@ async function guardEvaluateTrades(env,candidates){
   const top=(candidates||[]).slice(0,6);
   const evaluated=await mapLimit(top,2,async x=>{
     try{
-      const m=await guardExecutionMetrics(x);
+      const m=await guardExecutionMetrics(x,env);
       return guardPilotDecision(x,m);
     }catch(e){
       return {asset:x.base,venue:x.venue,price:x.price,buy:false,reason:"DATA_GAP",error:String(e)};
@@ -1806,7 +1820,7 @@ async function guardRevalidateActiveTrade(env,current,history){
       reason=hardInvalidation;
     }else{
       try{
-        const m=await guardExecutionMetrics(c);
+        const m=await guardExecutionMetrics(c,env);
         decision=guardPilotDecision(c,m);
         reason=decision && decision.buy
           ? "STILL_CONFIRMED"
