@@ -1,0 +1,40 @@
+name: Deploy SENDA Cloudflare Worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - 'cloudflare/senda-scanner/**'
+      - '.github/workflows/deploy-senda-worker.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-senda-worker
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Validate SENDA worker
+        run: |
+          node --check cloudflare/senda-scanner/src/index.js
+          grep -q 'FULL_COINBASE_KUCOIN_DYNAMIC_TOP20' cloudflare/senda-scanner/src/index.js
+      - name: Deploy SENDA worker
+        working-directory: cloudflare/senda-scanner
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@latest deploy
+      - name: Verify health
+        run: |
+          sleep 8
+          curl -fsS --retry 5 --retry-delay 3 https://senda-scanner.diondublin21.workers.dev/health
