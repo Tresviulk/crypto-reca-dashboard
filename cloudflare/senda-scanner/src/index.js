@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_9_2026-10-05";
+const VERSION = "SENDA_WORKER_2_0_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -123,7 +123,11 @@ async function universe(){
   const u=[];
   for(const [base,a] of by){
     a.sort((x,y)=>(y.turn||0)-(x.turn||0));
-    const z={...a[0],venues:[...new Set(a.map(x=>x.venue))].sort(),pairs:[...new Set(a.map(x=>x.venue+":"+x.pair))].sort()};
+    const z={...a[0],
+      venues:[...new Set(a.map(x=>x.venue))].sort(),
+      pairs:[...new Set(a.map(x=>x.venue+":"+x.pair))].sort(),
+      routes:a.map(x=>({venue:x.venue,pair:x.pair})).filter((x,i,arr)=>arr.findIndex(y=>y.venue===x.venue&&y.pair===x.pair)===i)
+    };
     u.push(z);
   }
   return {cbCount:cb.length,kcCount:kc.length,rawCount:raw.length,uniqueCount:u.length,rows:u,kucoinSource:kcResult.source,kucoinError:kcResult.error||null};
@@ -156,12 +160,25 @@ function aggregate4h(hourly){
   }
   return out.slice(-220);
 }
-async function barsFor(m){
-  if(m.venue==="COINBASE"){
-    const [h1,d1]=await Promise.all([cbBars(m.pair,3600),cbBars(m.pair,86400)]);
+async function barsForRoute(route){
+  if(route.venue==="COINBASE"){
+    const [h1,d1]=await Promise.all([cbBars(route.pair,3600),cbBars(route.pair,86400)]);
     return [aggregate4h(h1),d1];
   }
-  return Promise.all([kcBars(m.pair,"4hour",14400),kcBars(m.pair,"1day",86400)]);
+  return Promise.all([kcBars(route.pair,"4hour",14400),kcBars(route.pair,"1day",86400)]);
+}
+async function barsFor(m){
+  const preferred={venue:m.venue,pair:m.pair};
+  const routes=[preferred,...(m.routes||[]).filter(x=>!(x.venue===preferred.venue&&x.pair===preferred.pair))];
+  let last;
+  for(const route of routes){
+    try{
+      const bars=await barsForRoute(route);
+      if((bars[0]?.length||0)>=52&&(bars[1]?.length||0)>=52) return {...{bars},usedRoute:route};
+      last=new Error("insufficient bars via "+route.venue+":"+route.pair);
+    }catch(e){ last=e; }
+  }
+  throw last||new Error("no deep-data route");
 }
 function mean(a){ return a.reduce((s,x)=>s+x,0)/a.length; }
 function ema(v,p){
@@ -214,7 +231,7 @@ function feats(b){
   const c=b.map(x=>x.c); return {close:c.at(-1),rsi:rsi(c),adx:adx(b),ichi:ichi(b),st:supertrend(b),ema20:ema(c,20),ema50:ema(c,50)};
 }
 async function analyze(m){
-  const [b4,bd]=await barsFor(m); const f4=feats(b4),fd=feats(bd); const px=n(m.price)||f4.close;
+  const deep=await barsFor(m); const [b4,bd]=deep.bars; const f4=feats(b4),fd=feats(bd); const px=n(m.price)||f4.close;
   let s=25+clamp(m.broad,-20,40)*0.25; const reasons=[],penalties=[];
   for(const [lab,f,w] of [["4H",f4,1],["1D",fd,1.15]]){
     const ic=f.ichi,top=Math.max(ic.a,ic.b),bot=Math.min(ic.a,ic.b);
@@ -259,7 +276,8 @@ async function analyze(m){
       supertrendUp:fd.st,
       aboveCloud:fd.close>Math.max(fd.ichi.a,fd.ichi.b)
     }},
-    reasons:reasons.slice(0,6),penalties:penalties.slice(0,4),broadScore:m.broad};
+    reasons:reasons.slice(0,6),penalties:penalties.slice(0,4),broadScore:m.broad,
+    analysisDepth:"DEEP",technicalVenue:deep.usedRoute.venue,technicalPair:deep.usedRoute.pair};
 }
 async function mapLimit(items,limit,fn){
   const out=new Array(items.length);let next=0;
@@ -277,7 +295,7 @@ async function scan(){
     m.broad=broadScore(m,b1,b4);eligible.push(m);
   }
   eligible.sort((a,b)=>b.broad-a.broad); const deep=eligible.slice(0,TOP_DEEP);
-  const analyzed=await mapLimit(deep,4,analyze);
+  const analyzed=await mapLimit(deep,2,analyze);
   const errors=analyzed.filter(x=>x&&x.__error);
   const full=analyzed.filter(x=>x&&!x.__error).sort((a,b)=>b.score-a.score);
   const used=new Set(full.map(x=>x.asset));
