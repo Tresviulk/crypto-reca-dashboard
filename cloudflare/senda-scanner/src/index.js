@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_8_2026-10-05";
+const VERSION = "SENDA_WORKER_1_9_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -237,8 +237,28 @@ async function analyze(m){
   const trend=f4.st&&fd.st,cloud=px>Math.max(f4.ichi.a,f4.ichi.b);
   const state=s>=78&&trend&&cloud&&!noChase?"BUY":(s>=66&&!noChase?"NEAR BUY":"WATCH");
   return {asset:m.base,venue:m.venue,pair:m.pair,availableVenues:m.venues,availablePairs:m.pairs,state,score:s,price:px,change1hPct:m.c1,change4hPct:m.c4,change24hPct:m.c24,turnover24hUsdApprox:m.turn,volumeAcceleration:m.va,noChase,
-    technical:{"4h":{rsi14:f4.rsi==null?null:+f4.rsi.toFixed(2),adx14:f4.adx==null?null:+f4.adx.toFixed(2),supertrendUp:f4.st,aboveCloud:f4.close>Math.max(f4.ichi.a,f4.ichi.b)},
-      "1d":{rsi14:fd.rsi==null?null:+fd.rsi.toFixed(2),adx14:fd.adx==null?null:+fd.adx.toFixed(2),supertrendUp:fd.st,aboveCloud:fd.close>Math.max(fd.ichi.a,fd.ichi.b)}},
+    technical:{"4h":{
+      rsi14:f4.rsi==null?null:+f4.rsi.toFixed(2),
+      adx14:f4.adx==null?null:+f4.adx.toFixed(2),
+      ema20:f4.ema20==null?null:+f4.ema20.toPrecision(8),
+      ema50:f4.ema50==null?null:+f4.ema50.toPrecision(8),
+      priceVsEma20Pct:f4.ema20==null?null:+pct(px,f4.ema20).toFixed(2),
+      priceVsEma50Pct:f4.ema50==null?null:+pct(px,f4.ema50).toFixed(2),
+      ema20AboveEma50:f4.ema20!=null&&f4.ema50!=null?f4.ema20>f4.ema50:null,
+      supertrendUp:f4.st,
+      aboveCloud:f4.close>Math.max(f4.ichi.a,f4.ichi.b)
+    },
+      "1d":{
+      rsi14:fd.rsi==null?null:+fd.rsi.toFixed(2),
+      adx14:fd.adx==null?null:+fd.adx.toFixed(2),
+      ema20:fd.ema20==null?null:+fd.ema20.toPrecision(8),
+      ema50:fd.ema50==null?null:+fd.ema50.toPrecision(8),
+      priceVsEma20Pct:fd.ema20==null?null:+pct(px,fd.ema20).toFixed(2),
+      priceVsEma50Pct:fd.ema50==null?null:+pct(px,fd.ema50).toFixed(2),
+      ema20AboveEma50:fd.ema20!=null&&fd.ema50!=null?fd.ema20>fd.ema50:null,
+      supertrendUp:fd.st,
+      aboveCloud:fd.close>Math.max(fd.ichi.a,fd.ichi.b)
+    }},
     reasons:reasons.slice(0,6),penalties:penalties.slice(0,4),broadScore:m.broad};
 }
 async function mapLimit(items,limit,fn){
