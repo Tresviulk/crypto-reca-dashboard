@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_2_1_2026-10-05";
+const VERSION = "SENDA_WORKER_2_2_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 40;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -185,6 +185,20 @@ function ema(v,p){
   if(v.length<p)return null; let e=mean(v.slice(0,p)),k=2/(p+1);
   for(const x of v.slice(p)) e=x*k+e*(1-k); return e;
 }
+function emaSeries(v,p){
+  if(v.length<p)return [];
+  const out=new Array(v.length).fill(null); let e=mean(v.slice(0,p)),k=2/(p+1); out[p-1]=e;
+  for(let i=p;i<v.length;i++){e=v[i]*k+e*(1-k);out[i]=e}
+  return out;
+}
+function macd(v){
+  if(v.length<35)return null;
+  const e12=emaSeries(v,12),e26=emaSeries(v,26),line=[];
+  for(let i=0;i<v.length;i++) if(e12[i]!=null&&e26[i]!=null) line.push(e12[i]-e26[i]);
+  if(line.length<9)return null;
+  const sig=ema(line,9),ml=line.at(-1);
+  return {line:ml,signal:sig,hist:ml-sig};
+}
 function rsi(v,p=14){
   if(v.length<=p)return null; let g=0,l=0;
   for(let i=v.length-p;i<v.length;i++){ const d=v[i]-v[i-1]; if(d>0)g+=d; else l-=d; }
@@ -228,7 +242,14 @@ function supertrend(b,p=10,m=3){
 }
 function feats(b){
   if(b.length<52)throw new Error("insufficient bars "+b.length);
-  const c=b.map(x=>x.c); return {close:c.at(-1),rsi:rsi(c),adx:adx(b),ichi:ichi(b),st:supertrend(b),ema20:ema(c,20),ema50:ema(c,50)};
+  const c=b.map(x=>x.c),m=macd(c);
+  const recent20=b.slice(-21,-1);
+  return {
+    close:c.at(-1),rsi:rsi(c),adx:adx(b),ichi:ichi(b),st:supertrend(b),
+    ema20:ema(c,20),ema50:ema(c,50),ema200:ema(c,200),
+    macd:m,
+    prior20High:recent20.length?Math.max(...recent20.map(x=>x.h)):null
+  };
 }
 async function analyze(m){
   const deep=await barsFor(m); const [b4,bd]=deep.bars; const f4=feats(b4),fd=feats(bd); const px=n(m.price)||f4.close;
@@ -242,7 +263,34 @@ async function analyze(m){
   }
   if(f4.rsi!=null&&f4.rsi>=50&&f4.rsi<=68){s+=4;reasons.push("4H RSI constructive")}else if(f4.rsi>74){s-=8;penalties.push("4H RSI extended")}
   if(fd.rsi!=null&&fd.rsi>=48&&fd.rsi<=66){s+=3;reasons.push("1D RSI constructive")}else if(fd.rsi>74){s-=7;penalties.push("1D RSI extended")}
+  if(f4.ema20!=null&&f4.ema50!=null){
+    if(px>f4.ema20&&f4.ema20>f4.ema50){s+=5;reasons.push("4H EMA20>EMA50 and price above EMA20")}
+    else if(px<f4.ema20){s-=5;penalties.push("price below 4H EMA20")}
+  }
+  if(fd.ema20!=null&&fd.ema50!=null){
+    if(px>fd.ema20&&fd.ema20>fd.ema50){s+=4;reasons.push("1D EMA20>EMA50 and price above EMA20")}
+    else if(px<fd.ema20){s-=4;penalties.push("price below 1D EMA20")}
+  }
+  if(fd.ema200!=null){
+    if(px>fd.ema200){s+=2;reasons.push("price above 1D EMA200")}
+    else{s-=4;penalties.push("price below 1D EMA200")}
+  }
+  if(f4.macd){
+    if(f4.macd.hist>0&&f4.macd.line>f4.macd.signal){s+=3;reasons.push("4H MACD positive")}
+    else if(f4.macd.hist<0){s-=3;penalties.push("4H MACD weakening")}
+  }
+  if(fd.macd){
+    if(fd.macd.hist>0&&fd.macd.line>fd.macd.signal){s+=2;reasons.push("1D MACD positive")}
+    else if(fd.macd.hist<0){s-=2;penalties.push("1D MACD weakening")}
+  }
   const c1=n(m.c1,0)||0,c4=n(m.c4,0)||0,c24=n(m.c24,0)||0,va=n(m.va,1)||1; let noChase=false;
+  let breakoutPending=false;
+  if(f4.prior20High!=null){
+    const toHigh=pct(f4.prior20High,px);
+    if(px<f4.prior20High&&toHigh!=null&&toHigh>=0&&toHigh<=3){
+      breakoutPending=true;s-=5;penalties.push("4H resistance nearby; breakout not confirmed");
+    } else if(px>f4.prior20High){s+=3;reasons.push("4H 20-bar breakout confirmed")}
+  }
   if(c1>=.2&&c1<=3.5){s+=3;reasons.push("early 1H momentum")}
   if(c4>=.5&&c4<=8){s+=3;reasons.push("controlled 4H momentum")}
   if(va>=1.35){s+=Math.min(5,(va-1)*4);reasons.push("volume acceleration "+va.toFixed(2)+"x")}
@@ -250,15 +298,24 @@ async function analyze(m){
   if(c4>12){s-=(c4-12)*3;noChase=true;penalties.push("4H already "+c4.toFixed(1)+"%")}
   if(c24>25){s-=(c24-25)*1.5;noChase=true;penalties.push("24H already "+c24.toFixed(1)+"%")}
   const dk=pct(px,f4.ichi.k); if(dk!=null&&dk>10){s-=Math.min(12,(dk-10)*1.4);noChase=true;penalties.push(dk.toFixed(1)+"% above 4H Kijun")}
+  const de20=f4.ema20!=null?pct(px,f4.ema20):null;
+  if(de20!=null&&de20>8){s-=Math.min(10,(de20-8)*1.25);noChase=true;penalties.push(de20.toFixed(1)+"% above 4H EMA20")}
   if(noChase)s-=15; s=Math.round(clamp(s,0,100)*10)/10;
-  const trend=f4.st&&fd.st,cloud=px>Math.max(f4.ichi.a,f4.ichi.b);
-  const state=s>=78&&trend&&cloud&&!noChase?"BUY":(s>=66&&!noChase?"NEAR BUY":"WATCH");
+  const trend=f4.st&&fd.st,cloud4=px>Math.max(f4.ichi.a,f4.ichi.b),cloud1d=px>Math.min(fd.ichi.a,fd.ichi.b);
+  const emaGate=f4.ema20!=null&&f4.ema50!=null&&px>f4.ema20&&f4.ema20>f4.ema50;
+  const macdGate=!f4.macd||f4.macd.hist>=0;
+  const state=s>=78&&trend&&cloud4&&cloud1d&&emaGate&&macdGate&&!breakoutPending&&!noChase?"BUY":(s>=66&&!noChase?"NEAR BUY":"WATCH");
   return {asset:m.base,venue:m.venue,pair:m.pair,availableVenues:m.venues,availablePairs:m.pairs,state,score:s,price:px,change1hPct:m.c1,change4hPct:m.c4,change24hPct:m.c24,turnover24hUsdApprox:m.turn,volumeAcceleration:m.va,noChase,
     technical:{"4h":{
       rsi14:f4.rsi==null?null:+f4.rsi.toFixed(2),
       adx14:f4.adx==null?null:+f4.adx.toFixed(2),
       ema20:f4.ema20==null?null:+f4.ema20.toPrecision(8),
       ema50:f4.ema50==null?null:+f4.ema50.toPrecision(8),
+      ema200:f4.ema200==null?null:+f4.ema200.toPrecision(8),
+      macdLine:f4.macd==null?null:+f4.macd.line.toPrecision(8),
+      macdSignal:f4.macd==null?null:+f4.macd.signal.toPrecision(8),
+      macdHist:f4.macd==null?null:+f4.macd.hist.toPrecision(8),
+      prior20High:f4.prior20High==null?null:+f4.prior20High.toPrecision(8),
       priceVsEma20Pct:f4.ema20==null?null:+pct(px,f4.ema20).toFixed(2),
       priceVsEma50Pct:f4.ema50==null?null:+pct(px,f4.ema50).toFixed(2),
       ema20AboveEma50:f4.ema20!=null&&f4.ema50!=null?f4.ema20>f4.ema50:null,
@@ -270,6 +327,11 @@ async function analyze(m){
       adx14:fd.adx==null?null:+fd.adx.toFixed(2),
       ema20:fd.ema20==null?null:+fd.ema20.toPrecision(8),
       ema50:fd.ema50==null?null:+fd.ema50.toPrecision(8),
+      ema200:fd.ema200==null?null:+fd.ema200.toPrecision(8),
+      macdLine:fd.macd==null?null:+fd.macd.line.toPrecision(8),
+      macdSignal:fd.macd==null?null:+fd.macd.signal.toPrecision(8),
+      macdHist:fd.macd==null?null:+fd.macd.hist.toPrecision(8),
+      prior20High:fd.prior20High==null?null:+fd.prior20High.toPrecision(8),
       priceVsEma20Pct:fd.ema20==null?null:+pct(px,fd.ema20).toFixed(2),
       priceVsEma50Pct:fd.ema50==null?null:+pct(px,fd.ema50).toFixed(2),
       ema20AboveEma50:fd.ema20!=null&&fd.ema50!=null?fd.ema20>fd.ema50:null,
