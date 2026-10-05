@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_2_3_2026-10-05";
+const VERSION = "SENDA_WORKER_2_4_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 40;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -326,10 +326,20 @@ async function analyze(m){
   const c1=n(m.c1,0)||0,c4=n(m.c4,0)||0,c24=n(m.c24,0)||0,va=n(m.va,1)||1; let noChase=false;
   let breakoutPending=false;
   if(f4.prior20High!=null){
-    const toHigh=pct(f4.prior20High,px);
-    if(px<f4.prior20High&&toHigh!=null&&toHigh>=0&&toHigh<=3){
-      breakoutPending=true;s-=5;penalties.push("4H resistance nearby; breakout not confirmed");
-    } else if(px>f4.prior20High){s+=3;reasons.push("4H 20-bar breakout confirmed")}
+    const belowPct=pct(f4.prior20High,px);
+    const clearancePct=pct(px,f4.prior20High);
+    if(px<f4.prior20High&&belowPct!=null&&belowPct>=0&&belowPct<=3){
+      breakoutPending=true;
+      s-=6;
+      penalties.push("4H resistance nearby; breakout not confirmed");
+    } else if(px>=f4.prior20High&&clearancePct!=null&&clearancePct<0.8){
+      breakoutPending=true;
+      s-=4;
+      penalties.push("4H breakout too shallow; needs >=0.8% clearance");
+    } else if(px>=f4.prior20High&&clearancePct!=null&&clearancePct>=0.8){
+      s+=3;
+      reasons.push("4H breakout confirmed with clearance");
+    }
   }
   if(c1>=.2&&c1<=3.5){s+=3;reasons.push("early 1H momentum")}
   if(c4>=.5&&c4<=8){s+=3;reasons.push("controlled 4H momentum")}
@@ -340,12 +350,18 @@ async function analyze(m){
   const dk=pct(px,f4.ichi.k); if(dk!=null&&dk>10){s-=Math.min(12,(dk-10)*1.4);noChase=true;penalties.push(dk.toFixed(1)+"% above 4H Kijun")}
   const de20=f4.ema20!=null?pct(px,f4.ema20):null;
   if(de20!=null&&de20>8){s-=Math.min(10,(de20-8)*1.25);noChase=true;penalties.push(de20.toFixed(1)+"% above 4H EMA20")}
-  if(noChase)s-=15; s=Math.round(clamp(s,0,100)*10)/10;
+  if(noChase)s-=15;
+  const rawScore=Math.round(clamp(s,0,100)*10)/10;
   const trend=f4.st&&fd.st,cloud4=px>Math.max(f4.ichi.a,f4.ichi.b),cloud1d=px>Math.min(fd.ichi.a,fd.ichi.b);
   const emaGate=f4.ema20!=null&&f4.ema50!=null&&px>f4.ema20&&f4.ema20>f4.ema50;
   const macdGate=!f4.macd||f4.macd.hist>=0;
-  const state=s>=78&&trend&&cloud4&&cloud1d&&emaGate&&macdGate&&!breakoutPending&&!noChase?"BUY":(s>=66&&!noChase?"NEAR BUY":"WATCH");
-  return {asset:m.base,venue:m.venue,pair:m.pair,availableVenues:m.venues,availablePairs:m.pairs,state,score:s,price:px,change1hPct:m.c1,change4hPct:m.c4,change24hPct:m.c24,turnover24hUsdApprox:m.turn,volumeAcceleration:m.va,noChase,
+  const buyBlocked=!(trend&&cloud4&&cloud1d&&emaGate&&macdGate)||breakoutPending||noChase;
+  let score=rawScore;
+  if(noChase) score=Math.min(score,65.9);
+  else if(buyBlocked) score=Math.min(score,77.9);
+  score=Math.round(score*10)/10;
+  const state=score>=78&&!buyBlocked?"BUY":(score>=66&&!noChase?"NEAR BUY":"WATCH");
+  return {asset:m.base,venue:m.venue,pair:m.pair,availableVenues:m.venues,availablePairs:m.pairs,state,score,rawScore,price:px,change1hPct:m.c1,change4hPct:m.c4,change24hPct:m.c24,turnover24hUsdApprox:m.turn,volumeAcceleration:m.va,noChase,
     technical:{"4h":{
       rsi14:f4.rsi==null?null:+f4.rsi.toFixed(2),
       adx14:f4.adx==null?null:+f4.adx.toFixed(2),
