@@ -27,7 +27,7 @@ jobs:
       - name: Validate SENDA worker
         run: |
           node --check cloudflare/senda-scanner/src/index.js
-          grep -q 'FULL_COINBASE_KUCOIN_DYNAMIC_TOP20' cloudflare/senda-scanner/src/index.js
+          grep -q 'FULL_COINBASE_KUCOIN_DYNAMIC_CANDIDATES' cloudflare/senda-scanner/src/index.js
       - name: Deploy SENDA worker
         working-directory: cloudflare/senda-scanner
         env:
@@ -47,16 +47,33 @@ jobs:
             exit 1
           fi
           python - <<'PY'
-          import json
+          import json, subprocess
           p=json.load(open('/tmp/senda-scan.json',encoding='utf-8'))
           if p.get('system')!='SENDA':
               raise SystemExit(p)
-          if p.get('mode')!='FULL_COINBASE_KUCOIN_DYNAMIC_TOP20':
+          if p.get('mode')!='FULL_COINBASE_KUCOIN_DYNAMIC_CANDIDATES':
               raise SystemExit(p)
-          if len(p.get('ranking') or [])!=20:
-              raise SystemExit(f"expected TOP-20, got {len(p.get('ranking') or [])}: {p}")
           c=p.get('coverage') or {}
           if int(c.get('uniqueAssets') or 0)<=20:
               raise SystemExit(f"full universe not scanned: {c}")
-          print('SENDA FULL SCAN PASS', json.dumps({'coverage':c,'statusCounts':p.get('statusCounts'),'elapsedSeconds':p.get('elapsedSeconds')},ensure_ascii=False))
+          candidates=p.get('candidates') or []
+          if len(candidates)<20:
+              raise SystemExit(f"candidate pool too small: {len(candidates)}")
+          sample=candidates[0]
+          cp=subprocess.run([
+              'curl','-sS','--max-time','90',
+              '-H','content-type: application/json',
+              '-d',json.dumps(sample),
+              'https://senda-scanner.diondublin21.workers.dev/deep'
+          ],capture_output=True,text=True,check=True)
+          d=json.loads(cp.stdout)
+          result=d.get('result') or {}
+          if not d.get('ok') or not result.get('technical'):
+              raise SystemExit(f"deep analysis failed: {d}")
+          for tf in ('4h','1d'):
+              t=(result.get('technical') or {}).get(tf) or {}
+              for k in ('ema20','ema50','rsi14','adx14'):
+                  if t.get(k) is None:
+                      raise SystemExit(f"missing {tf} {k}: {d}")
+          print('SENDA FULL SCAN PASS', json.dumps({'coverage':c,'candidatePool':len(candidates),'deepSample':result.get('asset'),'elapsedSeconds':p.get('elapsedSeconds')},ensure_ascii=False))
           PY
