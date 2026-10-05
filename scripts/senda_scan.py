@@ -96,6 +96,18 @@ def universe():
         z=dict(a[0]); z["venues"]=sorted({x["venue"] for x in a}); z["pairs"]=sorted({x["venue"]+":"+x["pair"] for x in a}); u.append(z)
     return cb,kc,raw,u,errs
 
+def hour_metrics(m):
+    bars=cb_candles(m["pair"],3600) if m["venue"]=="COINBASE" else kc_candles(m["pair"],"1hour")
+    if len(bars)<14: raise RuntimeError("insufficient 1H bars "+str(len(bars)))
+    last=bars[-1]; prev=bars[-2]; four=bars[-5] if len(bars)>=5 else prev
+    hist=[x["v"] for x in bars[-13:-1] if x["v"]>0]
+    med=statistics.median(hist) if hist else None
+    m["c1"]=pct(last["c"],prev["c"]) or 0
+    m["c4"]=pct(last["c"],four["c"]) or 0
+    m["va"]=last["v"]/med if med and med>0 else None
+    if not m.get("price"): m["price"]=last["c"]
+    return m
+
 def broad(m,b1,b4):
     c1=n(m.get("c1"),0) or 0; c4=n(m.get("c4"),0) or 0; c24=n(m.get("c24"),0) or 0; va=n(m.get("va"),1) or 1; turn=n(m.get("turn"),0) or 0
     s=clamp(c1*7,-8,28)+clamp(c4*2.2,-8,24)+clamp((va-1)*18,-5,24)+clamp((c1-b1)*3.5,-6,12)+clamp((c4-b4)*1.2,-5,10)+clamp(math.log10(max(turn,1))-5.4,0,4)*2.5
@@ -106,15 +118,16 @@ def broad(m,b1,b4):
     return round(s,2)
 
 def cb_candles(pair,g):
-    rows=get("https://api.exchange.coinbase.com/products/"+pair+"/candles?"+urlencode({"granularity":g}),retries=1); out=[]
+    rows=get("https://api.exchange.coinbase.com/products/"+pair+"/candles?"+urlencode({"granularity":g}),retries=1); out=[]; now=int(time.time())
     for r in rows if isinstance(rows,list) else []:
-        if isinstance(r,list) and len(r)>=6: out.append({"t":int(r[0]),"l":n(r[1]),"h":n(r[2]),"o":n(r[3]),"c":n(r[4]),"v":n(r[5])})
+        if isinstance(r,list) and len(r)>=6 and int(r[0])+int(g)<=now: out.append({"t":int(r[0]),"l":n(r[1]),"h":n(r[2]),"o":n(r[3]),"c":n(r[4]),"v":n(r[5])})
     out=[x for x in out if None not in (x["l"],x["h"],x["o"],x["c"],x["v"])]; out.sort(key=lambda x:x["t"]); return out[-220:]
 
 def kc_candles(pair,t):
-    j=get("https://api.kucoin.com/api/v1/market/candles?"+urlencode({"symbol":pair,"type":t}),retries=1); rows=(j.get("data") or []) if isinstance(j,dict) else []; out=[]
+    j=get("https://api.kucoin.com/api/v1/market/candles?"+urlencode({"symbol":pair,"type":t}),retries=1); rows=(j.get("data") or []) if isinstance(j,dict) else []; out=[]; now=int(time.time())
+    sec={"1hour":3600,"4hour":14400,"1day":86400}[t]
     for r in rows:
-        if isinstance(r,list) and len(r)>=6: out.append({"t":int(float(r[0])),"o":n(r[1]),"c":n(r[2]),"h":n(r[3]),"l":n(r[4]),"v":n(r[5])})
+        if isinstance(r,list) and len(r)>=6 and int(float(r[0]))+sec<=now: out.append({"t":int(float(r[0])),"o":n(r[1]),"c":n(r[2]),"h":n(r[3]),"l":n(r[4]),"v":n(r[5])})
     out=[x for x in out if None not in (x["l"],x["h"],x["o"],x["c"],x["v"])]; out.sort(key=lambda x:x["t"]); return out[-220:]
 
 def candles(m):
@@ -179,31 +192,32 @@ def features(b):
     c=[x["c"] for x in b]; return {"close":c[-1],"rsi":rsi(c),"adx":adx(b),"ichi":ichi(b),"st":supertrend(b),"ema20":ema(c,20),"ema50":ema(c,50)}
 
 def analyze(m):
-    b4,bd=candles(m); f4,fd=features(b4),features(bd); px=n(m.get("price")) or f4["close"]; s=40+clamp(m["broad"],-20,40)*.35; reasons=[]; penalties=[]
+    b4,bd=candles(m); f4,fd=features(b4),features(bd); px=n(m.get("price")) or f4["close"]; s=25+clamp(m["broad"],-20,40)*.25; reasons=[]; penalties=[]
     for lab,f,w in (("4H",f4,1),("1D",fd,1.15)):
         ic=f["ichi"]; top=max(ic["a"],ic["b"]); bot=min(ic["a"],ic["b"])
-        if f["close"]>top:s+=8*w;reasons.append(lab+" above cloud")
-        elif f["close"]<bot:s-=8*w;penalties.append(lab+" below cloud")
-        if f["close"]>ic["k"] and ic["t"]>=ic["k"]:s+=4*w;reasons.append(lab+" Tenkan/Kijun bullish")
-        if f["st"]:s+=7*w;reasons.append(lab+" Supertrend bullish")
+        if f["close"]>top:s+=7*w;reasons.append(lab+" above cloud")
+        elif f["close"]<bot:s-=7*w;penalties.append(lab+" below cloud")
+        if f["close"]>ic["k"] and ic["t"]>=ic["k"]:s+=3*w;reasons.append(lab+" Tenkan/Kijun bullish")
+        if f["st"]:s+=6*w;reasons.append(lab+" Supertrend bullish")
         else:s-=6*w;penalties.append(lab+" Supertrend bearish")
-        if f["adx"] is not None and 18<=f["adx"]<=40:s+=5*w;reasons.append(lab+f" ADX {f['adx']:.1f}")
+        if f["adx"] is not None and 18<=f["adx"]<=40:s+=4*w;reasons.append(lab+f" ADX {f['adx']:.1f}")
         elif f["adx"] is not None and f["adx"]>55:s-=3*w;penalties.append(lab+" ADX overheated")
-    if f4["rsi"] is not None and 50<=f4["rsi"]<=68:s+=6;reasons.append("4H RSI constructive")
+    if f4["rsi"] is not None and 50<=f4["rsi"]<=68:s+=4;reasons.append("4H RSI constructive")
     elif f4["rsi"] is not None and f4["rsi"]>74:s-=8;penalties.append("4H RSI extended")
-    if fd["rsi"] is not None and 48<=fd["rsi"]<=66:s+=5;reasons.append("1D RSI constructive")
+    if fd["rsi"] is not None and 48<=fd["rsi"]<=66:s+=3;reasons.append("1D RSI constructive")
     elif fd["rsi"] is not None and fd["rsi"]>74:s-=7;penalties.append("1D RSI extended")
     c1=n(m.get("c1"),0) or 0;c4=n(m.get("c4"),0) or 0;c24=n(m.get("c24"),0) or 0;va=n(m.get("va"),1) or 1;nochase=False
-    if .2<=c1<=3.5:s+=4;reasons.append("early 1H momentum")
-    if .5<=c4<=8:s+=4;reasons.append("controlled 4H momentum")
-    if va>=1.35:s+=min(6,(va-1)*5);reasons.append(f"volume acceleration {va:.2f}x")
+    if .2<=c1<=3.5:s+=3;reasons.append("early 1H momentum")
+    if .5<=c4<=8:s+=3;reasons.append("controlled 4H momentum")
+    if va>=1.35:s+=min(5,(va-1)*4);reasons.append(f"volume acceleration {va:.2f}x")
     if c1>6:s-=(c1-6)*5;nochase=True;penalties.append(f"1H already {c1:.1f}%")
     if c4>12:s-=(c4-12)*3;nochase=True;penalties.append(f"4H already {c4:.1f}%")
     if c24>25:s-=(c24-25)*1.5;nochase=True;penalties.append(f"24H already {c24:.1f}%")
     dk=pct(px,f4["ichi"]["k"])
     if dk is not None and dk>10:s-=min(12,(dk-10)*1.4);nochase=True;penalties.append(f"{dk:.1f}% above 4H Kijun")
+    if nochase:s-=15
     s=round(clamp(s,0,100),1); trend=f4["st"] and fd["st"]; cloud=px>max(f4["ichi"]["a"],f4["ichi"]["b"])
-    state="BUY" if s>=82 and trend and cloud and not nochase else ("NEAR BUY" if s>=70 and not nochase else "WATCH")
+    state="BUY" if s>=78 and trend and cloud and not nochase else ("NEAR BUY" if s>=66 and not nochase else "WATCH")
     return {"asset":m["base"],"venue":m["venue"],"pair":m["pair"],"availableVenues":m["venues"],"availablePairs":m["pairs"],"state":state,"score":s,"price":px,
             "change1hPct":n(m.get("c1")),"change4hPct":n(m.get("c4")),"change24hPct":n(m.get("c24")),"turnover24hUsdApprox":n(m.get("turn")),"volumeAcceleration":n(m.get("va")),"noChase":nochase,
             "technical":{"4h":{"rsi14":round(f4["rsi"],2) if f4["rsi"] is not None else None,"adx14":round(f4["adx"],2) if f4["adx"] is not None else None,"supertrendUp":f4["st"],"aboveCloud":f4["close"]>max(f4["ichi"]["a"],f4["ichi"]["b"])},
@@ -211,10 +225,15 @@ def analyze(m):
             "reasons":reasons[:6],"penalties":penalties[:4],"broadScore":m["broad"]}
 
 def main():
-    start=time.time(); cb,kc,raw,u,errs=universe(); btc=next((x for x in u if x["base"]=="BTC"),{})
-    b1=n(btc.get("c1"),0) or 0;b4=n(btc.get("c4"),0) or 0; eligible=[]
+    start=time.time(); cb,kc,raw,u,errs=universe(); liquid=[]; hour_errors=[]
     for m in u:
-        if (n(m.get("turn"),0) or 0)<MIN_TURN or m.get("price") is None:continue
+        if (n(m.get("turn"),0) or 0)<MIN_TURN:continue
+        try: liquid.append(hour_metrics(m))
+        except Exception as e: hour_errors.append({"asset":m["base"],"venue":m["venue"],"error":str(e)})
+        time.sleep(.10)
+    btc=next((x for x in liquid if x["base"]=="BTC"),{})
+    b1=n(btc.get("c1"),0) or 0;b4=n(btc.get("c4"),0) or 0; eligible=[]
+    for m in liquid:
         m["broad"]=broad(m,b1,b4);eligible.append(m)
     eligible.sort(key=lambda x:x["broad"],reverse=True); deep=eligible[:DEEP]; ranked=[]; de=[]
     for m in deep:
@@ -226,7 +245,7 @@ def main():
     p={"system":"SENDA","version":"SENDA_1.0_FULL_CB_KC_TOP20","generatedAt":datetime.now(timezone.utc).isoformat(),"mode":"FULL_COINBASE_KUCOIN_DYNAMIC_TOP20","manualTradingOnly":True,
        "coverage":{"coinbasePairsDiscovered":len(cb),"kucoinPairsDiscovered":len(kc),"rawPairs":len(raw),"uniqueAssets":len(u),"liquidEligibleAssets":len(eligible),"deepCandidatesRequested":len(deep),"deepCandidatesAnalyzed":len(ranked),"topN":len(top),"minTurnoverUsdApprox":MIN_TURN},
        "statusCounts":{"BUY":sum(x["state"]=="BUY" for x in top),"NEAR BUY":sum(x["state"]=="NEAR BUY" for x in top),"WATCH":sum(x["state"]=="WATCH" for x in top)},
-       "ranking":top,"errors":{"sources":errs,"deep":de[:25]},"elapsedSeconds":round(time.time()-start,2),
+       "ranking":top,"errors":{"sources":errs,"hourly":hour_errors[:25],"deep":de[:25]},"elapsedSeconds":round(time.time()-start,2),
        "notes":["Every run rebuilds the ranking from the current Coinbase + KuCoin universe.","Only the dynamic TOP-20 is surfaced.","SENDA never trades automatically."]}
     os.makedirs("data",exist_ok=True);json.dump(p,open(OUT,"w",encoding="utf-8"),indent=2,ensure_ascii=False)
     print(json.dumps({"ok":True,"coverage":p["coverage"],"statusCounts":p["statusCounts"],"top":[{"rank":x["rank"],"asset":x["asset"],"state":x["state"],"score":x["score"],"venue":x["venue"]} for x in top]},ensure_ascii=False))
