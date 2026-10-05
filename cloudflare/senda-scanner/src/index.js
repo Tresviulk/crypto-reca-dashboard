@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_7_2026-10-05";
+const VERSION = "SENDA_WORKER_1_8_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -41,25 +41,40 @@ async function coinbaseProducts(){
   }).filter(Boolean);
 }
 async function kucoinTickers(){
+  const cache = caches.default;
+  const cacheKey = new Request("https://senda.internal/cache/kucoin-universe");
+  const save = async (payload) => {
+    try {
+      await cache.put(cacheKey,new Response(JSON.stringify(payload),{headers:{"content-type":"application/json","cache-control":"public, max-age=21600"}}));
+    } catch {}
+    return payload;
+  };
   try{
     const j=await fetchJson("https://api.kucoin.com/api/v1/market/allTickers",{},9000,1);
-    const rows=j?.data?.ticker||[];
-    return {rows:rows.map(x=>{
+    const rows=(j?.data?.ticker||[]).map(x=>{
       const p=String(x.symbol||"").split("-");
       if(p.length!==2||!eligibleBase(p[0])||!["USDT","USDC"].includes(p[1])) return null;
       return {base:upper(p[0]),venue:"KUCOIN",pair:x.symbol,tv:"KUCOIN:"+p.join(""),price:n(x.last),c24:(n(x.changeRate,0)||0)*100,turn:n(x.volValue,0)||0};
-    }).filter(Boolean),source:"ALL_TICKERS"};
+    }).filter(Boolean);
+    return await save({rows,source:"ALL_TICKERS"});
   }catch(e1){
     try{
       const j=await fetchJson("https://api.kucoin.com/api/v2/symbols",{},9000,1);
-      const rows=j?.data||[];
-      return {rows:rows.map(x=>{
+      const rows=(j?.data||[]).map(x=>{
         const base=upper(x.baseCurrency),quote=upper(x.quoteCurrency),pair=String(x.symbol||"");
         if(!x.enableTrading||!eligibleBase(base)||!["USDT","USDC"].includes(quote)) return null;
         return {base,venue:"KUCOIN",pair,tv:"KUCOIN:"+pair.replaceAll("-",""),sourceFallback:true};
-      }).filter(Boolean),source:"SYMBOLS_FALLBACK"};
+      }).filter(Boolean);
+      return await save({rows,source:"SYMBOLS_FALLBACK"});
     }catch(e2){
-      return {rows:[],source:"KUCOIN_RATE_LIMITED",error:String(e2||e1)};
+      try{
+        const hit=await cache.match(cacheKey);
+        if(hit){
+          const cached=await hit.json();
+          return {rows:cached.rows||[],source:"CACHE_FALLBACK",error:String(e2||e1)};
+        }
+      }catch{}
+      return {rows:[],source:"KUCOIN_RATE_LIMITED_NO_CACHE",error:String(e2||e1)};
     }
   }
 }
