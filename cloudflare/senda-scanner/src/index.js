@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_2_2_2026-10-05";
+const VERSION = "SENDA_WORKER_2_3_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 40;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -40,6 +40,34 @@ async function coinbaseProducts(){
     return {base,venue:"COINBASE",pair,tv:"COINBASE:"+pair.replaceAll("-","")};
   }).filter(Boolean);
 }
+async function kucoinFromTradingView(){
+  const j=await fetchJson("https://scanner.tradingview.com/crypto/scan",{
+    method:"POST",
+    headers:{"content-type":"application/json","user-agent":"Mozilla/5.0"},
+    body:JSON.stringify({
+      filter:[{left:"exchange",operation:"equal",right:"KUCOIN"}],
+      options:{lang:"en"},
+      symbols:{query:{types:[]},tickers:[]},
+      columns:["name","base_currency","currency","close","change","volume"],
+      range:[0,2000]
+    })
+  },12000,1);
+  const rows=[];
+  for(const x of j?.data||[]){
+    const s=String(x?.s||"");
+    if(!s.startsWith("KUCOIN:"))continue;
+    const d=x?.d||[];
+    const compact=s.slice(7);
+    const quote=["USDT","USDC"].find(q=>compact.endsWith(q));
+    if(!quote)continue;
+    const base=compact.slice(0,-quote.length);
+    if(!eligibleBase(base))continue;
+    const pair=base+"-"+quote;
+    rows.push({base,venue:"KUCOIN",pair,tv:s,price:n(d[3]),c24:n(d[4]),turn:(n(d[3])&&n(d[5]))?n(d[3])*n(d[5]):0,sourceFallback:true});
+  }
+  if(rows.length<100) throw new Error("TradingView KuCoin discovery too small: "+rows.length);
+  return rows;
+}
 async function kucoinTickers(){
   const cache = caches.default;
   const cacheKey = new Request("https://senda.internal/cache/kucoin-universe");
@@ -59,6 +87,10 @@ async function kucoinTickers(){
     return await save({rows,source:"ALL_TICKERS"});
   }catch(e1){
     try{
+      const rows=await kucoinFromTradingView();
+      return await save({rows,source:"TRADINGVIEW_FALLBACK"});
+    }catch(eTv){
+    try{
       const j=await fetchJson("https://api.kucoin.com/api/v2/symbols",{},9000,1);
       const rows=(j?.data||[]).map(x=>{
         const base=upper(x.baseCurrency),quote=upper(x.quoteCurrency),pair=String(x.symbol||"");
@@ -71,10 +103,11 @@ async function kucoinTickers(){
         const hit=await cache.match(cacheKey);
         if(hit){
           const cached=await hit.json();
-          return {rows:cached.rows||[],source:"CACHE_FALLBACK",error:String(e2||e1)};
+          return {rows:cached.rows||[],source:"CACHE_FALLBACK",error:String(e2||eTv||e1)};
         }
       }catch{}
-      return {rows:[],source:"KUCOIN_RATE_LIMITED_NO_CACHE",error:String(e2||e1)};
+      return {rows:[],source:"KUCOIN_RATE_LIMITED_NO_CACHE",error:String(e2||eTv||e1)};
+    }
     }
   }
 }
@@ -126,7 +159,13 @@ async function universe(){
     const z={...a[0],
       venues:[...new Set(a.map(x=>x.venue))].sort(),
       pairs:[...new Set(a.map(x=>x.venue+":"+x.pair))].sort(),
-      routes:a.map(x=>({venue:x.venue,pair:x.pair})).filter((x,i,arr)=>arr.findIndex(y=>y.venue===x.venue&&y.pair===x.pair)===i)
+      routes:a.map(x=>({venue:x.venue,pair:x.pair}))
+        .filter(x=>/(?:-USD|-USDT|-USDC)$/.test(x.pair))
+        .filter((x,i,arr)=>arr.findIndex(y=>y.venue===x.venue&&y.pair===x.pair)===i)
+        .sort((x,y)=>{
+          const rank=p=>p.endsWith("-USD")?0:(p.endsWith("-USDT")?1:2);
+          return rank(x.pair)-rank(y.pair);
+        })
     };
     u.push(z);
   }
@@ -168,8 +207,9 @@ async function barsForRoute(route){
   return Promise.all([kcBars(route.pair,"4hour",14400),kcBars(route.pair,"1day",86400)]);
 }
 async function barsFor(m){
-  const preferred={venue:m.venue,pair:m.pair};
-  const routes=[preferred,...(m.routes||[]).filter(x=>!(x.venue===preferred.venue&&x.pair===preferred.pair))];
+  const all=(m.routes||[]).filter(x=>x&&x.venue&&x.pair);
+  const preferred=all.find(x=>x.venue===m.venue&&x.pair===m.pair)||all[0]||{venue:m.venue,pair:m.pair};
+  const routes=[preferred,...all.filter(x=>!(x.venue===preferred.venue&&x.pair===preferred.pair))];
   let last;
   for(const route of routes){
     try{
