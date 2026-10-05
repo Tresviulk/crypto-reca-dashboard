@@ -1,6 +1,6 @@
-const VERSION = "SENDA_WORKER_2_0_2026-10-05";
+const VERSION = "SENDA_WORKER_2_1_2026-10-05";
 const MIN_TURNOVER = 250000;
-const TOP_DEEP = 20;
+const TOP_DEEP = 40;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
 const WRAP = new Set(["WBTC","WETH","STETH","WSTETH","CBETH","RETH","WEETH"]);
 
@@ -294,42 +294,44 @@ async function scan(){
     if((n(m.turn,0)||0)<MIN_TURNOVER||m.price==null)continue;
     m.broad=broadScore(m,b1,b4);eligible.push(m);
   }
-  eligible.sort((a,b)=>b.broad-a.broad); const deep=eligible.slice(0,TOP_DEEP);
-  const analyzed=await mapLimit(deep,2,analyze);
-  const errors=analyzed.filter(x=>x&&x.__error);
-  const full=analyzed.filter(x=>x&&!x.__error).sort((a,b)=>b.score-a.score);
-  const used=new Set(full.map(x=>x.asset));
-  const ranking=[...full];
-  for(const m of eligible){
-    if(ranking.length>=20)break;
-    if(used.has(m.base))continue;
-    const failed=errors.some(e=>e.asset===m.base);
-    ranking.push({
-      asset:m.base,venue:m.venue,pair:m.pair,availableVenues:m.venues,availablePairs:m.pairs,
-      state:"WATCH",score:Math.round(clamp(35+(m.broad||0)*0.45,0,65)*10)/10,
-      price:m.price,change1hPct:m.c1,change4hPct:m.c4,change24hPct:m.c24,
-      turnover24hUsdApprox:m.turn,volumeAcceleration:m.va,noChase:false,
-      technical:null,reasons:["Broad-market candidate; deep confirmation pending"],
-      penalties:[failed?"Deep data unavailable on this run":"Outside current deep-analysis slots"],
-      broadScore:m.broad,analysisDepth:"BROAD_FALLBACK"
-    });
-    used.add(m.base);
-  }
-  ranking.splice(20);
-  ranking.forEach((x,i)=>x.rank=i+1);
-  return {system:"SENDA",version:VERSION,generatedAt:new Date().toISOString(),mode:"FULL_COINBASE_KUCOIN_DYNAMIC_TOP20",manualTradingOnly:true,
-    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,deepCandidatesRequested:deep.length,deepCandidatesAnalyzed:full.length,topN:ranking.length,minTurnoverUsdApprox:MIN_TURNOVER,kucoinSource:u.kucoinSource,kucoinDegraded:!!u.kucoinError},
-    statusCounts:{BUY:ranking.filter(x=>x.state==="BUY").length,"NEAR BUY":ranking.filter(x=>x.state==="NEAR BUY").length,WATCH:ranking.filter(x=>x.state==="WATCH").length},
-    ranking,errors,elapsedSeconds:Math.round((Date.now()-started)/10)/100};
+  eligible.sort((a,b)=>b.broad-a.broad);
+  const candidates=eligible.slice(0,TOP_DEEP).map((m,i)=>({
+    broadRank:i+1,asset:m.base,venue:m.venue,pair:m.pair,availableVenues:m.venues,availablePairs:m.pairs,routes:m.routes,
+    price:m.price,change1hPct:m.c1,change4hPct:m.c4,change24hPct:m.c24,
+    turnover24hUsdApprox:m.turn,volumeAcceleration:m.va,broadScore:m.broad
+  }));
+  return {system:"SENDA",version:VERSION,generatedAt:new Date().toISOString(),mode:"FULL_COINBASE_KUCOIN_DYNAMIC_CANDIDATES",manualTradingOnly:true,
+    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,candidatePool:candidates.length,minTurnoverUsdApprox:MIN_TURNOVER,kucoinSource:u.kucoinSource,kucoinDegraded:!!u.kucoinError},
+    candidates,elapsedSeconds:Math.round((Date.now()-started)/10)/100};
+}
+async function deepAnalyzeCandidate(raw){
+  const m={
+    base:upper(raw?.asset),venue:upper(raw?.venue),pair:String(raw?.pair||""),
+    venues:Array.isArray(raw?.availableVenues)?raw.availableVenues.map(upper):[],
+    pairs:Array.isArray(raw?.availablePairs)?raw.availablePairs:[],
+    routes:Array.isArray(raw?.routes)?raw.routes.filter(x=>x&&x.venue&&x.pair).map(x=>({venue:upper(x.venue),pair:String(x.pair)})):[],
+    price:n(raw?.price),c1:n(raw?.change1hPct),c4:n(raw?.change4hPct),c24:n(raw?.change24hPct),
+    turn:n(raw?.turnover24hUsdApprox),va:n(raw?.volumeAcceleration),broad:n(raw?.broadScore,0)||0
+  };
+  if(!m.base||!m.pair||!["COINBASE","KUCOIN"].includes(m.venue)) throw new Error("invalid candidate");
+  const result=await analyze(m);
+  result.displayDataAt=new Date().toISOString();
+  return result;
 }
 export default {
   async fetch(request){
     const url=new URL(request.url);
-    if(request.method==="OPTIONS") return new Response(null,{headers:{"access-control-allow-origin":"*","access-control-allow-methods":"GET,OPTIONS","access-control-allow-headers":"content-type"}});
+    if(request.method==="OPTIONS") return new Response(null,{headers:{"access-control-allow-origin":"*","access-control-allow-methods":"GET,POST,OPTIONS","access-control-allow-headers":"content-type"}});
     if(url.pathname==="/health") return cors({ok:true,system:"SENDA",version:VERSION});
     if(url.pathname==="/scan"){
       try{return cors(await scan())}catch(e){return cors({ok:false,error:String(e),version:VERSION},500)}
     }
-    return cors({ok:true,system:"SENDA",version:VERSION,endpoints:["/health","/scan"]});
+    if(url.pathname==="/deep"&&request.method==="POST"){
+      try{
+        const raw=await request.json();
+        return cors({ok:true,result:await deepAnalyzeCandidate(raw),version:VERSION});
+      }catch(e){return cors({ok:false,error:String(e),version:VERSION},422)}
+    }
+    return cors({ok:true,system:"SENDA",version:VERSION,endpoints:["/health","/scan","/deep"]});
   }
 };
