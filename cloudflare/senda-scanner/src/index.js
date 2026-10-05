@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_0_2026-10-05";
+const VERSION = "SENDA_WORKER_1_1_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -54,7 +54,7 @@ async function tvChunk(tickers){
   return m;
 }
 async function tvScan(markets){
-  const chunks=[]; for(let i=0;i<markets.length;i+=150) chunks.push(markets.slice(i,i+150).map(x=>x.tv));
+  const chunks=[]; for(let i=0;i<markets.length;i+=500) chunks.push(markets.slice(i,i+500).map(x=>x.tv));
   const maps=await Promise.all(chunks.map(tvChunk));
   const out=new Map(); for(const m of maps) for(const [k,v] of m) out.set(k,v);
   return out;
