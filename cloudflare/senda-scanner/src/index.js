@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_6_2026-10-05";
+const VERSION = "SENDA_WORKER_1_7_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -42,21 +42,25 @@ async function coinbaseProducts(){
 }
 async function kucoinTickers(){
   try{
-    const j=await fetchJson("https://api.kucoin.com/api/v1/market/allTickers",{},9000,2);
+    const j=await fetchJson("https://api.kucoin.com/api/v1/market/allTickers",{},9000,1);
     const rows=j?.data?.ticker||[];
-    return rows.map(x=>{
+    return {rows:rows.map(x=>{
       const p=String(x.symbol||"").split("-");
       if(p.length!==2||!eligibleBase(p[0])||!["USDT","USDC"].includes(p[1])) return null;
       return {base:upper(p[0]),venue:"KUCOIN",pair:x.symbol,tv:"KUCOIN:"+p.join(""),price:n(x.last),c24:(n(x.changeRate,0)||0)*100,turn:n(x.volValue,0)||0};
-    }).filter(Boolean);
-  }catch(e){
-    const j=await fetchJson("https://api.kucoin.com/api/v2/symbols",{},9000,2);
-    const rows=j?.data||[];
-    return rows.map(x=>{
-      const base=upper(x.baseCurrency),quote=upper(x.quoteCurrency),pair=String(x.symbol||"");
-      if(!x.enableTrading||!eligibleBase(base)||!["USDT","USDC"].includes(quote)) return null;
-      return {base,venue:"KUCOIN",pair,tv:"KUCOIN:"+pair.replaceAll("-",""),sourceFallback:true};
-    }).filter(Boolean);
+    }).filter(Boolean),source:"ALL_TICKERS"};
+  }catch(e1){
+    try{
+      const j=await fetchJson("https://api.kucoin.com/api/v2/symbols",{},9000,1);
+      const rows=j?.data||[];
+      return {rows:rows.map(x=>{
+        const base=upper(x.baseCurrency),quote=upper(x.quoteCurrency),pair=String(x.symbol||"");
+        if(!x.enableTrading||!eligibleBase(base)||!["USDT","USDC"].includes(quote)) return null;
+        return {base,venue:"KUCOIN",pair,tv:"KUCOIN:"+pair.replaceAll("-",""),sourceFallback:true};
+      }).filter(Boolean),source:"SYMBOLS_FALLBACK"};
+    }catch(e2){
+      return {rows:[],source:"KUCOIN_RATE_LIMITED",error:String(e2||e1)};
+    }
   }
 }
 const TV_COLS=["close","change","change|60","change|240","volume","volume|60","volume|240"];
@@ -90,7 +94,8 @@ function broadScore(m,b1,b4){
   return Math.round(s*100)/100;
 }
 async function universe(){
-  const [cb,kc]=await Promise.all([coinbaseProducts(),kucoinTickers()]);
+  const [cb,kcResult]=await Promise.all([coinbaseProducts(),kucoinTickers()]);
+  const kc=kcResult.rows||[];
   const raw=[...cb,...kc]; const tv=await tvScan(raw);
   for(const m of raw){
     const t=tv.get(m.tv)||{};
@@ -106,7 +111,7 @@ async function universe(){
     const z={...a[0],venues:[...new Set(a.map(x=>x.venue))].sort(),pairs:[...new Set(a.map(x=>x.venue+":"+x.pair))].sort()};
     u.push(z);
   }
-  return {cbCount:cb.length,kcCount:kc.length,rawCount:raw.length,uniqueCount:u.length,rows:u};
+  return {cbCount:cb.length,kcCount:kc.length,rawCount:raw.length,uniqueCount:u.length,rows:u,kucoinSource:kcResult.source,kucoinError:kcResult.error||null};
 }
 async function cbBars(pair,granularity){
   const rows=await fetchJson("https://api.exchange.coinbase.com/products/"+encodeURIComponent(pair)+"/candles?granularity="+granularity);
@@ -260,7 +265,7 @@ async function scan(){
   ranking.splice(20);
   ranking.forEach((x,i)=>x.rank=i+1);
   return {system:"SENDA",version:VERSION,generatedAt:new Date().toISOString(),mode:"FULL_COINBASE_KUCOIN_DYNAMIC_TOP20",manualTradingOnly:true,
-    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,deepCandidatesRequested:deep.length,deepCandidatesAnalyzed:full.length,topN:ranking.length,minTurnoverUsdApprox:MIN_TURNOVER},
+    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,deepCandidatesRequested:deep.length,deepCandidatesAnalyzed:full.length,topN:ranking.length,minTurnoverUsdApprox:MIN_TURNOVER,kucoinSource:u.kucoinSource,kucoinDegraded:!!u.kucoinError},
     statusCounts:{BUY:ranking.filter(x=>x.state==="BUY").length,"NEAR BUY":ranking.filter(x=>x.state==="NEAR BUY").length,WATCH:ranking.filter(x=>x.state==="WATCH").length},
     ranking,errors,elapsedSeconds:Math.round((Date.now()-started)/10)/100};
 }
