@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_3_2026-10-05";
+const VERSION = "SENDA_WORKER_1_4_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -169,7 +169,7 @@ function supertrend(b,p=10,m=3){
   return up;
 }
 function feats(b){
-  if(b.length<60)throw new Error("insufficient bars "+b.length);
+  if(b.length<52)throw new Error("insufficient bars "+b.length);
   const c=b.map(x=>x.c); return {close:c.at(-1),rsi:rsi(c),adx:adx(b),ichi:ichi(b),st:supertrend(b),ema20:ema(c,20),ema50:ema(c,50)};
 }
 async function analyze(m){
@@ -216,10 +216,30 @@ async function scan(){
     m.broad=broadScore(m,b1,b4);eligible.push(m);
   }
   eligible.sort((a,b)=>b.broad-a.broad); const deep=eligible.slice(0,TOP_DEEP);
-  const analyzed=await mapLimit(deep,4,analyze); const errors=analyzed.filter(x=>x&&x.__error); const ranking=analyzed.filter(x=>x&&!x.__error).sort((a,b)=>b.score-a.score);
+  const analyzed=await mapLimit(deep,4,analyze);
+  const errors=analyzed.filter(x=>x&&x.__error);
+  const full=analyzed.filter(x=>x&&!x.__error).sort((a,b)=>b.score-a.score);
+  const used=new Set(full.map(x=>x.asset));
+  const ranking=[...full];
+  for(const m of eligible){
+    if(ranking.length>=20)break;
+    if(used.has(m.base))continue;
+    const failed=errors.some(e=>e.asset===m.base);
+    ranking.push({
+      asset:m.base,venue:m.venue,pair:m.pair,availableVenues:m.venues,availablePairs:m.pairs,
+      state:"WATCH",score:Math.round(clamp(35+(m.broad||0)*0.45,0,65)*10)/10,
+      price:m.price,change1hPct:m.c1,change4hPct:m.c4,change24hPct:m.c24,
+      turnover24hUsdApprox:m.turn,volumeAcceleration:m.va,noChase:false,
+      technical:null,reasons:["Broad-market candidate; deep confirmation pending"],
+      penalties:[failed?"Deep data unavailable on this run":"Outside current deep-analysis slots"],
+      broadScore:m.broad,analysisDepth:"BROAD_FALLBACK"
+    });
+    used.add(m.base);
+  }
+  ranking.splice(20);
   ranking.forEach((x,i)=>x.rank=i+1);
   return {system:"SENDA",version:VERSION,generatedAt:new Date().toISOString(),mode:"FULL_COINBASE_KUCOIN_DYNAMIC_TOP20",manualTradingOnly:true,
-    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,deepCandidatesRequested:deep.length,deepCandidatesAnalyzed:ranking.length,topN:ranking.length,minTurnoverUsdApprox:MIN_TURNOVER},
+    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,deepCandidatesRequested:deep.length,deepCandidatesAnalyzed:full.length,topN:ranking.length,minTurnoverUsdApprox:MIN_TURNOVER},
     statusCounts:{BUY:ranking.filter(x=>x.state==="BUY").length,"NEAR BUY":ranking.filter(x=>x.state==="NEAR BUY").length,WATCH:ranking.filter(x=>x.state==="WATCH").length},
     ranking,errors,elapsedSeconds:Math.round((Date.now()-started)/10)/100};
 }
