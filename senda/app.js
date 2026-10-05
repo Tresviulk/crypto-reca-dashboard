@@ -37,10 +37,10 @@ function render(d){
     <td class="${cls(x.change1hPct)}">${fmtPct(x.change1hPct)}</td>
     <td class="${cls(x.change4hPct)}">${fmtPct(x.change4hPct)}</td>
     <td class="${cls(x.change24hPct)}">${fmtPct(x.change24hPct)}</td>
-    <td class="tech">${tech(x.technical?.["4h"])}</td>
-    <td class="tech">${tech(x.technical?.["1d"])}</td>
+    <td class="tech">${tech(x.technical?.["4h"])}${x.technicalVenue?'<br><span class="muted">Fuente: '+x.technicalVenue+'</span>':''}</td>
+    <td class="tech">${tech(x.technical?.["1d"])}${x.technicalPair?'<br><span class="muted">'+x.technicalPair+'</span>':''}</td>
     <td class="tech">Vol accel ${x.volumeAcceleration==null?"—":Number(x.volumeAcceleration).toFixed(2)+"x"}<br>24h turn ${fmtNum(x.turnover24hUsdApprox)}<br>No-chase ${x.noChase?"Sí":"No"}</td>
-    <td class="reason">${[...(x.reasons||[]),...(x.penalties||[]).slice(0,2)].slice(0,5).join(" · ")}</td>
+    <td class="reason">${x.analysisDepth==="BROAD_FALLBACK"?"Datos técnicos profundos no disponibles en esta ejecución · "+((x.penalties||[])[0]||""):([...(x.reasons||[]),...(x.penalties||[]).slice(0,2)].slice(0,5).join(" · "))}</td>
   </tr>`).join("");
   $("rows").innerHTML=rows||'<tr><td colspan="13" class="empty">No se pudo construir el ranking.</td></tr>';
 }
