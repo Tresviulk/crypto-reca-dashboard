@@ -39,7 +39,13 @@ jobs:
           set -euo pipefail
           sleep 8
           curl -fsS --retry 5 --retry-delay 3 https://senda-scanner.diondublin21.workers.dev/health
-          curl -fsS --max-time 180 --retry 2 --retry-delay 5 https://senda-scanner.diondublin21.workers.dev/scan -o /tmp/senda-scan.json
+          HTTP=$(curl -sS --max-time 180 -o /tmp/senda-scan.json -w '%{http_code}' https://senda-scanner.diondublin21.workers.dev/scan)
+          echo "SENDA /scan HTTP ${HTTP}"
+          cat /tmp/senda-scan.json
+          echo
+          if [ "${HTTP}" != "200" ]; then
+            exit 1
+          fi
           python - <<'PY'
           import json
           p=json.load(open('/tmp/senda-scan.json',encoding='utf-8'))
