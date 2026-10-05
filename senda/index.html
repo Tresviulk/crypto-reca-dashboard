@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SENDA · Radar Coinbase + KuCoin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <div class="eyebrow">SENDA 1.0 · SOLO SIMULACIÓN</div>
+        <h1>Radar de entradas</h1>
+        <p>Escanea Coinbase + KuCoin y muestra únicamente los 20 activos más próximos a una entrada útil.</p>
+      </div>
+      <div class="badge">COINBASE + KUCOIN</div>
+    </header>
+
+    <section class="panel action">
+      <div>
+        <h2>Analizar mercado</h2>
+        <p>El ranking se reconstruye desde cero en cada ejecución.</p>
+      </div>
+      <button id="scanBtn">Analizar mercado</button>
+    </section>
+
+    <section id="progress" class="panel progress hidden">
+      <div class="spinner"></div>
+      <div>
+        <strong>Escaneando mercado completo…</strong>
+        <div id="progressText">Descubriendo activos y calculando candidatos.</div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><span>Activos únicos</span><strong id="unique">—</strong></div>
+      <div class="stat"><span>Elegibles</span><strong id="eligible">—</strong></div>
+      <div class="stat"><span>BUY</span><strong id="buyCount">—</strong></div>
+      <div class="stat"><span>NEAR BUY</span><strong id="nearCount">—</strong></div>
+      <div class="stat"><span>WATCH</span><strong id="watchCount">—</strong></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div><h2>TOP 20 actual</h2><p id="stamp">Pulsa “Analizar mercado” para generar el ranking.</p></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Activo</th><th>Exchange</th><th>Estado</th><th>Score</th><th>1H</th><th>4H</th><th>24H</th><th>Motivo</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="9" class="empty">Sin análisis todavía.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>SENDA · Proyecto independiente de CABAL · No ejecuta operaciones automáticamente.</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
