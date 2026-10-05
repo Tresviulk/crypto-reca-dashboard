@@ -168,3 +168,23 @@ assert.equal(backup.sourceStatus.coinbase,'TARGETED_ONLY');
 assert.ok(backup.a.BTC && backup.a.ETH,'references survive unsupported tracked names');
 assert.equal(backup.sourceStatus.coinbaseErrors.length,6);
 console.log('CROWDED SOURCE FAILOVER PASS: independent reference slots and per-asset errors');
+
+// CABAL2 WATCH identities must reach native execution, never replay radar prices.
+store.clear();
+const radarEnv={RADAR_URL:'https://radar.invalid/health'};
+context.fetch=async url=>url===radarEnv.RADAR_URL
+  ? new Response(JSON.stringify({healthy:true,last:{generatedAt:new Date(clock).toISOString(),universeCount:389,sourceStatus:{coinbase:'PASS',kucoin:'PASS'},detected:[{asset:'LYN',price:999}]},earlyWatchDelivery:{lastByAsset:{LYN:new Date(clock-60000).toISOString(),AEON:new Date(clock-60000).toISOString(),NEON:new Date(clock).toISOString()}}}),{status:200})
+  : new Response(JSON.stringify({events:[]}),{status:200});
+const bridgeItems=await context.test.guardRunnerFollowup(radarEnv);
+assert(bridgeItems.some(x=>x.base==='LYN') && bridgeItems.some(x=>x.base==='AEON'));
+assert(!bridgeItems.some(x=>x.base==='NEON'));
+assert(bridgeItems.every(x=>x.price===undefined),'radar prices cannot become execution quotes');
+context.nativeQuotes=async items=>items.map(x=>({base:x.base,quote:'USDT',venue:'KUCOIN',venueSymbol:x.base+'-USDT',lastPrice:0.03,turnover24h:1e6,price24hPct:7}));
+vm.runInContext('guardTargetedKucoin=nativeQuotes;',context);
+const bridgeSnapshot=await context.test.guardBuildSnapshot(bridgeItems,radarEnv);
+assert.equal(bridgeSnapshot.a.LYN[0],0.03);
+assert.equal(bridgeSnapshot.discoveryUniverseCount,389);
+assert.equal(bridgeSnapshot.sourceStatus.mode,'RADAR_DISCOVERY_NATIVE_EXECUTION');
+store.set('radar:bridge',{generatedAt:new Date(clock-120000).toISOString()});
+await assert.rejects(()=>context.test.guardBuildSnapshot(bridgeItems,radarEnv),/RADAR_BRIDGE_UNAVAILABLE/);
+console.log('RADAR BRIDGE PASS: WATCH identities, native quotes, excluded assets and stale discovery rejection');

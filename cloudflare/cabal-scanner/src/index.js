@@ -19,7 +19,7 @@
   not a false "no whales" result.
 */
 
-const PATCH_VERSION = "CABAL_WHALES_V3_1_20_2026-10-04_RESERVED_SOURCE_FAILOVER";
+const PATCH_VERSION = "CABAL_WHALES_V3_1_21_2026-10-05_RADAR_BRIDGE";
 
 const PRIMARY_MIN_TURNOVER = 2_000_000;
 const BROAD_SCAN_MIN_TURNOVER = 250_000;
@@ -1213,6 +1213,33 @@ async function guardRunnerFollowup(env){
       await guardPut(env,"runner:followup",{items,refreshedAt:now,error:String(e)});
     }
   }
+  if(env.RADAR_URL){
+    try{
+      const r=await fetchTimed(env.RADAR_URL);
+      if(!r.ok) throw Error("RADAR_HTTP_"+r.status);
+      const radar=await r.json(), last=radar.last||{};
+      const at=Date.parse(last.generatedAt);
+      if(!radar.healthy || !Number.isFinite(at) || at>now || now-at>90_000) throw Error("RADAR_STALE_OR_UNHEALTHY");
+      const delivery=radar.earlyWatchDelivery||{};
+      const alerts=Object.entries(delivery.lastByAsset||{})
+        .map(([base,t])=>({base,scanAt:Date.parse(t),alerted:true}))
+        .filter(x=>eligibleBase(x.base) && Number.isFinite(x.scanAt) && x.scanAt<=now && now-x.scanAt<30*60_000);
+      const detected=(last.detected||[]).filter(x=>eligibleBase(x.asset)).slice(0,6)
+        .map(x=>({base:x.asset,scanAt:at}));
+      for(const x of [...alerts,...detected]){
+        if(items.some(y=>y.base===x.base && y.scanAt>=x.scanAt)) continue;
+        const alerted=x.alerted || items.find(y=>y.base===x.base)?.alerted || false;
+        items=items.filter(y=>y.base!==x.base);
+        items.push({...x,alerted,expiresAt:x.scanAt+30*60_000});
+      }
+      // Discovery carries identities only. Execution obtains a fresh native quote.
+      await guardPut(env,"radar:bridge",{generatedAt:last.generatedAt,sourceStatus:last.sourceStatus,universeCount:last.universeCount,alerts:alerts.map(x=>x.base),error:null});
+      items.sort((a,b)=>Number(Boolean(b.alerted))-Number(Boolean(a.alerted)) || b.scanAt-a.scanAt);
+      await guardPut(env,"runner:followup",{items:items.slice(0,12),refreshedAt:now,error:null});
+    }catch(e){
+      await guardPut(env,"radar:bridge",{error:String(e),checkedAt:new Date(now).toISOString()});
+    }
+  }
   return items.slice(0,6);
 }
 
@@ -1244,6 +1271,23 @@ function guardFollowupCandidates(current,history,detected,items){
 }
 
 async function guardBuildSnapshot(followup=[],env){
+  if(env && env.RADAR_URL){
+    const bridge=await guardGet(env,"radar:bridge");
+    if(!bridge || bridge.error || Date.now()-Date.parse(bridge.generatedAt)>90_000) throw Error("RADAR_BRIDGE_UNAVAILABLE");
+    const active=await guardGet(env,"trade:active");
+    const bases=[...new Set([...(active&&active.asset?[active.asset]:[]),...followup.map(x=>x.base)])].filter(eligibleBase).slice(0,6);
+    const errors=[];
+    const markets=await mapLimit(bases,1,async base=>{
+      const kucoin=(await guardTargetedKucoin([{base}]))[0];
+      if(kucoin) return kucoin;
+      try{return await guardCoinbaseMarket(base);}catch(e){errors.push(base+":"+String(e));return null;}
+    });
+    const a={};
+    for(const m of markets.filter(Boolean)) a[m.base]=guardSnapshotAsset(m);
+    if(bases.length && !Object.keys(a).length) throw Error("RADAR_NATIVE_QUOTES_UNAVAILABLE "+errors.join("; "));
+    return {t:Date.now(),a,count:Object.keys(a).length,discoveryUniverseCount:bridge.universeCount,
+      sourceStatus:{mode:"RADAR_DISCOVERY_NATIVE_EXECUTION",radar:bridge.sourceStatus,kucoin:"TARGETED_ONLY",coinbase:"TARGETED_ONLY",quoteErrors:errors}};
+  }
   const src=await Promise.allSettled([bybitTickers(),kucoinTickers()]);
   const bybit=src[0].status==="fulfilled" ? src[0].value : [];
   let kucoin=src[1].status==="fulfilled" ? src[1].value : [];
@@ -1710,7 +1754,7 @@ async function guardQualifyBuySignals(env,evaluated){
 
 async function guardEvaluateTrades(env,candidates){
   const top=(candidates||[]).slice(0,6);
-  const evaluated=await mapLimit(top,2,async x=>{
+  const evaluated=await mapLimit(top,1,async x=>{
     try{
       const m=await guardExecutionMetrics(x,env);
       return guardPilotDecision(x,m);
@@ -2116,7 +2160,8 @@ async function guardHealth(env){
     lastUniverseCount:Number(hb.lastUniverseCount||0),
     lastCandidateCount:Number(hb.lastCandidateCount||0),
     sourceStatus:hb.lastSourceStatus||null,
-    coverageHealthy:Boolean(hb.lastSourceStatus && hb.lastSourceStatus.kucoin==="PASS" && hb.lastSourceStatus.bybit==="PASS"),
+    radarBridge:env.RADAR_URL ? await guardGet(env,"radar:bridge") : null,
+    coverageHealthy:Boolean(hb.lastSourceStatus && (hb.lastSourceStatus.mode==="RADAR_DISCOVERY_NATIVE_EXECUTION" ? hb.lastSourceStatus.radar?.kucoin==="PASS" && hb.lastSourceStatus.radar?.coinbase==="PASS" : hb.lastSourceStatus.kucoin==="PASS" && hb.lastSourceStatus.bybit==="PASS")),
     lastAlertAssets:Array.isArray(hb.lastAlertAssets)?hb.lastAlertAssets:[],
     consecutiveHealthyCycles:Number(hb.consecutiveHealthyCycles||0),
     notificationHealthy:hb.notificationHealthy!==false,
