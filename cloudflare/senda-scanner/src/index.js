@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_5_2026-10-05";
+const VERSION = "SENDA_WORKER_1_6_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -41,13 +41,23 @@ async function coinbaseProducts(){
   }).filter(Boolean);
 }
 async function kucoinTickers(){
-  const j=await fetchJson("https://api.kucoin.com/api/v1/market/allTickers");
-  const rows=j?.data?.ticker||[];
-  return rows.map(x=>{
-    const p=String(x.symbol||"").split("-");
-    if(p.length!==2||!eligibleBase(p[0])||!["USDT","USDC"].includes(p[1])) return null;
-    return {base:upper(p[0]),venue:"KUCOIN",pair:x.symbol,tv:"KUCOIN:"+p.join(""),price:n(x.last),c24:(n(x.changeRate,0)||0)*100,turn:n(x.volValue,0)||0};
-  }).filter(Boolean);
+  try{
+    const j=await fetchJson("https://api.kucoin.com/api/v1/market/allTickers",{},9000,2);
+    const rows=j?.data?.ticker||[];
+    return rows.map(x=>{
+      const p=String(x.symbol||"").split("-");
+      if(p.length!==2||!eligibleBase(p[0])||!["USDT","USDC"].includes(p[1])) return null;
+      return {base:upper(p[0]),venue:"KUCOIN",pair:x.symbol,tv:"KUCOIN:"+p.join(""),price:n(x.last),c24:(n(x.changeRate,0)||0)*100,turn:n(x.volValue,0)||0};
+    }).filter(Boolean);
+  }catch(e){
+    const j=await fetchJson("https://api.kucoin.com/api/v2/symbols",{},9000,2);
+    const rows=j?.data||[];
+    return rows.map(x=>{
+      const base=upper(x.baseCurrency),quote=upper(x.quoteCurrency),pair=String(x.symbol||"");
+      if(!x.enableTrading||!eligibleBase(base)||!["USDT","USDC"].includes(quote)) return null;
+      return {base,venue:"KUCOIN",pair,tv:"KUCOIN:"+pair.replaceAll("-",""),sourceFallback:true};
+    }).filter(Boolean);
+  }
 }
 const TV_COLS=["close","change","change|60","change|240","volume","volume|60","volume|240"];
 async function tvChunk(tickers){
