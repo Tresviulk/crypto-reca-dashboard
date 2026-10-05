@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_4_2026-10-05";
+const VERSION = "SENDA_WORKER_1_5_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -13,13 +13,24 @@ function eligibleBase(b){
   if(!b||STABLE.has(b)||WRAP.has(b)) return false;
   return !/(UP|DOWN|BULL|BEAR|2L|2S|3L|3S|5L|5S)$/.test(b);
 }
-async function fetchJson(url,options={},timeout=9000){
-  const c=new AbortController(); const t=setTimeout(()=>c.abort(),timeout);
-  try{
-    const r=await fetch(url,{...options,signal:c.signal});
-    if(!r.ok) throw new Error(`${r.status} ${url}`);
-    return await r.json();
-  } finally { clearTimeout(t); }
+async function fetchJson(url,options={},timeout=9000,retries=2){
+  let last;
+  for(let attempt=0;attempt<=retries;attempt++){
+    const c=new AbortController(); const t=setTimeout(()=>c.abort(),timeout);
+    try{
+      const r=await fetch(url,{...options,signal:c.signal});
+      if(r.ok) return await r.json();
+      last=new Error(`${r.status} ${url}`);
+      if(!(r.status===429||r.status>=500)||attempt>=retries) throw last;
+      const retryAfter=Number(r.headers.get("retry-after")||0);
+      await new Promise(resolve=>setTimeout(resolve,Math.max(retryAfter*1000,700*(attempt+1))));
+    }catch(e){
+      last=e;
+      if(attempt>=retries) throw e;
+      await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
+    }finally{clearTimeout(t)}
+  }
+  throw last;
 }
 async function coinbaseProducts(){
   const rows=await fetchJson("https://api.exchange.coinbase.com/products");
