@@ -130,8 +130,24 @@ def kc_candles(pair,t):
         if isinstance(r,list) and len(r)>=6 and int(float(r[0]))+sec<=now: out.append({"t":int(float(r[0])),"o":n(r[1]),"c":n(r[2]),"h":n(r[3]),"l":n(r[4]),"v":n(r[5])})
     out=[x for x in out if None not in (x["l"],x["h"],x["o"],x["c"],x["v"])]; out.sort(key=lambda x:x["t"]); return out[-220:]
 
+def aggregate_4h(hourly):
+    buckets={}
+    for x in hourly:
+        k=(x["t"]//14400)*14400
+        buckets.setdefault(k,[]).append(x)
+    out=[]
+    for k in sorted(buckets):
+        rows=sorted(buckets[k],key=lambda x:x["t"])
+        if len(rows)!=4: continue
+        if [r["t"] for r in rows] != [k,k+3600,k+7200,k+10800]: continue
+        out.append({"t":k,"o":rows[0]["o"],"h":max(r["h"] for r in rows),"l":min(r["l"] for r in rows),"c":rows[-1]["c"],"v":sum(r["v"] for r in rows)})
+    return out[-220:]
+
 def candles(m):
-    return (cb_candles(m["pair"],14400),cb_candles(m["pair"],86400)) if m["venue"]=="COINBASE" else (kc_candles(m["pair"],"4hour"),kc_candles(m["pair"],"1day"))
+    if m["venue"]=="COINBASE":
+        h1=cb_candles(m["pair"],3600)
+        return aggregate_4h(h1),cb_candles(m["pair"],86400)
+    return kc_candles(m["pair"],"4hour"),kc_candles(m["pair"],"1day")
 
 def ema(v,p):
     if len(v)<p:return None
