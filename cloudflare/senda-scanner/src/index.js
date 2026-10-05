@@ -1,4 +1,4 @@
-const VERSION = "SENDA_WORKER_1_1_2026-10-05";
+const VERSION = "SENDA_WORKER_1_2_2026-10-05";
 const MIN_TURNOVER = 250000;
 const TOP_DEEP = 20;
 const STABLE = new Set(["USDT","USDC","DAI","FDUSD","TUSD","USDE","PYUSD","USDS","FRAX","USDD","LUSD","GHO","EURC","USD1","USDG","RLUSD"]);
@@ -212,14 +212,14 @@ async function scan(){
   const started=Date.now(); const u=await universe(); const btc=u.rows.find(x=>x.base==="BTC")||{};
   const b1=n(btc.c1,0)||0,b4=n(btc.c4,0)||0; const eligible=[];
   for(const m of u.rows){
-    if((n(m.turn,0)||0)<MIN_TURN||m.price==null)continue;
+    if((n(m.turn,0)||0)<MIN_TURNOVER||m.price==null)continue;
     m.broad=broadScore(m,b1,b4);eligible.push(m);
   }
   eligible.sort((a,b)=>b.broad-a.broad); const deep=eligible.slice(0,TOP_DEEP);
   const analyzed=await mapLimit(deep,4,analyze); const errors=analyzed.filter(x=>x&&x.__error); const ranking=analyzed.filter(x=>x&&!x.__error).sort((a,b)=>b.score-a.score);
   ranking.forEach((x,i)=>x.rank=i+1);
   return {system:"SENDA",version:VERSION,generatedAt:new Date().toISOString(),mode:"FULL_COINBASE_KUCOIN_DYNAMIC_TOP20",manualTradingOnly:true,
-    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,deepCandidatesRequested:deep.length,deepCandidatesAnalyzed:ranking.length,topN:ranking.length,minTurnoverUsdApprox:MIN_TURNOVER},
+    coverage:{coinbasePairsDiscovered:u.cbCount,kucoinPairsDiscovered:u.kcCount,rawPairs:u.rawCount,uniqueAssets:u.uniqueCount,liquidEligibleAssets:eligible.length,deepCandidatesRequested:deep.length,deepCandidatesAnalyzed:ranking.length,topN:ranking.length,minTurnoverUsdApprox:MIN_TURNOVEROVER},
     statusCounts:{BUY:ranking.filter(x=>x.state==="BUY").length,"NEAR BUY":ranking.filter(x=>x.state==="NEAR BUY").length,WATCH:ranking.filter(x=>x.state==="WATCH").length},
     ranking,errors,elapsedSeconds:Math.round((Date.now()-started)/10)/100};
 }
