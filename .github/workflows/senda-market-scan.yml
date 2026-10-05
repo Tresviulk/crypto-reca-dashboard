@@ -1,0 +1,48 @@
+name: SENDA market scan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: senda-market-scan
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run SENDA full Coinbase + KuCoin scan
+        run: python scripts/senda_scan.py
+      - name: Validate TOP-20 output
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open('data/senda-ranking.json',encoding='utf-8'))
+          assert p['system']=='SENDA'
+          assert p['mode']=='FULL_COINBASE_KUCOIN_DYNAMIC_TOP20'
+          assert len(p['ranking']) <= 20
+          assert p['coverage']['uniqueAssets'] > 20
+          print('SENDA VALID', p['coverage'], p['statusCounts'])
+          PY
+      - name: Persist latest SENDA ranking
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/senda-ranking.json
+          if git diff --cached --quiet; then
+            echo "No ranking change"
+          else
+            git commit -m "data: refresh SENDA TOP-20"
+            git push
+          fi
+      - name: Upload SENDA result
+        uses: actions/upload-artifact@v4
+        with:
+          name: senda-ranking
+          path: data/senda-ranking.json
+          retention-days: 14
