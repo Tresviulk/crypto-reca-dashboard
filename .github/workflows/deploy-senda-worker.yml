@@ -34,7 +34,23 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@latest deploy
-      - name: Verify health
+      - name: Verify health and full scan
         run: |
+          set -euo pipefail
           sleep 8
           curl -fsS --retry 5 --retry-delay 3 https://senda-scanner.diondublin21.workers.dev/health
+          curl -fsS --max-time 180 --retry 2 --retry-delay 5 https://senda-scanner.diondublin21.workers.dev/scan -o /tmp/senda-scan.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/senda-scan.json',encoding='utf-8'))
+          if p.get('system')!='SENDA':
+              raise SystemExit(p)
+          if p.get('mode')!='FULL_COINBASE_KUCOIN_DYNAMIC_TOP20':
+              raise SystemExit(p)
+          if len(p.get('ranking') or [])!=20:
+              raise SystemExit(f"expected TOP-20, got {len(p.get('ranking') or [])}: {p}")
+          c=p.get('coverage') or {}
+          if int(c.get('uniqueAssets') or 0)<=20:
+              raise SystemExit(f"full universe not scanned: {c}")
+          print('SENDA FULL SCAN PASS', json.dumps({'coverage':c,'statusCounts':p.get('statusCounts'),'elapsedSeconds':p.get('elapsedSeconds')},ensure_ascii=False))
+          PY
