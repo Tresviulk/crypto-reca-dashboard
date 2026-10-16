@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-10-16T11:39:51.512Z",
+  "generatedAt": "2026-10-16T14:51:43.872Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -79,12 +79,12 @@
       }
     },
     "earlyEntry": {
-      "status": "PARTIAL",
-      "generatedAt": "2026-10-16T09:20:00.974Z",
+      "status": "PASS",
+      "generatedAt": "2026-10-16T14:03:48.770Z",
       "cohortSize": 30,
       "buyCandidateCount": 0,
       "earlyWatchCount": 0,
-      "newOnchainSwapBuys": 1,
+      "newOnchainSwapBuys": 0,
       "newOnchainSwapSells": 0
     }
   },
@@ -251,12 +251,12 @@
       }
     },
     "earlyEntry": {
-      "status": "PARTIAL",
-      "generatedAt": "2026-10-16T09:20:00.974Z",
-      "ageMinutes": 139.8,
+      "status": "PASS",
+      "generatedAt": "2026-10-16T14:03:48.770Z",
+      "ageMinutes": 47.9,
       "cohortSize": 30,
       "failedWallets": 0,
-      "txFailures": 2
+      "txFailures": 0
     }
   },
   "coverage": {
@@ -6082,7 +6082,7 @@
   "netAccumulation": {
     "schemaVersion": "1.1",
     "module": "whalesNetAccumulationLedger",
-    "generatedAt": "2026-10-16T11:39:51.481Z",
+    "generatedAt": "2026-10-16T14:51:43.823Z",
     "status": "PASS",
     "retentionDays": 30,
     "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -6091,7 +6091,7 @@
       "base": "PASS",
       "arbitrum": "PASS",
       "solanaTradeFeed": "PASS",
-      "earlyEntryEngine": "PARTIAL"
+      "earlyEntryEngine": "PASS"
     },
     "eventCount": 3423,
     "events": [
@@ -102434,8 +102434,8 @@
     "rule": "TOKEN_FLOW_CONTEXT_ONLY is never promoted to BUY/SELL without trade-level evidence. Net accumulation uses confirmed classifications only. CEX labels are context signals and never proof of sale/purchase."
   },
   "earlyEntry": {
-    "status": "PARTIAL",
-    "generatedAt": "2026-10-16T09:20:00.974Z",
+    "status": "PASS",
+    "generatedAt": "2026-10-16T14:03:48.770Z",
     "scheduleTargetMinutes": 5,
     "cohort": {
       "total": 30,
@@ -102444,11 +102444,11 @@
       "dynamicTierB": 13
     },
     "scan": {
-      "newEventCount": 3,
-      "newOnchainSwapBuys": 1,
+      "newEventCount": 1,
+      "newOnchainSwapBuys": 0,
       "newOnchainSwapSells": 0,
-      "newContextOnly": 2,
-      "retainedEventCount": 174,
+      "newContextOnly": 1,
+      "retainedEventCount": 175,
       "activeMintCount6h": 1,
       "signalCount": 1,
       "buyCandidateCount": 0,
@@ -102471,25 +102471,18 @@
       ],
       "providerStats": {
         "https://solana-rpc.publicnode.com": {
-          "calls": 37,
-          "successes": 33,
-          "failures": 4,
+          "calls": 31,
+          "successes": 31,
+          "failures": 0,
           "recoveredFallbacks": 0,
-          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
-        },
-        "https://api.mainnet-beta.solana.com": {
-          "calls": 4,
-          "successes": 0,
-          "failures": 4,
-          "recoveredFallbacks": 0,
-          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+          "lastError": null
         }
       },
       "failedWallets": 0,
-      "txFailures": 2,
+      "txFailures": 0,
       "fallbackRecoveries": 0,
-      "walletsPass": 29,
-      "walletsPartial": 1,
+      "walletsPass": 30,
+      "walletsPartial": 0,
       "walletsError": 0
     },
     "dataGaps": [
