@@ -627,39 +627,83 @@ async function kucoinKline(symbol, interval, limit){
     .slice(-limit);
 }
 
+async function coinbaseKlinePublic(symbol,interval,limit){
+  const seconds={"15":900,"60":3600,"240":14400}[interval];
+  if(!seconds) throw Error("COINBASE_PUBLIC_INTERVAL_UNSUPPORTED");
+  const end=Math.floor(Date.now()/1000);
+  const start=end-Math.ceil((limit+3)*seconds);
+  const url="https://api.exchange.coinbase.com/products/"+encodeURIComponent(symbol)+"/candles?granularity="+seconds+"&start="+start+"&end="+end;
+  const r=await fetchTimed(url,{},6500);
+  if(!r.ok) throw Error("Coinbase public candles "+symbol+" "+r.status);
+  const rows=await r.json();
+  if(!Array.isArray(rows)) throw Error("COINBASE_PUBLIC_INVALID_CANDLES");
+  return rows.map(x=>({t:Number(x[0])*1000,l:Number(x[1]),h:Number(x[2]),o:Number(x[3]),c:Number(x[4]),v:Number(x[5])}))
+    .filter(x=>Object.values(x).every(Number.isFinite) && x.t+INT_MS[interval]<=Date.now())
+    .sort((a,b)=>a.t-b.t).slice(-limit);
+}
+
 async function coinbaseKline(symbol,interval,limit){
   const granularity={"1":"ONE_MINUTE","5":"FIVE_MINUTE","15":"FIFTEEN_MINUTE","60":"ONE_HOUR","120":"TWO_HOUR","240":"FOUR_HOUR","360":"SIX_HOUR","D":"ONE_DAY"}[interval];
   if(!granularity || !INT_MS[interval]) throw Error("COINBASE_INTERVAL_UNSUPPORTED");
   const end=Math.floor(Date.now()/1000);
   const start=end-Math.ceil((limit+2)*INT_MS[interval]/1000);
   const url="https://api.coinbase.com/api/v3/brokerage/market/products/"+encodeURIComponent(symbol)+"/candles?granularity="+granularity+"&start="+start+"&end="+end+"&limit="+Math.min(350,limit+2);
-  const r=await fetchTimed(url);
-  if(!r.ok) throw Error("Coinbase candles "+symbol+" "+r.status);
-  const j=await r.json();
-  if(!Array.isArray(j.candles)) throw Error("COINBASE_INVALID_CANDLES");
-  return j.candles.map(x=>({t:Number(x.start)*1000,l:Number(x.low),h:Number(x.high),o:Number(x.open),c:Number(x.close),v:Number(x.volume)}))
-    .filter(x=>Object.values(x).every(Number.isFinite) && x.t+INT_MS[interval]<=Date.now())
-    .sort((a,b)=>a.t-b.t).slice(-limit);
+  let primaryError=null;
+  try{
+    const r=await fetchTimed(url);
+    if(!r.ok) throw Error("Coinbase candles "+symbol+" "+r.status);
+    const j=await r.json();
+    if(!Array.isArray(j.candles)) throw Error("COINBASE_INVALID_CANDLES");
+    const bars=j.candles.map(x=>({t:Number(x.start)*1000,l:Number(x.low),h:Number(x.high),o:Number(x.open),c:Number(x.close),v:Number(x.volume)}))
+      .filter(x=>Object.values(x).every(Number.isFinite) && x.t+INT_MS[interval]<=Date.now())
+      .sort((a,b)=>a.t-b.t).slice(-limit);
+    if(bars.length>=Math.min(12,Math.floor(limit/3))) return bars;
+    primaryError=Error("COINBASE_BROKERAGE_INSUFFICIENT_BARS");
+  }catch(e){primaryError=e;}
+  try{return await coinbaseKlinePublic(symbol,interval,limit);}
+  catch(e){throw Error(String(primaryError||"COINBASE_BROKERAGE_FAILED")+" | "+String(e));}
+}
+
+async function guardCoinbaseMarketPublic(base){
+  const symbol=base+"-USD";
+  const root="https://api.exchange.coinbase.com/products/"+encodeURIComponent(symbol);
+  const [pr,tr,sr]=await Promise.all([
+    fetchTimed(root,{},6500),
+    fetchTimed(root+"/ticker",{},6500),
+    fetchTimed(root+"/stats",{},6500)
+  ]);
+  if(!pr.ok||!tr.ok||!sr.ok) throw Error("COINBASE_PUBLIC_MARKET_HTTP "+pr.status+"/"+tr.status+"/"+sr.status);
+  const product=await pr.json(), ticker=await tr.json(), stats=await sr.json();
+  if(product.id!==symbol || product.base_currency!==base || product.quote_currency!=="USD" || product.status!=="online" || product.trading_disabled || product.cancel_only || product.post_only || product.limit_only) throw Error("COINBASE_PUBLIC_PRODUCT_NOT_EXECUTABLE");
+  const price=Number(ticker.price), volume=Number(stats.volume), open=Number(stats.open);
+  if(!(price>0) || !(volume>0) || !(open>0)) throw Error("COINBASE_PUBLIC_STATS_INVALID");
+  return {base,quote:"USD",venue:"COINBASE",venueSymbol:symbol,lastPrice:price,
+    turnover24h:volume*price,price24hPct:(price/open-1)*100};
 }
 
 async function guardCoinbaseMarket(base){
   if(!eligibleBase(base)) throw Error("COINBASE_BASE_EXCLUDED");
   const symbol=base+"-USD";
   const root="https://api.coinbase.com/api/v3/brokerage/market/products/"+encodeURIComponent(symbol);
-  const productResponse=await fetchTimed(root);
-  if(!productResponse.ok) throw Error("Coinbase product "+symbol+" "+productResponse.status);
-  const product=await productResponse.json();
-  if(product.product_id!==symbol || product.base_currency_id!==base || product.quote_currency_id!=="USD" || product.product_type!=="SPOT" || product.is_disabled || product.view_only || product.trading_disabled || product.cancel_only || product.post_only || product.limit_only || product.auction_mode) throw Error("COINBASE_PRODUCT_NOT_EXECUTABLE");
-  const tickerResponse=await fetchTimed(root+"/ticker?limit=1");
-  if(!tickerResponse.ok) throw Error("Coinbase ticker "+symbol+" "+tickerResponse.status);
-  const ticker=await tickerResponse.json();
-  const trade=ticker.trades?.[0];
-  const at=Date.parse(trade?.time), price=Number(trade?.price);
-  if(trade?.product_id!==symbol || !Number.isFinite(at) || Math.abs(Date.now()-at)>120_000 || !(price>0)) throw Error("COINBASE_STALE_PRICE");
-  const volume=Number(product.volume_24h), change=parseFloat(product.price_percentage_change_24h);
-  if(!(volume>0) || !Number.isFinite(change)) throw Error("COINBASE_STATS_INVALID");
-  return {base,quote:"USD",venue:"COINBASE",venueSymbol:symbol,lastPrice:price,
-    turnover24h:volume*price,price24hPct:change};
+  let primaryError=null;
+  try{
+    const productResponse=await fetchTimed(root);
+    if(!productResponse.ok) throw Error("Coinbase product "+symbol+" "+productResponse.status);
+    const product=await productResponse.json();
+    if(product.product_id!==symbol || product.base_currency_id!==base || product.quote_currency_id!=="USD" || product.product_type!=="SPOT" || product.is_disabled || product.view_only || product.trading_disabled || product.cancel_only || product.post_only || product.limit_only || product.auction_mode) throw Error("COINBASE_PRODUCT_NOT_EXECUTABLE");
+    const tickerResponse=await fetchTimed(root+"/ticker?limit=1");
+    if(!tickerResponse.ok) throw Error("Coinbase ticker "+symbol+" "+tickerResponse.status);
+    const ticker=await tickerResponse.json();
+    const trade=ticker.trades?.[0];
+    const at=Date.parse(trade?.time), price=Number(trade?.price);
+    if(trade?.product_id!==symbol || !Number.isFinite(at) || Math.abs(Date.now()-at)>120_000 || !(price>0)) throw Error("COINBASE_STALE_PRICE");
+    const volume=Number(product.volume_24h), change=parseFloat(product.price_percentage_change_24h);
+    if(!(volume>0) || !Number.isFinite(change)) throw Error("COINBASE_STATS_INVALID");
+    return {base,quote:"USD",venue:"COINBASE",venueSymbol:symbol,lastPrice:price,
+      turnover24h:volume*price,price24hPct:change};
+  }catch(e){primaryError=e;}
+  try{return await guardCoinbaseMarketPublic(base);}
+  catch(e){throw Error(String(primaryError||"COINBASE_BROKERAGE_FAILED")+" | "+String(e));}
 }
 
 async function klineOnMarket(market, interval, limit){
