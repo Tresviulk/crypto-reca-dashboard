@@ -1271,22 +1271,36 @@ function guardFollowupCandidates(current,history,detected,items){
 }
 
 async function guardBuildSnapshot(followup=[],env){
+  // RADAR is an optional discovery accelerator, never a single point of failure.
+  // If the bridge is stale/unhealthy, immediately fall back to the native
+  // exchange universe so the 1-minute guard keeps observing the market.
+  let bridgeFallbackReason=null;
   if(env && env.RADAR_URL){
     const bridge=await guardGet(env,"radar:bridge");
-    if(!bridge || bridge.error || Date.now()-Date.parse(bridge.generatedAt)>90_000) throw Error("RADAR_BRIDGE_UNAVAILABLE");
-    const active=await guardGet(env,"trade:active");
-    const bases=[...new Set([...(active&&active.asset?[active.asset]:[]),...followup.map(x=>x.base)])].filter(eligibleBase).slice(0,6);
-    const errors=[];
-    const markets=await mapLimit(bases,1,async base=>{
-      const kucoin=(await guardTargetedKucoin([{base}]))[0];
-      if(kucoin) return kucoin;
-      try{return await guardCoinbaseMarket(base);}catch(e){errors.push(base+":"+String(e));return null;}
-    });
-    const a={};
-    for(const m of markets.filter(Boolean)) a[m.base]=guardSnapshotAsset(m);
-    if(bases.length && !Object.keys(a).length) throw Error("RADAR_NATIVE_QUOTES_UNAVAILABLE "+errors.join("; "));
-    return {t:Date.now(),a,count:Object.keys(a).length,discoveryUniverseCount:bridge.universeCount,
-      sourceStatus:{mode:"RADAR_DISCOVERY_NATIVE_EXECUTION",radar:bridge.sourceStatus,kucoin:"TARGETED_ONLY",coinbase:"TARGETED_ONLY",quoteErrors:errors}};
+    const bridgeAt=bridge && bridge.generatedAt ? Date.parse(bridge.generatedAt) : NaN;
+    const bridgeFresh=Boolean(
+      bridge && !bridge.error && Number.isFinite(bridgeAt) &&
+      Date.now()-bridgeAt<=90_000
+    );
+    if(bridgeFresh){
+      const active=await guardGet(env,"trade:active");
+      const bases=[...new Set([...(active&&active.asset?[active.asset]:[]),...followup.map(x=>x.base)])].filter(eligibleBase).slice(0,6);
+      const errors=[];
+      const markets=await mapLimit(bases,1,async base=>{
+        const kucoin=(await guardTargetedKucoin([{base}]))[0];
+        if(kucoin) return kucoin;
+        try{return await guardCoinbaseMarket(base);}catch(e){errors.push(base+":"+String(e));return null;}
+      });
+      const a={};
+      for(const m of markets.filter(Boolean)) a[m.base]=guardSnapshotAsset(m);
+      if(!bases.length || Object.keys(a).length){
+        return {t:Date.now(),a,count:Object.keys(a).length,discoveryUniverseCount:bridge.universeCount,
+          sourceStatus:{mode:"RADAR_DISCOVERY_NATIVE_EXECUTION",radar:bridge.sourceStatus,kucoin:"TARGETED_ONLY",coinbase:"TARGETED_ONLY",quoteErrors:errors}};
+      }
+      bridgeFallbackReason="RADAR_NATIVE_QUOTES_UNAVAILABLE "+errors.join("; ");
+    }else{
+      bridgeFallbackReason="RADAR_BRIDGE_UNAVAILABLE";
+    }
   }
   const src=await Promise.allSettled([bybitTickers(),kucoinTickers()]);
   const bybit=src[0].status==="fulfilled" ? src[0].value : [];
@@ -1330,6 +1344,8 @@ async function guardBuildSnapshot(followup=[],env){
   return {
     t:Date.now(),a,count:ded.length,bybit:bybit.length,kucoin:kucoin.length,
     sourceStatus:{
+      mode:"NATIVE_FALLBACK",
+      radarFallbackReason:bridgeFallbackReason,
       coinbase:coinbase.length?"TARGETED_ONLY":"NOT_USED",
       bybit:bybit.length?"PASS":"FAIL",
       kucoin:targeted.length?"TARGETED_ONLY":(kucoin.length?"PASS":"FAIL"),
