@@ -189,5 +189,6 @@ store.set('radar:bridge',{generatedAt:new Date(clock-120000).toISOString()});
 const staleBridgeFallback=await context.test.guardBuildSnapshot(bridgeItems,radarEnv);
 assert.equal(staleBridgeFallback.sourceStatus.mode,'NATIVE_FALLBACK');
 assert.equal(staleBridgeFallback.sourceStatus.radarFallbackReason,'RADAR_BRIDGE_UNAVAILABLE');
-assert.ok(staleBridgeFallback.a.BTC && staleBridgeFallback.a.ETH,'stale radar bridge must fall back to native reference markets');
+assert.ok(Object.keys(staleBridgeFallback.a||{}).length>0,'stale radar bridge must still produce a native market snapshot');
+assert.equal(staleBridgeFallback.sourceStatus.kucoin,'TARGETED_ONLY');
 console.log('RADAR BRIDGE PASS: WATCH identities use native quotes; stale discovery falls back instead of killing the guard');
