@@ -1243,6 +1243,24 @@ async function guardRunnerFollowup(env){
   return items.slice(0,6);
 }
 
+async function guardTargetedBybit(items){
+  return (await mapLimit(items,2,async x=>{
+    try{
+      const symbol=x.base+"USDT";
+      const r=await fetchTimed("https://api.bybit.com/v5/market/tickers?category=spot&symbol="+encodeURIComponent(symbol));
+      if(!r.ok) return null;
+      const j=await r.json();
+      const row=j?.result?.list?.[0];
+      const at=Number(j?.time);
+      if(!row || row.symbol!==symbol || !(Number(row.lastPrice)>0)) return null;
+      if(Number.isFinite(at) && Math.abs(Date.now()-at)>120_000) return null;
+      return {base:x.base,quote:"USDT",venue:"BYBIT",venueSymbol:symbol,
+        lastPrice:Number(row.lastPrice),turnover24h:Number(row.turnover24h),
+        price24hPct:Number(row.price24hPcnt)*100};
+    }catch(_){return null;}
+  })).filter(Boolean);
+}
+
 async function guardTargetedKucoin(items){
   return (await mapLimit(items,2,async x=>{
     try{
@@ -1289,13 +1307,15 @@ async function guardBuildSnapshot(followup=[],env){
       const markets=await mapLimit(bases,1,async base=>{
         const kucoin=(await guardTargetedKucoin([{base}]))[0];
         if(kucoin) return kucoin;
+        const bybit=(await guardTargetedBybit([{base}]))[0];
+        if(bybit) return bybit;
         try{return await guardCoinbaseMarket(base);}catch(e){errors.push(base+":"+String(e));return null;}
       });
       const a={};
       for(const m of markets.filter(Boolean)) a[m.base]=guardSnapshotAsset(m);
       if(!bases.length || Object.keys(a).length){
         return {t:Date.now(),a,count:Object.keys(a).length,discoveryUniverseCount:bridge.universeCount,
-          sourceStatus:{mode:"RADAR_DISCOVERY_NATIVE_EXECUTION",radar:bridge.sourceStatus,kucoin:"TARGETED_ONLY",coinbase:"TARGETED_ONLY",quoteErrors:errors}};
+          sourceStatus:{mode:"RADAR_DISCOVERY_NATIVE_EXECUTION",radar:bridge.sourceStatus,kucoin:"TARGETED_ONLY",bybit:"TARGETED_FALLBACK",coinbase:"TARGETED_FALLBACK",quoteErrors:errors}};
       }
       bridgeFallbackReason="RADAR_NATIVE_QUOTES_UNAVAILABLE "+errors.join("; ");
     }else{
@@ -1616,13 +1636,18 @@ async function guardExecutionMetrics(c,env){
   if(!c || !c.base || !c.venue || !c.venueSymbol) throw new Error("GUARD_EXECUTION_SYMBOL_MISSING");
   const alternatives=[{venue:c.venue,venueSymbol:c.venueSymbol}];
   if(c.venue!=="KUCOIN") alternatives.push({venue:"KUCOIN",venueSymbol:c.base+"-USDT"});
+  if(c.venue!=="BYBIT") alternatives.push({venue:"BYBIT",venueSymbol:c.base+"USDT"});
   if(c.venue!=="COINBASE") alternatives.push({venue:"COINBASE",venueSymbol:c.base+"-USD"});
   const errors=[];
   for(const market of alternatives){
     try{
       let execution=c;
       if(market.venue!==c.venue || market.venueSymbol!==c.venueSymbol){
-        const row=market.venue==="COINBASE" ? await guardCoinbaseMarket(c.base) : (await guardTargetedKucoin([{base:c.base}]))[0];
+        const row=market.venue==="COINBASE"
+          ? await guardCoinbaseMarket(c.base)
+          : (market.venue==="BYBIT"
+            ? (await guardTargetedBybit([{base:c.base}]))[0]
+            : (await guardTargetedKucoin([{base:c.base}]))[0]);
         if(!row) throw Error("ALTERNATIVE_LIVE_PRICE_MISSING");
         const current={t:Date.now(),a:{[c.base]:guardSnapshotAsset(row)}};
         const history=env ? await guardLoadHistory(env,current.t) : [];
