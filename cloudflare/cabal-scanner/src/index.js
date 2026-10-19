@@ -657,8 +657,8 @@ async function coinbaseKline(symbol,interval,limit){
     const bars=j.candles.map(x=>({t:Number(x.start)*1000,l:Number(x.low),h:Number(x.high),o:Number(x.open),c:Number(x.close),v:Number(x.volume)}))
       .filter(x=>Object.values(x).every(Number.isFinite) && x.t+INT_MS[interval]<=Date.now())
       .sort((a,b)=>a.t-b.t).slice(-limit);
-    if(bars.length>=Math.min(12,Math.floor(limit/3))) return bars;
-    primaryError=Error("COINBASE_BROKERAGE_INSUFFICIENT_BARS");
+    if(bars.length) return bars;
+    primaryError=Error("COINBASE_BROKERAGE_NO_BARS");
   }catch(e){primaryError=e;}
   try{return await coinbaseKlinePublic(symbol,interval,limit);}
   catch(e){throw Error(String(primaryError||"COINBASE_BROKERAGE_FAILED")+" | "+String(e));}
