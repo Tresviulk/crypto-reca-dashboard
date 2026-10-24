@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.2",
   "module": "whalesCexFlowLabeler",
-  "generatedAt": "2026-10-24T05:43:38.501Z",
+  "generatedAt": "2026-10-24T09:54:52.571Z",
   "status": "PARTIAL",
   "provider": {
     "name": "eth-labels.com",
@@ -22,20 +22,29 @@
   },
   "chainHealth": {
     "ethereum": {
-      "status": "PASS",
+      "status": "PARTIAL",
       "rpcProviders": 4,
       "chunkSize": 50,
       "lookbackBlocks": 1800,
       "batchedWalletCount": 11,
-      "chunkQueries": 2,
+      "chunkQueries": 74,
       "successfulChunks": 2,
-      "failedChunks": 0,
+      "failedChunks": 72,
       "transferLogs": 0,
       "cexMatches": 0,
       "providersUsed": {
-        "https://1rpc.io/eth": 2
+        "https://ethereum-rpc.publicnode.com": 2
       },
-      "lastErrors": []
+      "lastErrors": [
+        "26261325-26261374:HTTP_429",
+        "26261375-26261424:HTTP_429",
+        "26261425-26261474:HTTP_429",
+        "26261475-26261524:HTTP_429",
+        "26261525-26261574:HTTP_429",
+        "26261575-26261624:HTTP_429",
+        "26261625-26261674:HTTP_429",
+        "26261675-26261724:HTTP_429"
+      ]
     },
     "base": {
       "status": "PARTIAL",
@@ -52,14 +61,14 @@
         "https://base-rpc.publicnode.com": 2
       },
       "lastErrors": [
-        "53012627-53013626:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-        "53013627-53014626:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-        "53014627-53015626:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-        "53010627-53011626:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-        "53011627-53012626:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-        "53012627-53013626:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-        "53013627-53014626:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-        "53014627-53015626:-32602:eth_getLogs is limited to 0 - 50 blocks range"
+        "53020163-53021162:HTTP_403",
+        "53021163-53022162:HTTP_403",
+        "53022163-53023162:HTTP_403",
+        "53018163-53019162:HTTP_403",
+        "53019163-53020162:HTTP_403",
+        "53020163-53021162:HTTP_403",
+        "53021163-53022162:HTTP_403",
+        "53022163-53023162:HTTP_403"
       ]
     },
     "arbitrum": {
@@ -81,10 +90,28 @@
   },
   "rpcStats": {
     "https://1rpc.io/eth": {
-      "calls": 3,
+      "calls": 150,
+      "successes": 0,
+      "failures": 150,
+      "lastError": "HTTP_403"
+    },
+    "https://ethereum-rpc.publicnode.com": {
+      "calls": 147,
       "successes": 3,
-      "failures": 0,
-      "lastError": null
+      "failures": 144,
+      "lastError": "-32701:Please specify an address in your request or, to remove restrictions, order a dedicated full node here: https://www.allnodes.com/eth/host"
+    },
+    "https://eth.llamarpc.com": {
+      "calls": 144,
+      "successes": 0,
+      "failures": 144,
+      "lastError": "HTTP_525"
+    },
+    "https://cloudflare-eth.com": {
+      "calls": 144,
+      "successes": 0,
+      "failures": 144,
+      "lastError": "HTTP_429"
     },
     "https://mainnet.base.org": {
       "calls": 25,
@@ -108,7 +135,7 @@
       "calls": 20,
       "successes": 0,
       "failures": 20,
-      "lastError": "-32602:eth_getLogs is limited to 0 - 50 blocks range"
+      "lastError": "HTTP_403"
     },
     "https://arb1.arbitrum.io/rpc": {
       "calls": 9,
