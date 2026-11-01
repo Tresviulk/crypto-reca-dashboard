@@ -2,8 +2,8 @@
   "schemaVersion": "1.0",
   "module": "whalesMultichain",
   "version": "WHALES_MULTICHAIN_V3_1_2026-09-13",
-  "generatedAt": "2026-11-01T09:10:08.922Z",
-  "overallStatus": "PASS",
+  "generatedAt": "2026-11-01T16:00:12.913Z",
+  "overallStatus": "PARTIAL_SOLANA_RPC",
   "architecture": {
     "trackedEvmWallets": 11,
     "trackedSolanaWallets": 6,
@@ -12,7 +12,7 @@
       "base": "PASS",
       "arbitrum": "PASS",
       "hyperliquid": "PASS",
-      "solana": "PASS"
+      "solana": "PARTIAL"
     },
     "importantLimitation": "Solana has a configured independent whale cohort. A PARTIAL Solana status means public-RPC/provider degradation, not missing wallets. Raw TOKEN_FLOW remains contextual until trade-level confirmation."
   },
@@ -33,7 +33,7 @@
         "candidatesEndpoint": "/candidates",
         "deepAuthConfigured": true,
         "alchemyChain": "ethereum",
-        "timestamp": "2026-11-01T07:21:34.651Z"
+        "timestamp": "2026-11-01T14:57:16.052Z"
       },
       "summary": {
         "ok": true,
@@ -48,8 +48,8 @@
     "base": {
       "status": "PASS",
       "rpcUrl": "https://mainnet.base.org",
-      "latestBlock": 53367425,
-      "fromBlock": 53362425,
+      "latestBlock": 53379702,
+      "fromBlock": 53374702,
       "candidateTransactions": 0,
       "reconstructed": 0,
       "failed": 0,
@@ -58,8 +58,8 @@
     "arbitrum": {
       "status": "PASS",
       "rpcUrl": "https://arb1.arbitrum.io/rpc",
-      "latestBlock": 520232815,
-      "fromBlock": 520227815,
+      "latestBlock": 520318883,
+      "fromBlock": 520313883,
       "candidateTransactions": 0,
       "reconstructed": 0,
       "failed": 0,
@@ -72,7 +72,7 @@
       "fills": []
     },
     "solana": {
-      "status": "PASS",
+      "status": "PARTIAL",
       "mode": "RESILIENT_PUBLIC_RPC_FAILOVER",
       "rpcUrl": "https://solana-rpc.publicnode.com",
       "rpcProviders": [
@@ -81,16 +81,23 @@
       ],
       "providerStats": {
         "https://solana-rpc.publicnode.com": {
-          "calls": 7,
-          "successes": 7,
-          "failures": 0,
+          "calls": 62,
+          "successes": 14,
+          "failures": 48,
           "recoveredFallbacks": 0,
-          "lastError": null
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+        },
+        "https://api.mainnet-beta.solana.com": {
+          "calls": 48,
+          "successes": 0,
+          "failures": 48,
+          "recoveredFallbacks": 0,
+          "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
         }
       },
       "walletCount": 6,
       "failed": 0,
-      "txFailures": 0,
+      "txFailures": 24,
       "fallbackRecoveries": 0,
       "perWallet": [
         {
@@ -99,7 +106,7 @@
           "status": "PASS",
           "signatureProvider": "https://solana-rpc.publicnode.com",
           "signaturesSeen": 25,
-          "txFetched": 1,
+          "txFetched": 7,
           "txFailures": 0
         },
         {
@@ -141,14 +148,105 @@
         {
           "label": "SOL-WEST",
           "address": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-          "status": "PASS",
+          "status": "PARTIAL",
           "signatureProvider": "https://solana-rpc.publicnode.com",
-          "signaturesSeen": 19,
-          "txFetched": 0,
-          "txFailures": 0
+          "signaturesSeen": 25,
+          "txFetched": 1,
+          "txFailures": 24
         }
       ],
-      "signals": [],
+      "signals": [
+        {
+          "chain": "solana",
+          "walletLabel": "SOL-GAKE",
+          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+          "classification": "TOKEN_FLOW",
+          "signature": "4NEwFyZr83NJvXF6FvKoDCc3VeCG8Pv5GtY5FdyJamRhqWf89mDR3DtF6HiC4CWTxTgdMLA3ZqaNMhUMAQKcUmE3",
+          "blockTime": 1793546896,
+          "tokenFlows": [
+            {
+              "mint": "G4qw17ba3LB9uV7yPGCWUv5rN7k8fSDhXNvrSQAgpump",
+              "delta": 10
+            }
+          ],
+          "rpcProvider": "https://solana-rpc.publicnode.com"
+        },
+        {
+          "chain": "solana",
+          "walletLabel": "SOL-GAKE",
+          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+          "classification": "TOKEN_FLOW",
+          "signature": "5w1GKZ1HVRABPeNqbu18SuHJ5PPR5kX26KmgPi1kLMR497T5EhjwVNcTjTFUQYU8vG2y9F2edJg3KMitB8xmnBMq",
+          "blockTime": 1793545315,
+          "tokenFlows": [
+            {
+              "mint": "GBZrPZmP7LvYMJBMZcX41W43QmGoVQBVwWxazkg1pump",
+              "delta": 10
+            }
+          ],
+          "rpcProvider": "https://solana-rpc.publicnode.com"
+        },
+        {
+          "chain": "solana",
+          "walletLabel": "SOL-GAKE",
+          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+          "classification": "TOKEN_FLOW",
+          "signature": "4D6VVzWSvsoVxUu1AM7NjQ5BQgzFyAStc6LicSXG4a4hGrGKVvA16iPb2k2wVXeU5rrtBEe1aR4fjYmZyM3BeyGP",
+          "blockTime": 1793544472,
+          "tokenFlows": [
+            {
+              "mint": "CcZ8Bpu9W9oAPCtykmKMvjUQ33KYevKYzixjm2bDpump",
+              "delta": 10
+            }
+          ],
+          "rpcProvider": "https://solana-rpc.publicnode.com"
+        },
+        {
+          "chain": "solana",
+          "walletLabel": "SOL-GAKE",
+          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+          "classification": "TOKEN_FLOW",
+          "signature": "4AsiYrndo5QkPem8wDNkUE1kJKPUoiWQ2xWEzFFc9brXdnHSZvDLy6dS6coKsRgwiAMMwU8YXTdDTqsLHHym6YPc",
+          "blockTime": 1793543702,
+          "tokenFlows": [
+            {
+              "mint": "M8qrDwGZLtYX87rGEWSmsENGvXXsmjeboS4jzEVpump",
+              "delta": 10
+            }
+          ],
+          "rpcProvider": "https://solana-rpc.publicnode.com"
+        },
+        {
+          "chain": "solana",
+          "walletLabel": "SOL-GAKE",
+          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+          "classification": "TOKEN_FLOW",
+          "signature": "5Szb4Dkhu7F6nqQK2Upi3s7RgqAhRzhJB6eBk6ropFkhNu3pwqXXgfd1FNWPEQXqnSPeS1N5uJuAJxWwUSYUiY32",
+          "blockTime": 1793542650,
+          "tokenFlows": [
+            {
+              "mint": "89edHubaDdDofnmjHAteD2CV2GiD5sHbZ1EQT8W9pump",
+              "delta": 10
+            }
+          ],
+          "rpcProvider": "https://solana-rpc.publicnode.com"
+        },
+        {
+          "chain": "solana",
+          "walletLabel": "SOL-GAKE",
+          "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
+          "classification": "TOKEN_FLOW",
+          "signature": "4T7G1Dcejq9Ko9ps2o66fvWxPKoBQ3eehXbws1thdgtH1SV3n5RwmiviKePusGxMZWgaHeXbNTzKWzyUzubkV11q",
+          "blockTime": 1793541340,
+          "tokenFlows": [
+            {
+              "mint": "7iUM4NqpJMXbjTa6yX5biPQxs3Fi7KXEjLt3PBNDpump",
+              "delta": 10
+            }
+          ],
+          "rpcProvider": "https://solana-rpc.publicnode.com"
+        }
+      ],
       "interpretation": "Provider-level failures are retried and failed over. A wallet is only marked failed when its signature query fails across all providers; individual transaction failures are exposed separately."
     }
   },
@@ -159,7 +257,7 @@
     "providersConfigured": 2,
     "fallbackRecoveries": 0,
     "failedWallets": 0,
-    "txFailures": 0
+    "txFailures": 24
   },
   "statusSemantics": {
     "normalized": true,
