@@ -2,8 +2,8 @@
   "schemaVersion": "1.0",
   "module": "whalesEarlyEntryEngine",
   "version": "WHALES_EARLY_ENTRY_V1_2026-09-13",
-  "generatedAt": "2026-11-05T02:46:06.761Z",
-  "runStatus": "PASS",
+  "generatedAt": "2026-11-05T09:55:11.149Z",
+  "runStatus": "PARTIAL",
   "purpose": "Wallet-first early-entry detection. Start from shark wallets, classify real on-chain swap direction, resolve the token/pair and only then use CABAL as secondary confirmation.",
   "executionPolicy": "SURVEILLANCE_ONLY_NO_AUTO_TRADE",
   "scheduleTargetMinutes": 5,
@@ -77,7 +77,7 @@
         "tier": "TIER_A",
         "alphaScore": 95,
         "winRate": 0.8919,
-        "ageDays": 15.86
+        "ageDays": 16.15
       },
       {
         "label": "EARLY-A-7BpWm8",
@@ -86,7 +86,7 @@
         "tier": "TIER_A",
         "alphaScore": 93.18,
         "winRate": 0.7419,
-        "ageDays": 23.21
+        "ageDays": 23.5
       },
       {
         "label": "EARLY-A-6u8s1M",
@@ -95,7 +95,7 @@
         "tier": "TIER_A",
         "alphaScore": 92.31,
         "winRate": 0.7667,
-        "ageDays": 23.44
+        "ageDays": 23.73
       },
       {
         "label": "EARLY-A-AvtQcV",
@@ -104,7 +104,7 @@
         "tier": "TIER_A",
         "alphaScore": 91.88,
         "winRate": 0.7,
-        "ageDays": 23.21
+        "ageDays": 23.5
       },
       {
         "label": "EARLY-A-EkaZfX",
@@ -113,7 +113,7 @@
         "tier": "TIER_A",
         "alphaScore": 91.88,
         "winRate": 0.7,
-        "ageDays": 23.44
+        "ageDays": 23.73
       },
       {
         "label": "EARLY-A-EWgyAc",
@@ -122,7 +122,7 @@
         "tier": "TIER_A",
         "alphaScore": 88.95,
         "winRate": 0.6452,
-        "ageDays": 23.44
+        "ageDays": 23.73
       },
       {
         "label": "EARLY-A-6KgsGB",
@@ -131,7 +131,7 @@
         "tier": "TIER_A",
         "alphaScore": 88.94,
         "winRate": 0.6061,
-        "ageDays": 14.17
+        "ageDays": 14.46
       },
       {
         "label": "EARLY-A-AbePay",
@@ -140,7 +140,7 @@
         "tier": "TIER_A",
         "alphaScore": 87.98,
         "winRate": 0.6452,
-        "ageDays": 23.21
+        "ageDays": 23.5
       },
       {
         "label": "EARLY-A-JDTqpP",
@@ -149,7 +149,7 @@
         "tier": "TIER_A",
         "alphaScore": 86.07,
         "winRate": 0.7083,
-        "ageDays": 0.52
+        "ageDays": 0.81
       },
       {
         "label": "EARLY-B-CKxSCw",
@@ -158,7 +158,7 @@
         "tier": "TIER_B",
         "alphaScore": 86,
         "winRate": 0.8333,
-        "ageDays": 9.44
+        "ageDays": 9.74
       },
       {
         "label": "EARLY-B-3bVNXB",
@@ -167,7 +167,7 @@
         "tier": "TIER_B",
         "alphaScore": 83.94,
         "winRate": 0.7273,
-        "ageDays": 0.09
+        "ageDays": 0.39
       },
       {
         "label": "EARLY-B-3N7Trc",
@@ -176,7 +176,7 @@
         "tier": "TIER_B",
         "alphaScore": 82.83,
         "winRate": 0.8,
-        "ageDays": 1.23
+        "ageDays": 1.52
       },
       {
         "label": "EARLY-B-HXpxt6",
@@ -185,7 +185,7 @@
         "tier": "TIER_B",
         "alphaScore": 80,
         "winRate": 0.9091,
-        "ageDays": 10.65
+        "ageDays": 10.94
       },
       {
         "label": "EARLY-B-ECWi7e",
@@ -194,7 +194,7 @@
         "tier": "TIER_B",
         "alphaScore": 79.35,
         "winRate": 0.8636,
-        "ageDays": 10.29
+        "ageDays": 10.58
       },
       {
         "label": "EARLY-B-MFFpqt",
@@ -203,7 +203,7 @@
         "tier": "TIER_B",
         "alphaScore": 79.18,
         "winRate": 0.75,
-        "ageDays": 1.21
+        "ageDays": 1.5
       },
       {
         "label": "EARLY-B-BGCbX7",
@@ -212,7 +212,7 @@
         "tier": "TIER_B",
         "alphaScore": 78.49,
         "winRate": 0.8387,
-        "ageDays": 11.56
+        "ageDays": 11.85
       }
     ]
   },
@@ -224,35 +224,42 @@
     ],
     "providerStats": {
       "https://solana-rpc.publicnode.com": {
-        "calls": 25,
-        "successes": 25,
-        "failures": 0,
+        "calls": 28,
+        "successes": 26,
+        "failures": 2,
         "recoveredFallbacks": 0,
-        "lastError": null
+        "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
+      },
+      "https://api.mainnet-beta.solana.com": {
+        "calls": 2,
+        "successes": 0,
+        "failures": 2,
+        "recoveredFallbacks": 0,
+        "lastError": "getTransaction:{\"code\":-32015,\"message\":\"Transaction version (1) is not supported by the requesting client. Please try the request again with the following configuration parameter: \\\"maxSupportedTransactionVersion\\\": 1\"}"
       }
     },
     "failedWallets": 0,
-    "txFailures": 0,
+    "txFailures": 1,
     "fallbackRecoveries": 0,
-    "walletsPass": 22,
-    "walletsPartial": 0,
+    "walletsPass": 21,
+    "walletsPartial": 1,
     "walletsError": 0
   },
   "scan": {
-    "newEventCount": 1,
-    "newOnchainSwapBuys": 0,
+    "newEventCount": 2,
+    "newOnchainSwapBuys": 2,
     "newOnchainSwapSells": 0,
-    "newContextOnly": 1,
-    "retainedEventCount": 167,
-    "activeMintCount6h": 0,
-    "signalCount": 0,
+    "newContextOnly": 0,
+    "retainedEventCount": 155,
+    "activeMintCount6h": 1,
+    "signalCount": 1,
     "buyCandidateCount": 0,
     "earlyWatchCount": 0,
     "netAccumulationSignalCount": 0,
     "netDistributionSignalCount": 0,
     "roundTripFlatCount": 0,
-    "rawNetAccumulationSignalCount": 0,
-    "microProbeCount": 0,
+    "rawNetAccumulationSignalCount": 1,
+    "microProbeCount": 1,
     "scoutPositionCount": 0
   },
   "thresholds": {
@@ -275,9 +282,9 @@
       "ageDays": null,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
-      "signaturesSeen": 3,
-      "newSignatures": 3,
-      "classifiedEvents": 1
+      "signaturesSeen": 1,
+      "newSignatures": 1,
+      "classifiedEvents": 0
     },
     {
       "label": "SOL-CENTED",
@@ -315,10 +322,10 @@
       "alphaScore": 100,
       "winRate": null,
       "ageDays": null,
-      "status": "PASS",
+      "status": "PARTIAL",
       "rpcProvider": "https://solana-rpc.publicnode.com",
-      "signaturesSeen": 0,
-      "newSignatures": 0,
+      "signaturesSeen": 1,
+      "newSignatures": 1,
       "classifiedEvents": 0
     },
     {
@@ -356,7 +363,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 95,
       "winRate": 0.8919,
-      "ageDays": 15.86,
+      "ageDays": 16.15,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -370,7 +377,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 93.18,
       "winRate": 0.7419,
-      "ageDays": 23.21,
+      "ageDays": 23.5,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -384,7 +391,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 92.31,
       "winRate": 0.7667,
-      "ageDays": 23.44,
+      "ageDays": 23.73,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -398,7 +405,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 91.88,
       "winRate": 0.7,
-      "ageDays": 23.21,
+      "ageDays": 23.5,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -412,7 +419,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 91.88,
       "winRate": 0.7,
-      "ageDays": 23.44,
+      "ageDays": 23.73,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -426,7 +433,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 88.95,
       "winRate": 0.6452,
-      "ageDays": 23.44,
+      "ageDays": 23.73,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -440,7 +447,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 88.94,
       "winRate": 0.6061,
-      "ageDays": 14.17,
+      "ageDays": 14.46,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -454,7 +461,7 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 87.98,
       "winRate": 0.6452,
-      "ageDays": 23.21,
+      "ageDays": 23.5,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -468,12 +475,12 @@
       "discoveryTier": "TIER_A",
       "alphaScore": 86.07,
       "winRate": 0.7083,
-      "ageDays": 0.52,
+      "ageDays": 0.81,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
-      "signaturesSeen": 0,
-      "newSignatures": 0,
-      "classifiedEvents": 0
+      "signaturesSeen": 3,
+      "newSignatures": 3,
+      "classifiedEvents": 2
     },
     {
       "label": "EARLY-B-CKxSCw",
@@ -482,7 +489,7 @@
       "discoveryTier": "TIER_B",
       "alphaScore": 86,
       "winRate": 0.8333,
-      "ageDays": 9.44,
+      "ageDays": 9.74,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -496,7 +503,7 @@
       "discoveryTier": "TIER_B",
       "alphaScore": 83.94,
       "winRate": 0.7273,
-      "ageDays": 0.09,
+      "ageDays": 0.39,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -510,7 +517,7 @@
       "discoveryTier": "TIER_B",
       "alphaScore": 82.83,
       "winRate": 0.8,
-      "ageDays": 1.23,
+      "ageDays": 1.52,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -524,7 +531,7 @@
       "discoveryTier": "TIER_B",
       "alphaScore": 80,
       "winRate": 0.9091,
-      "ageDays": 10.65,
+      "ageDays": 10.94,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -538,7 +545,7 @@
       "discoveryTier": "TIER_B",
       "alphaScore": 79.35,
       "winRate": 0.8636,
-      "ageDays": 10.29,
+      "ageDays": 10.58,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -552,7 +559,7 @@
       "discoveryTier": "TIER_B",
       "alphaScore": 79.18,
       "winRate": 0.75,
-      "ageDays": 1.21,
+      "ageDays": 1.5,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -566,7 +573,7 @@
       "discoveryTier": "TIER_B",
       "alphaScore": 78.49,
       "winRate": 0.8387,
-      "ageDays": 11.56,
+      "ageDays": 11.85,
       "status": "PASS",
       "rpcProvider": "https://solana-rpc.publicnode.com",
       "signaturesSeen": 0,
@@ -577,34 +584,114 @@
   "newEvents": [
     {
       "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "SOL-GAKE",
-      "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
-      "walletSource": "FIXED_TIER_A",
-      "walletTier": "FIXED_TIER_A",
-      "alphaScore": 100,
-      "winRate": null,
-      "walletWeight": 1,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "2724239D1JhWQGV5WZ7tdBTN5Jz4FZ3pdmvj3iD4LsVE",
-          "delta": 33.005863
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "2uwdp1iW8nwqJwn6AJzcXxSQUYxdQYvenpBbpdkfD1uGaHAY3xoDRsKo1q8o9GEYajbWDyjTGMTFwvDFK8bv5RSJ",
-      "blockTime": 1793845933,
-      "eventTime": "2026-11-05T02:32:13.000Z",
+      "action": "BUY",
+      "classification": "ONCHAIN_SWAP_BUY",
+      "confidence": 0.9,
+      "walletLabel": "EARLY-A-JDTqpP",
+      "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+      "walletSource": "DISCOVERY_TIER_A",
+      "walletTier": "TIER_A",
+      "alphaScore": 86.07,
+      "winRate": 0.7083,
+      "walletWeight": 0.95,
+      "mint": "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump",
+      "tokenAmount": 264307.544331,
+      "quoteAsset": "SOL",
+      "quoteAmount": 0.01002725,
+      "signature": "3xEHiqQNofCbmTnFfam8BnMbHqTi8c9cBV6nHJgvTJpk7zmqLjKFY2egcvhVm5CxAEqPhwhCFssY1YwfVLQbsivw",
+      "blockTime": 1793872387,
+      "eventTime": "2026-11-05T09:53:07.000Z",
       "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
+      "firstBuyAtForWalletToken": "2026-11-05T09:52:55.000Z",
+      "rpcProvider": "https://solana-rpc.publicnode.com",
+      "priceUsdAtDetection": 0.000003588,
+      "symbolAtDetection": "ZELDA",
+      "liquidityUsdAtDetection": null,
+      "marketCapUsdAtDetection": 3588.9
+    },
+    {
+      "chain": "solana",
+      "action": "BUY",
+      "classification": "ONCHAIN_SWAP_BUY",
+      "confidence": 0.96,
+      "walletLabel": "EARLY-A-JDTqpP",
+      "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+      "walletSource": "DISCOVERY_TIER_A",
+      "walletTier": "TIER_A",
+      "alphaScore": 86.07,
+      "winRate": 0.7083,
+      "walletWeight": 0.95,
+      "mint": "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump",
+      "tokenAmount": 9665470.875969,
+      "quoteAsset": "USDC",
+      "quoteAmount": 35,
+      "signature": "pbuLVLiFz7J7j9YaNp8oavZpK9rU6xTXX18jof9cCWzhvLczqXxEdevFKUharxgzqnzX2JHcdXZbghfRjkBzC7r",
+      "blockTime": 1793872375,
+      "eventTime": "2026-11-05T09:52:55.000Z",
+      "firstTouch": true,
+      "firstBuyAtForWalletToken": "2026-11-05T09:52:55.000Z",
+      "rpcProvider": "https://solana-rpc.publicnode.com",
+      "priceUsdAtDetection": 0.000003588,
+      "symbolAtDetection": "ZELDA",
+      "liquidityUsdAtDetection": null,
+      "marketCapUsdAtDetection": 3588.9
     }
   ],
   "events": [
+    {
+      "chain": "solana",
+      "action": "BUY",
+      "classification": "ONCHAIN_SWAP_BUY",
+      "confidence": 0.9,
+      "walletLabel": "EARLY-A-JDTqpP",
+      "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+      "walletSource": "DISCOVERY_TIER_A",
+      "walletTier": "TIER_A",
+      "alphaScore": 86.07,
+      "winRate": 0.7083,
+      "walletWeight": 0.95,
+      "mint": "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump",
+      "tokenAmount": 264307.544331,
+      "quoteAsset": "SOL",
+      "quoteAmount": 0.01002725,
+      "signature": "3xEHiqQNofCbmTnFfam8BnMbHqTi8c9cBV6nHJgvTJpk7zmqLjKFY2egcvhVm5CxAEqPhwhCFssY1YwfVLQbsivw",
+      "blockTime": 1793872387,
+      "eventTime": "2026-11-05T09:53:07.000Z",
+      "firstTouch": false,
+      "firstBuyAtForWalletToken": "2026-11-05T09:52:55.000Z",
+      "rpcProvider": "https://solana-rpc.publicnode.com",
+      "priceUsdAtDetection": 0.000003588,
+      "symbolAtDetection": "ZELDA",
+      "liquidityUsdAtDetection": null,
+      "marketCapUsdAtDetection": 3588.9
+    },
+    {
+      "chain": "solana",
+      "action": "BUY",
+      "classification": "ONCHAIN_SWAP_BUY",
+      "confidence": 0.96,
+      "walletLabel": "EARLY-A-JDTqpP",
+      "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+      "walletSource": "DISCOVERY_TIER_A",
+      "walletTier": "TIER_A",
+      "alphaScore": 86.07,
+      "winRate": 0.7083,
+      "walletWeight": 0.95,
+      "mint": "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump",
+      "tokenAmount": 9665470.875969,
+      "quoteAsset": "USDC",
+      "quoteAmount": 35,
+      "signature": "pbuLVLiFz7J7j9YaNp8oavZpK9rU6xTXX18jof9cCWzhvLczqXxEdevFKUharxgzqnzX2JHcdXZbghfRjkBzC7r",
+      "blockTime": 1793872375,
+      "eventTime": "2026-11-05T09:52:55.000Z",
+      "firstTouch": true,
+      "firstBuyAtForWalletToken": "2026-11-05T09:52:55.000Z",
+      "rpcProvider": "https://solana-rpc.publicnode.com",
+      "priceUsdAtDetection": 0.000003588,
+      "symbolAtDetection": "ZELDA",
+      "liquidityUsdAtDetection": null,
+      "marketCapUsdAtDetection": 3588.9
+    },
     {
       "chain": "solana",
       "action": "CONTEXT",
@@ -4824,407 +4911,130 @@
       "eventTime": "2026-11-02T19:15:09.000Z",
       "firstTouch": false,
       "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "A4tiCbKsC9UhMFspDtkM5RZiMcGFk9JZVrBJ4MBwpump",
-          "delta": 66.903201
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "v6Y6QteTR2WRjMNq3XmdubRt1vQyceTWPGW6ZmVRwqkuMjGo9eHNTadHqt8JiSvCKme1W3S5rrrpRyNhuH2yf9E",
-      "blockTime": 1793611360,
-      "eventTime": "2026-11-02T09:22:40.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "4WgxC56hGyNXLd14mCgxBuR2DUyDReF8koFDynhepump",
-          "delta": 91.301187
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "5r3gEspUWVunwzhjoFDDNCEsMHP1EunNQLi7i7xpUpozjwAYPAKGPRcXEBTpqRzNUrXLGNF5JKUcPBfDK2hdhL8E",
-      "blockTime": 1793611061,
-      "eventTime": "2026-11-02T09:17:41.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-B-8v3afX",
-      "wallet": "8v3afXFt3NsN12ecX6wQ2LhsSt2Th61saKQ8FJEsvhTs",
-      "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
-      "walletTier": "TIER_B",
-      "alphaScore": 90.2,
-      "winRate": 0.5769,
-      "walletWeight": 0.72,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
-          "delta": 1.851074
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "5rdVvL1qxp5eQjn5UtRSHaxv3ux8C4CvAQrz8Wisn7nCxw6yJN5g3k6EggrJkRSafRxkHs2i3MjLyAEB4QKYCtjt",
-      "blockTime": 1793610999,
-      "eventTime": "2026-11-02T09:16:39.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-B-8v3afX",
-      "wallet": "8v3afXFt3NsN12ecX6wQ2LhsSt2Th61saKQ8FJEsvhTs",
-      "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
-      "walletTier": "TIER_B",
-      "alphaScore": 90.2,
-      "winRate": 0.5769,
-      "walletWeight": 0.72,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
-          "delta": 0.321324
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "5io5WjKUJk5NNrnsNLuG6t58ipec8RXvcEwzrfFPUr4QkWe6NcrsFLSzsyChWTNqoEdaRLxBnhKtJ19cT6DaWfdq",
-      "blockTime": 1793610685,
-      "eventTime": "2026-11-02T09:11:25.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
-          "delta": 6.6e-7
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "ntX55SqRbzdEnfZLi7WR6nR6mQEi3vw29ibFnUharcK1SxfijTrr4AnmJZ3n4jjGWerUggNsQJcQrQFHc2Wcqan",
-      "blockTime": 1793610516,
-      "eventTime": "2026-11-02T09:08:36.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-B-8v3afX",
-      "wallet": "8v3afXFt3NsN12ecX6wQ2LhsSt2Th61saKQ8FJEsvhTs",
-      "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
-      "walletTier": "TIER_B",
-      "alphaScore": 90.2,
-      "winRate": 0.5769,
-      "walletWeight": 0.72,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
-          "delta": 14.380697
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "2AFWF2qywrWR725XhYr2N8hEefJ8V6iNx1yHYA1zDBKM329koQPb8P233W5ALhtBryHYH6KfdZkBukKR7z1Q7mQ4",
-      "blockTime": 1793610491,
-      "eventTime": "2026-11-02T09:08:11.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-B-8v3afX",
-      "wallet": "8v3afXFt3NsN12ecX6wQ2LhsSt2Th61saKQ8FJEsvhTs",
-      "walletSource": "DISCOVERY_TIER_B_DYNAMIC",
-      "walletTier": "TIER_B",
-      "alphaScore": 90.2,
-      "winRate": 0.5769,
-      "walletWeight": 0.72,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
-          "delta": 1.614562
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "5gZEermwqSaNUodEDi6JNHsWn9UKdozqG7XvpuvkZFzXjut46jQmXUGeywG1S2zKjYwwASYumL1Pb4ukYW1ScD7t",
-      "blockTime": 1793610248,
-      "eventTime": "2026-11-02T09:04:08.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
-          "delta": 1e-8
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "4vgqK84V6fDvGZgAibfYgDfThCTdkvejro3Ki5FQiYRePd4v8ATrvo9BUJuQhT1R4w4rdPRQzbpJkjeEfhGP9kzR",
-      "blockTime": 1793610241,
-      "eventTime": "2026-11-02T09:04:01.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "9PFMuqNSLFmwAhgJdSLCvgkNAoAsfWaAzyFHtJQwpump",
-          "delta": 28.342419
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "2rfmBjYczFF9omNLCHMmb4BcPCcmYcyBkJZQQG1njDnZdwv2EKc7YahDLFhboEfdsMrnjjaQkgfU44Hda2YoS3uE",
-      "blockTime": 1793610226,
-      "eventTime": "2026-11-02T09:03:46.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "83WuTBUf1vMDShCZyMD2PrDbd5ZY9DZVQd6vpfy1pump",
-          "delta": 20.501415
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "47Gq56CVyGztGnwpKSM8XRFYhhzTAPiz2DW9TezFhWJLQgoQBwTzs2yesiRt8mNNHnT1nsiuKbnAn3ryXgwPGn7f",
-      "blockTime": 1793610136,
-      "eventTime": "2026-11-02T09:02:16.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "7x4EfRQCFG1id7YZDNMbfcaZPMiaoNCZy6vTtXXmpump",
-          "delta": 20.03257
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "fTrggB3RERPrh1fT5EunbxL5X51nuZP1wihdcfeLT12DcjYDXuVfByZntPBtLTe7GQBwvERRx7kaWjsnnnNhdGb",
-      "blockTime": 1793610122,
-      "eventTime": "2026-11-02T09:02:02.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-FRt9zu",
-      "wallet": "FRt9zu1bupehCad2zdHRUYg6QvKeTs9CJcBt2xStJKrS",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 89.61,
-      "winRate": 0.7188,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "CXWNzqBE98SSmkGgHogJZd9vjsLdgaMAFpVfV22ypump",
-          "delta": 10.481436
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "4p1Z6gzWTHp42g4Y3sVqeY5j6YnxaUbUh7RzA2XceTgu7oE8y6fSXRqqf88wZjGojgFPNkpcD6rz8kdjLju9iNtX",
-      "blockTime": 1793610107,
-      "eventTime": "2026-11-02T09:01:47.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "CONTEXT",
-      "classification": "TOKEN_FLOW_CONTEXT_ONLY",
-      "confidence": 0,
-      "walletLabel": "EARLY-A-JDTqpP",
-      "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 87.1,
-      "winRate": 0.7727,
-      "walletWeight": 0.95,
-      "mint": null,
-      "tokenAmount": null,
-      "tokenFlows": [
-        {
-          "mint": "HKGBDGUNkvtCjPzPJhJL74urZuykKiDPZAH3go4ndJdk",
-          "delta": 38370.517539
-        }
-      ],
-      "quoteAsset": null,
-      "quoteAmount": null,
-      "signature": "45KbYwmeGc6yU12F6y2dqQekRdrqfVVAMntrHLC4btmeeozS4idJtsJ9VXCwmKSDxhvPcYtD53wx7o6Wxgcnib4v",
-      "blockTime": 1793609913,
-      "eventTime": "2026-11-02T08:58:33.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com"
-    },
-    {
-      "chain": "solana",
-      "action": "SELL",
-      "classification": "ONCHAIN_SWAP_SELL",
-      "confidence": 0.96,
-      "walletLabel": "EARLY-A-JDTqpP",
-      "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
-      "walletSource": "DISCOVERY_TIER_A",
-      "walletTier": "TIER_A",
-      "alphaScore": 87.1,
-      "winRate": 0.7727,
-      "walletWeight": 0.95,
-      "mint": "HKGBDGUNkvtCjPzPJhJL74urZuykKiDPZAH3go4ndJdk",
-      "tokenAmount": 33253472.877957,
-      "quoteAsset": "USDC",
-      "quoteAmount": 82.283055,
-      "signature": "4TvvtytkVVQXYCRjNSugxNbCvUkKvsqAiYvLf15TNPmXaxLgyHH6HyvCtD5F1F4Yzd6mzLB62Hsy9BDLX9UQqDM6",
-      "blockTime": 1793609908,
-      "eventTime": "2026-11-02T08:58:28.000Z",
-      "firstTouch": false,
-      "rpcProvider": "https://solana-rpc.publicnode.com",
-      "priceUsdAtDetection": 0.000002499,
-      "symbolAtDetection": "PI",
-      "liquidityUsdAtDetection": null,
-      "marketCapUsdAtDetection": 2499.31
     }
   ],
-  "signals": [],
+  "signals": [
+    {
+      "status": "MICRO_PROBE_CONTEXT_ONLY",
+      "action": "IGNORE_FOR_ACTIONABLE_SIGNAL",
+      "reason": "Detected buy is only a micro probe. Orders below 1 SOL / $100 are not treated as whale/shark evidence.",
+      "mint": "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump",
+      "symbol": "ZELDA",
+      "name": "Ocarina of Time",
+      "pair": "ZELDA/SOL or ZELDA/USDC (DEX-dependent)",
+      "dex": "pumpfun",
+      "pairAddress": "F71w2YacX8fpsJqKJs5AdAQKYzD77JQinEp4sH8yhJSx",
+      "pairUrl": "https://dexscreener.com/solana/f71w2yacx8fpsjqkjs5adaqkyzd77jqinep4sh8yhjsx",
+      "priceUsd": 0.000003588,
+      "liquidityUsd": null,
+      "marketCapUsd": 3588.9,
+      "fdvUsd": 3588.9,
+      "volume24hUsd": 91462.57,
+      "priceChange5mPct": 1.98,
+      "priceChange1hPct": -2.18,
+      "priceChange6hPct": -16.23,
+      "priceChange24hPct": -16.23,
+      "pairCreatedAt": "2026-11-05T05:50:43.000Z",
+      "buyCount": 2,
+      "sellCount": 0,
+      "tokenBought": 9929778.4203,
+      "tokenSold": 0,
+      "netTokenFlow": 9929778.4203,
+      "uniqueBuyWalletCount": 1,
+      "uniqueSellWalletCount": 0,
+      "uniqueBuyWallets": [
+        "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK"
+      ],
+      "uniqueSellWallets": [],
+      "flatRoundTripWallets": [],
+      "netAccumulatingWalletCount": 1,
+      "tierAPriorityBuyCount": 1,
+      "firstTouchBuyCount": 1,
+      "avgConfidence": 0.93,
+      "whaleScore": 0.95,
+      "firstBuyAt": "2026-11-05T09:52:55.000Z",
+      "latestBuyAt": "2026-11-05T09:53:07.000Z",
+      "minutesSinceFirstBuy": 2.3,
+      "noChase": false,
+      "liquidityHealthy": false,
+      "marketCapHealthy": true,
+      "marketHealthy": false,
+      "cabal": null,
+      "cabalValidatedForEntry": false,
+      "buyEvidence": [
+        {
+          "walletLabel": "EARLY-A-JDTqpP",
+          "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+          "walletSource": "DISCOVERY_TIER_A",
+          "walletTier": "TIER_A",
+          "alphaScore": 86.07,
+          "firstTouch": true,
+          "confidence": 0.96,
+          "quoteAsset": "USDC",
+          "quoteAmount": 35,
+          "tokenAmount": 9665470.875969,
+          "signature": "pbuLVLiFz7J7j9YaNp8oavZpK9rU6xTXX18jof9cCWzhvLczqXxEdevFKUharxgzqnzX2JHcdXZbghfRjkBzC7r",
+          "eventTime": "2026-11-05T09:52:55.000Z"
+        },
+        {
+          "walletLabel": "EARLY-A-JDTqpP",
+          "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+          "walletSource": "DISCOVERY_TIER_A",
+          "walletTier": "TIER_A",
+          "alphaScore": 86.07,
+          "firstTouch": false,
+          "confidence": 0.9,
+          "quoteAsset": "SOL",
+          "quoteAmount": 0.01002725,
+          "tokenAmount": 264307.544331,
+          "signature": "3xEHiqQNofCbmTnFfam8BnMbHqTi8c9cBV6nHJgvTJpk7zmqLjKFY2egcvhVm5CxAEqPhwhCFssY1YwfVLQbsivw",
+          "eventTime": "2026-11-05T09:53:07.000Z"
+        }
+      ],
+      "sellEvidence": [],
+      "dataQuality": "PASS",
+      "positionSizing": {
+        "ruleVersion": "SHARK_SIZE_FILTER_V1_2026-09-13",
+        "strongestTier": "MICRO_PROBE",
+        "meaningfulWalletCount": 0,
+        "priorityMeaningfulWalletCount": 0,
+        "minActionable": {
+          "sol": 5,
+          "stableUsd": 500
+        },
+        "strongConviction": {
+          "sol": 10,
+          "stableUsd": 1000
+        },
+        "minRetentionRatio": 0.5,
+        "perWallet": [
+          {
+            "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+            "walletLabel": "EARLY-A-JDTqpP",
+            "walletTier": "TIER_A",
+            "walletSource": "DISCOVERY_TIER_A",
+            "quoteSizing": {
+              "tier": "MICRO_PROBE",
+              "sol": 0.010027,
+              "stableUsd": 35,
+              "byAsset": {
+                "USDC": 35,
+                "SOL": 0.010027
+              }
+            },
+            "retentionRatio": 1,
+            "meaningful": false
+          }
+        ]
+      },
+      "preSizeFilterStatus": "WHALE_DISCOVERY_LOW_LIQUIDITY",
+      "preSizeFilterAction": "WATCH_RISK_REJECT"
+    }
+  ],
   "topCandidates": [],
   "buyCandidates": [],
   "earlyWatches": [],
   "processedSignatures": [
-    "2A5Af9zpyoacsw6XLdRSp1tURZ1AypFTGapoBJJRTaUdZwNcFhS5aq5iKgPVB82X6gsyk1NN9ioSTf1JB59dF22x",
-    "4DR4VcVFwZaFM3b5V6JfgT33VxySPuVA8woUaBdVhnikVFWs4UEsLZKzSaXB8L12vTibH4D3yW2GWDwuw8ernGcB",
-    "r9eFyXTMAzShpzLw7QJfNXWpEmMfRYZfJmtkrnaDU3dfqfYsmjA5UHnjBJoNy8eWCEb7j5bqmi2iU4xAgn5Y7fT",
-    "2ErpaBjieJAgLYgZR2NDMHuy8MgJQSpw2VwGZE61GRWtWTtGDT4d7SLKdjF8VTJv7ymN8Kv21dTcAbZ3LrtNgB3Z",
     "4wFR2U6EHtNpU6VVGq4AQ6nqNuJhifBQcUpxbDin1TyPYMNEuTmGp6AcPmgvxKTDi2X8mgMGwEUXQpasbutbcPLm",
     "4Xa6Kfk7N1myhbrdFnFr4K24tmAq9bRerfpLxRjboU8EQJMBLvM9ErsZxFi5bFWtaqGfdrjEVbGvWnZpph6Wxrzp",
     "4hnDRFHFxhUQHoFLYUxK3tmvnzdMfY3ujCjMYnnfgNvwYXJUnAdnEZfgr3b21cX4dgLWqH33C64ZaMhx7AxVqAkf",
@@ -7720,7 +7530,11 @@
     "4qULNVfRNiQCijRBp89dW79aQDwfcKksacnrwLaoNEFewSYb3Jkwg1kz3QeTjCsXF5msMnWYPpqLr1CPF8VtQZoJ",
     "2uwdp1iW8nwqJwn6AJzcXxSQUYxdQYvenpBbpdkfD1uGaHAY3xoDRsKo1q8o9GEYajbWDyjTGMTFwvDFK8bv5RSJ",
     "3QS75jhv77vpfesqgfoHWancziZfzbFE9wHep1uHveeXVRL8YYEJBAuCxafobm4pMzV6mFydscHYvJYPcwFo7GFo",
-    "DSYSxY1CxrV5HUpiENL4mGFTfmLtUCrNjSFh4PjmLz35QbkQU321u7C6UVof6LS4mG41RMTPBQ2ixtaPjZyV1f6"
+    "DSYSxY1CxrV5HUpiENL4mGFTfmLtUCrNjSFh4PjmLz35QbkQU321u7C6UVof6LS4mG41RMTPBQ2ixtaPjZyV1f6",
+    "3etJ8w4QegmfkENmydd22VDGQb8YfayBAt74PXE7Yup1QCW42caPRX9pXfhFHK3BhSMx972o7j8Vb3Ky1QapAjQq",
+    "2EvwBJRUYGsJySePS2hud8ytV1zENURV6nTtYzxMFy6M6nwgMu7wU2EQKCJCTycA4hbUMWaVRMXQoZHAxxDVVyZF",
+    "3xEHiqQNofCbmTnFfam8BnMbHqTi8c9cBV6nHJgvTJpk7zmqLjKFY2egcvhVm5CxAEqPhwhCFssY1YwfVLQbsivw",
+    "pbuLVLiFz7J7j9YaNp8oavZpK9rU6xTXX18jof9cCWzhvLczqXxEdevFKUharxgzqnzX2JHcdXZbghfRjkBzC7r"
   ],
   "walletMintHistory": {
     "F3MsrweASYcZcAN9mg6o76hef1Xzh7P7qv6BM9acSMJP:ApS8Sb3oXpFV5zcok9ii83PhCo2DSUV3N5UMzcYcWhHs": {
@@ -26730,6 +26544,15 @@
       "lastSeenAt": "2026-11-04T16:58:29.000Z",
       "buyCount": 1,
       "sellCount": 1
+    },
+    "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK:4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump": {
+      "wallet": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
+      "mint": "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump",
+      "firstSeenAt": "2026-11-05T09:52:55.000Z",
+      "firstBuyAt": "2026-11-05T09:52:55.000Z",
+      "lastSeenAt": "2026-11-05T09:53:07.000Z",
+      "buyCount": 2,
+      "sellCount": 0
     }
   },
   "metadataCache": {
@@ -53917,6 +53740,26 @@
       "priceChange6hPct": -4.1,
       "priceChange24hPct": -4.1,
       "pairCreatedAt": null
+    },
+    "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump": {
+      "status": "PASS",
+      "checkedAt": "2026-11-05T09:55:11.067Z",
+      "mint": "4ZrRNPtv7Wwpxb84bgtBTZzfRqjdbJa2DQNFfAZ4pump",
+      "symbol": "ZELDA",
+      "name": "Ocarina of Time",
+      "dexId": "pumpfun",
+      "pairAddress": "F71w2YacX8fpsJqKJs5AdAQKYzD77JQinEp4sH8yhJSx",
+      "pairUrl": "https://dexscreener.com/solana/f71w2yacx8fpsjqkjs5adaqkyzd77jqinep4sh8yhjsx",
+      "priceUsd": 0.000003588,
+      "liquidityUsd": null,
+      "marketCapUsd": 3588.9,
+      "fdvUsd": 3588.9,
+      "volume24hUsd": 91462.57,
+      "priceChange5mPct": 1.98,
+      "priceChange1hPct": -2.18,
+      "priceChange6hPct": -16.23,
+      "priceChange24hPct": -16.23,
+      "pairCreatedAt": "2026-11-05T05:50:43.000Z"
     }
   },
   "dataGaps": [
@@ -53927,7 +53770,7 @@
   ],
   "reconciliation": {
     "applied": true,
-    "generatedAt": "2026-11-05T02:46:06.830Z",
+    "generatedAt": "2026-11-05T09:55:11.289Z",
     "version": "EARLY_ENTRY_RECONCILE_V1_2026-09-13",
     "rules": [
       "BUY signals require positive net token accumulation after offsetting classified sells.",
@@ -53939,7 +53782,7 @@
   },
   "sizeFilter": {
     "applied": true,
-    "generatedAt": "2026-11-05T02:46:06.893Z",
+    "generatedAt": "2026-11-05T09:55:11.398Z",
     "version": "SHARK_SIZE_FILTER_V1_2026-09-13",
     "thresholds": {
       "microProbeBelow": {
