@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0",
   "module": "whalesCanonicalReport",
-  "generatedAt": "2026-11-12T02:59:10.361Z",
+  "generatedAt": "2026-11-12T04:28:09.595Z",
   "reportContract": {
     "command": "WHALES",
     "rule": "Always expose every mandatory section. Empty sections must be shown as NONE or DATA_GAP; never silently omit them. Discovery wallets promoted to Tier A must expose live-surveillance state. WHALES DEEP 6h/24h/72h, net accumulation and CEX flows must be persisted and exposed when available. Unsupported claims must remain DATA_GAP.",
@@ -35,8 +35,8 @@
     "monitoredWallets": {
       "fixedEvm": 11,
       "fixedSolana": 6,
-      "autoPromotedDiscovery": 7,
-      "totalSurveillanceUniverse": 24
+      "autoPromotedDiscovery": 4,
+      "totalSurveillanceUniverse": 21
     },
     "freshConfirmedBuys": 0,
     "freshConfirmedSells": 0,
@@ -64,9 +64,9 @@
     },
     "netAccumulation": {
       "status": "PASS",
-      "eventCount": 1942,
-      "assets24h": 4,
-      "assets72h": 7
+      "eventCount": 1931,
+      "assets24h": 6,
+      "assets72h": 9
     },
     "cexFlows": {
       "status": "PARTIAL",
@@ -92,54 +92,54 @@
     "freshness": [
       {
         "module": "multichain",
-        "generatedAt": "2026-11-11T21:53:01.835Z",
-        "ageMinutes": 110.8,
+        "generatedAt": "2026-11-12T02:39:23.636Z",
+        "ageMinutes": 105.1,
         "maxMinutes": 25,
         "freshness": "STALE"
       },
       {
         "module": "ethereumWorker",
-        "generatedAt": "2026-11-11T18:34:53.019581Z",
-        "ageMinutes": 305.7,
+        "generatedAt": "2026-11-12T01:27:31.367711Z",
+        "ageMinutes": 175.7,
         "maxMinutes": 25,
         "freshness": "STALE"
       },
       {
         "module": "solanaFixedFeed",
-        "generatedAt": "2026-11-11T22:12:47.635Z",
-        "ageMinutes": 87.8,
+        "generatedAt": "2026-11-12T03:06:38.413Z",
+        "ageMinutes": 76.6,
         "maxMinutes": 35,
         "freshness": "STALE"
       },
       {
         "module": "discovery",
-        "generatedAt": "2026-11-11T22:14:04.796Z",
-        "ageMinutes": 86.5,
+        "generatedAt": "2026-11-12T03:18:28.813Z",
+        "ageMinutes": 64.7,
         "maxMinutes": 75,
-        "freshness": "STALE"
+        "freshness": "FRESH"
       },
       {
         "module": "cabal",
-        "generatedAt": "2026-11-11T23:27:34.009428Z",
-        "ageMinutes": 13.1,
+        "generatedAt": "2026-11-12T03:59:32.867857Z",
+        "ageMinutes": 23.7,
         "maxMinutes": 30,
         "freshness": "FRESH"
       },
       {
         "module": "positions",
         "generatedAt": "2026-09-28T16:15:00+02:00",
-        "ageMinutes": 63928.9,
+        "ageMinutes": 64209.5,
         "maxMinutes": 1440,
         "freshness": "STALE"
       }
     ],
-    "multichainOverall": "PASS",
+    "multichainOverall": "PARTIAL_SOLANA_RPC",
     "chainStatus": {
       "ethereum": "PASS",
       "base": "PASS",
       "arbitrum": "PASS",
       "hyperliquid": "PASS",
-      "solana": "PASS"
+      "solana": "PARTIAL"
     },
     "fixedSolanaFeed": {
       "provider": "MadeOnSol public KOL feed",
@@ -151,35 +151,35 @@
       "errors": []
     },
     "discoveryStatus": "PASS",
-    "solanaOperationalMeaning": "All enabled multichain monitors passed, including resilient Solana RPC.",
+    "solanaOperationalMeaning": "Solana wallets are configured and monitored with provider failover; one or more wallet/transaction calls still failed across the provider pool.",
     "solanaResilience": {
       "solanaRpcFailoverEnabled": true,
       "providersConfigured": 2,
       "fallbackRecoveries": 0,
       "failedWallets": 0,
-      "txFailures": 0
+      "txFailures": 3
     },
     "promotedDiscoveryLive": {
       "status": "PASS",
-      "generatedAt": "2026-11-11T18:07:34.616Z",
-      "ageMinutes": 336.3,
-      "promotedWalletCount": 7,
+      "generatedAt": "2026-11-12T00:49:53.579Z",
+      "ageMinutes": 214.6,
+      "promotedWalletCount": 4,
       "failedWallets": 0
     },
     "whalesDeep": {
       "status": "PASS",
       "generatedAt": "2026-09-16T08:06:09.029Z",
-      "ageMinutes": 81577.7,
+      "ageMinutes": 81858.3,
       "freshness": "STALE",
       "persistedResultsAvailable": true
     },
     "netAccumulation": {
       "status": "PASS",
-      "generatedAt": "2026-11-11T23:40:37.737Z"
+      "generatedAt": "2026-11-12T04:23:13.290Z"
     },
     "cexFlowLabeler": {
       "status": "PARTIAL",
-      "generatedAt": "2026-11-11T23:47:46.371Z",
+      "generatedAt": "2026-11-12T04:28:09.489Z",
       "chainHealth": {
         "ethereum": {
           "status": "PARTIAL",
@@ -188,22 +188,22 @@
           "lookbackBlocks": 1800,
           "batchedWalletCount": 11,
           "chunkQueries": 74,
-          "successfulChunks": 36,
-          "failedChunks": 38,
-          "transferLogs": 0,
+          "successfulChunks": 31,
+          "failedChunks": 43,
+          "transferLogs": 1,
           "cexMatches": 0,
           "providersUsed": {
-            "https://1rpc.io/eth": 36
+            "https://1rpc.io/eth": 31
           },
           "lastErrors": [
-            "26394301-26394350:-32603:Internal error",
-            "26394351-26394400:-32603:Internal error",
-            "26394451-26394500:-32603:Internal error",
-            "26394701-26394750:-32603:Internal error",
-            "26394751-26394800:-32603:Internal error",
-            "26394901-26394950:-32603:Internal error",
-            "26394951-26395000:-32603:Internal error",
-            "26395001-26395050:-32603:Internal error"
+            "26395950-26395999:-32603:Internal error",
+            "26396050-26396099:-32603:Internal error",
+            "26396100-26396149:-32603:Internal error",
+            "26396200-26396249:-32603:Internal error",
+            "26396250-26396299:-32603:Internal error",
+            "26396300-26396349:-32603:Internal error",
+            "26396350-26396399:-32603:Internal error",
+            "26396400-26396449:-32603:Internal error"
           ]
         },
         "base": {
@@ -221,14 +221,14 @@
             "https://base-rpc.publicnode.com": 2
           },
           "lastErrors": [
-            "56249285-56250284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-            "56250285-56251284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-            "56251285-56252284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-            "56247285-56248284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-            "56248285-56249284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-            "56249285-56250284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-            "56250285-56251284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-            "56251285-56252284:-32602:eth_getLogs is limited to 0 - 50 blocks range"
+            "56333486-56334485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "56334486-56335485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "56335486-56336485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "56331486-56332485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "56332486-56333485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "56333486-56334485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "56334486-56335485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+            "56335486-56336485:-32602:eth_getLogs is limited to 0 - 50 blocks range"
           ]
         },
         "arbitrum": {
@@ -252,7 +252,7 @@
     "earlyEntry": {
       "status": "PASS",
       "generatedAt": "2026-11-12T02:18:25.849Z",
-      "ageMinutes": 40.7,
+      "ageMinutes": 129.7,
       "cohortSize": 15,
       "failedWallets": 0,
       "txFailures": 0
@@ -323,7 +323,7 @@
     "schemaVersion": "1.0",
     "module": "whalesDiscovery",
     "version": "WHALES_DISCOVERY_V1_2026-09-12",
-    "generatedAt": "2026-11-11T22:14:04.796Z",
+    "generatedAt": "2026-11-12T03:18:28.813Z",
     "runStatus": "PASS",
     "source": {
       "provider": "MadeOnSol",
@@ -394,11 +394,11 @@
       ]
     },
     "universe": {
-      "uniqueWallets": 232,
+      "uniqueWallets": 233,
       "tierA": 4,
       "tierB": 13,
       "watch": 102,
-      "discovered": 113,
+      "discovered": 114,
       "promotedForSurveillance": 4
     },
     "topWallets": [
@@ -423,7 +423,7 @@
         "totalSolBought": 1521.634822,
         "totalSolSold": 7830.074286,
         "lastSeen": "2026-10-20T03:47:04+00:00",
-        "ageDays": 22.77,
+        "ageDays": 22.98,
         "ranks": {
           "win_rate": 9,
           "pnl": 1,
@@ -454,10 +454,10 @@
         "totalSolBought": 248.826577,
         "totalSolSold": 545.063563,
         "lastSeen": "2026-10-21T20:18:27+00:00",
-        "ageDays": 21.08,
+        "ageDays": 21.29,
         "ranks": {
           "pnl": 9,
-          "roi": 94
+          "roi": 96
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -484,11 +484,11 @@
         "totalSolBought": 41.253062,
         "totalSolSold": 87.979507,
         "lastSeen": "2026-11-09T07:55:22+00:00",
-        "ageDays": 2.6,
+        "ageDays": 2.81,
         "ranks": {
           "win_rate": 69,
-          "pnl": 59,
-          "roi": 99
+          "pnl": 60,
+          "roi": 100
         },
         "leaderboardAppearances": 3,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -515,9 +515,9 @@
         "totalSolBought": 35.357088,
         "totalSolSold": 196.929447,
         "lastSeen": "2026-11-06T07:16:46+00:00",
-        "ageDays": 5.62,
+        "ageDays": 5.83,
         "ranks": {
-          "win_rate": 92,
+          "win_rate": 91,
           "pnl": 18,
           "roi": 12
         },
@@ -546,10 +546,10 @@
         "totalSolBought": 42.131466,
         "totalSolSold": 114.504773,
         "lastSeen": "2026-11-11T16:29:56+00:00",
-        "ageDays": 0.24,
+        "ageDays": 0.45,
         "ranks": {
-          "pnl": 45,
-          "roi": 62
+          "pnl": 46,
+          "roi": 63
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -576,7 +576,7 @@
         "totalSolBought": 32.929775,
         "totalSolSold": 211.415631,
         "lastSeen": "2026-10-26T13:39:06+00:00",
-        "ageDays": 16.36,
+        "ageDays": 16.57,
         "ranks": {
           "win_rate": 24,
           "pnl": 14,
@@ -607,7 +607,7 @@
         "totalSolBought": 466.827914,
         "totalSolSold": 929.045177,
         "lastSeen": "2026-10-21T20:18:21+00:00",
-        "ageDays": 21.08,
+        "ageDays": 21.29,
         "ranks": {
           "pnl": 7
         },
@@ -636,9 +636,9 @@
         "totalSolBought": 3.755105,
         "totalSolSold": 11.115485,
         "lastSeen": "2026-11-08T09:30:08+00:00",
-        "ageDays": 3.53,
+        "ageDays": 3.74,
         "ranks": {
-          "roi": 51
+          "roi": 52
         },
         "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -665,10 +665,10 @@
         "totalSolBought": 17.286505,
         "totalSolSold": 39.029954,
         "lastSeen": "2026-11-10T12:00:27+00:00",
-        "ageDays": 1.43,
+        "ageDays": 1.64,
         "ranks": {
           "pnl": 90,
-          "roi": 85
+          "roi": 87
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -695,7 +695,7 @@
         "totalSolBought": 121.706647,
         "totalSolSold": 2165.308662,
         "lastSeen": "2026-10-16T21:34:13+00:00",
-        "ageDays": 26.03,
+        "ageDays": 26.24,
         "ranks": {
           "win_rate": 1,
           "pnl": 2,
@@ -726,7 +726,7 @@
         "totalSolBought": 0.205777,
         "totalSolSold": 126.672701,
         "lastSeen": "2026-10-28T16:30:19+00:00",
-        "ageDays": 14.24,
+        "ageDays": 14.45,
         "ranks": {
           "win_rate": 14,
           "pnl": 25,
@@ -757,10 +757,10 @@
         "totalSolBought": 29.880243,
         "totalSolSold": 105.974066,
         "lastSeen": "2026-10-17T18:42:21+00:00",
-        "ageDays": 25.15,
+        "ageDays": 25.36,
         "ranks": {
           "win_rate": 10,
-          "pnl": 44,
+          "pnl": 45,
           "roi": 29
         },
         "leaderboardAppearances": 3,
@@ -787,11 +787,11 @@
         "losses": 34,
         "totalSolBought": 50.538369,
         "totalSolSold": 130.410775,
-        "lastSeen": "2026-11-11T20:18:10+00:00",
-        "ageDays": 0.08,
+        "lastSeen": "2026-11-12T02:19:50+00:00",
+        "ageDays": 0.04,
         "ranks": {
           "pnl": 41,
-          "roi": 72
+          "roi": 73
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -818,10 +818,10 @@
         "totalSolBought": 134.179993,
         "totalSolSold": 388.416066,
         "lastSeen": "2026-11-09T09:48:27+00:00",
-        "ageDays": 2.52,
+        "ageDays": 2.73,
         "ranks": {
           "pnl": 10,
-          "roi": 54
+          "roi": 55
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -848,11 +848,11 @@
         "totalSolBought": 65.304911,
         "totalSolSold": 237.502681,
         "lastSeen": "2026-10-19T03:09:26+00:00",
-        "ageDays": 23.79,
+        "ageDays": 24.01,
         "ranks": {
-          "win_rate": 91,
+          "win_rate": 90,
           "pnl": 15,
-          "roi": 26
+          "roi": 27
         },
         "leaderboardAppearances": 3,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -879,7 +879,7 @@
         "totalSolBought": 10.618571,
         "totalSolSold": 65.375876,
         "lastSeen": "2026-10-15T13:23:41+00:00",
-        "ageDays": 27.37,
+        "ageDays": 27.58,
         "ranks": {
           "win_rate": 39,
           "pnl": 52,
@@ -910,7 +910,7 @@
         "totalSolBought": 77.53339,
         "totalSolSold": 158.504867,
         "lastSeen": "2026-10-29T19:12:27+00:00",
-        "ageDays": 13.13,
+        "ageDays": 13.34,
         "ranks": {
           "pnl": 40
         },
@@ -939,10 +939,40 @@
         "totalSolBought": 100.929318,
         "totalSolSold": 264.708354,
         "lastSeen": "2026-11-10T08:38:47+00:00",
-        "ageDays": 1.57,
+        "ageDays": 1.78,
         "ranks": {
           "pnl": 17,
-          "roi": 68
+          "roi": 69
+        },
+        "leaderboardAppearances": 2,
+        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
+        "surveillanceOnly": true
+      },
+      {
+        "wallet": "FrbZ92LBMsqPXmNiMXcsycpEaq5Lt6i4mx9LV8yuhhZu",
+        "tier": "WATCH",
+        "alphaScore": 80.74,
+        "scoreBreakdown": {
+          "alphaDataset": 15,
+          "winRate": 8.07,
+          "roi": 20,
+          "pnl": 12.67,
+          "sample": 15,
+          "recency": 10
+        },
+        "winRate": 0.2581,
+        "roi": 1.2762,
+        "netPnlSol": 48.3285,
+        "tokensTraded": 31,
+        "wins": 8,
+        "losses": 23,
+        "totalSolBought": 37.868662,
+        "totalSolSold": 86.197158,
+        "lastSeen": "2026-11-11T16:43:47+00:00",
+        "ageDays": 0.44,
+        "ranks": {
+          "pnl": 57,
+          "roi": 85
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -969,10 +999,10 @@
         "totalSolBought": 167.611101,
         "totalSolSold": 467.111439,
         "lastSeen": "2026-11-06T02:34:53+00:00",
-        "ageDays": 5.82,
+        "ageDays": 6.03,
         "ranks": {
           "pnl": 8,
-          "roi": 57
+          "roi": 58
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -999,7 +1029,7 @@
         "totalSolBought": 24.556044,
         "totalSolSold": 193.617863,
         "lastSeen": "2026-10-20T03:02:00+00:00",
-        "ageDays": 22.8,
+        "ageDays": 23.01,
         "ranks": {
           "pnl": 16,
           "roi": 8
@@ -1029,40 +1059,10 @@
         "totalSolBought": 12.477216,
         "totalSolSold": 30.082731,
         "lastSeen": "2026-10-25T08:49:21+00:00",
-        "ageDays": 17.56,
+        "ageDays": 17.77,
         "ranks": {
           "win_rate": 6,
-          "roi": 77
-        },
-        "leaderboardAppearances": 2,
-        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
-        "surveillanceOnly": true
-      },
-      {
-        "wallet": "FrbZ92LBMsqPXmNiMXcsycpEaq5Lt6i4mx9LV8yuhhZu",
-        "tier": "WATCH",
-        "alphaScore": 79.58,
-        "scoreBreakdown": {
-          "alphaDataset": 15,
-          "winRate": 7.29,
-          "roi": 20,
-          "pnl": 12.29,
-          "sample": 15,
-          "recency": 10
-        },
-        "winRate": 0.2333,
-        "roi": 1.1331,
-        "netPnlSol": 42.9089,
-        "tokensTraded": 31,
-        "wins": 7,
-        "losses": 23,
-        "totalSolBought": 37.868662,
-        "totalSolSold": 80.777595,
-        "lastSeen": "2026-11-11T16:43:47+00:00",
-        "ageDays": 0.23,
-        "ranks": {
-          "pnl": 63,
-          "roi": 98
+          "roi": 78
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1089,7 +1089,7 @@
         "totalSolBought": 9098.194453,
         "totalSolSold": 11076.902809,
         "lastSeen": "2026-10-25T17:16:35+00:00",
-        "ageDays": 17.21,
+        "ageDays": 17.42,
         "ranks": {
           "win_rate": 20,
           "pnl": 3
@@ -1119,7 +1119,7 @@
         "totalSolBought": 0.887421,
         "totalSolSold": 4.704439,
         "lastSeen": "2026-11-11T16:49:52+00:00",
-        "ageDays": 0.23,
+        "ageDays": 0.44,
         "ranks": {
           "win_rate": 3,
           "roi": 13
@@ -1149,10 +1149,10 @@
         "totalSolBought": 2.14789,
         "totalSolSold": 5.650584,
         "lastSeen": "2026-11-11T15:28:21+00:00",
-        "ageDays": 0.28,
+        "ageDays": 0.49,
         "ranks": {
           "win_rate": 43,
-          "roi": 67
+          "roi": 68
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1179,7 +1179,7 @@
         "totalSolBought": 7089.119431,
         "totalSolSold": 8324.599805,
         "lastSeen": "2026-10-24T10:58:09+00:00",
-        "ageDays": 18.47,
+        "ageDays": 18.68,
         "ranks": {
           "win_rate": 23,
           "pnl": 4
@@ -1209,12 +1209,11 @@
         "totalSolBought": 8.231093,
         "totalSolSold": 28.126723,
         "lastSeen": "2026-11-10T19:49:03+00:00",
-        "ageDays": 1.1,
+        "ageDays": 1.31,
         "ranks": {
-          "pnl": 100,
           "roi": 32
         },
-        "leaderboardAppearances": 2,
+        "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
         "surveillanceOnly": true
       },
@@ -1239,10 +1238,10 @@
         "totalSolBought": 71.069906,
         "totalSolSold": 230.706017,
         "lastSeen": "2026-10-14T08:41:45+00:00",
-        "ageDays": 28.56,
+        "ageDays": 28.78,
         "ranks": {
           "pnl": 20,
-          "roi": 39
+          "roi": 40
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1269,7 +1268,7 @@
         "totalSolBought": 10.586621,
         "totalSolSold": 21.694629,
         "lastSeen": "2026-10-13T11:01:52+00:00",
-        "ageDays": 29.47,
+        "ageDays": 29.68,
         "ranks": {
           "win_rate": 32
         },
@@ -1298,7 +1297,7 @@
         "totalSolBought": 34.280683,
         "totalSolSold": 115.910513,
         "lastSeen": "2026-10-20T04:55:48+00:00",
-        "ageDays": 22.72,
+        "ageDays": 22.93,
         "ranks": {
           "pnl": 38,
           "roi": 36
@@ -1328,10 +1327,10 @@
         "totalSolBought": 60.019022,
         "totalSolSold": 151.154789,
         "lastSeen": "2026-11-02T03:25:18+00:00",
-        "ageDays": 9.78,
+        "ageDays": 10,
         "ranks": {
           "pnl": 34,
-          "roi": 74
+          "roi": 75
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1358,10 +1357,10 @@
         "totalSolBought": 2.608162,
         "totalSolSold": 6.763998,
         "lastSeen": "2026-11-03T18:43:11+00:00",
-        "ageDays": 8.15,
+        "ageDays": 8.36,
         "ranks": {
           "win_rate": 33,
-          "roi": 70
+          "roi": 71
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1388,10 +1387,10 @@
         "totalSolBought": 22.828849,
         "totalSolSold": 90.381425,
         "lastSeen": "2026-10-25T23:46:35+00:00",
-        "ageDays": 16.94,
+        "ageDays": 17.15,
         "ranks": {
           "pnl": 48,
-          "roi": 22
+          "roi": 23
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1418,9 +1417,9 @@
         "totalSolBought": 2.279545,
         "totalSolSold": 6.851781,
         "lastSeen": "2026-11-10T19:09:00+00:00",
-        "ageDays": 1.13,
+        "ageDays": 1.34,
         "ranks": {
-          "roi": 49
+          "roi": 50
         },
         "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1447,10 +1446,10 @@
         "totalSolBought": 21.306067,
         "totalSolSold": 65.305247,
         "lastSeen": "2026-11-09T07:55:18+00:00",
-        "ageDays": 2.6,
+        "ageDays": 2.81,
         "ranks": {
-          "pnl": 61,
-          "roi": 47
+          "pnl": 62,
+          "roi": 48
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1477,7 +1476,7 @@
         "totalSolBought": 25.79247,
         "totalSolSold": 119.174761,
         "lastSeen": "2026-10-31T19:33:44+00:00",
-        "ageDays": 11.11,
+        "ageDays": 11.32,
         "ranks": {
           "pnl": 33,
           "roi": 18
@@ -1507,10 +1506,10 @@
         "totalSolBought": 48.689309,
         "totalSolSold": 176.378824,
         "lastSeen": "2026-10-19T07:13:39+00:00",
-        "ageDays": 23.63,
+        "ageDays": 23.84,
         "ranks": {
           "pnl": 24,
-          "roi": 27
+          "roi": 28
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1537,7 +1536,7 @@
         "totalSolBought": 41.35749,
         "totalSolSold": 57.711712,
         "lastSeen": "2026-10-20T01:22:23+00:00",
-        "ageDays": 22.87,
+        "ageDays": 23.08,
         "ranks": {
           "win_rate": 41
         },
@@ -1566,7 +1565,7 @@
         "totalSolBought": 2.161727,
         "totalSolSold": 7.379601,
         "lastSeen": "2026-11-11T17:24:33+00:00",
-        "ageDays": 0.2,
+        "ageDays": 0.41,
         "ranks": {
           "roi": 33
         },
@@ -1595,10 +1594,10 @@
         "totalSolBought": 33.995087,
         "totalSolSold": 88.08051,
         "lastSeen": "2026-10-20T00:11:16+00:00",
-        "ageDays": 22.92,
+        "ageDays": 23.13,
         "ranks": {
           "pnl": 53,
-          "roi": 71
+          "roi": 72
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1625,10 +1624,10 @@
         "totalSolBought": 15.352939,
         "totalSolSold": 57.853527,
         "lastSeen": "2026-11-05T06:26:21+00:00",
-        "ageDays": 6.66,
+        "ageDays": 6.87,
         "ranks": {
           "pnl": 64,
-          "roi": 24
+          "roi": 25
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1655,12 +1654,41 @@
         "totalSolBought": 435.438221,
         "totalSolSold": 958.081945,
         "lastSeen": "2026-10-13T18:19:49+00:00",
-        "ageDays": 29.16,
+        "ageDays": 29.37,
         "ranks": {
           "pnl": 6,
-          "roi": 92
+          "roi": 94
         },
         "leaderboardAppearances": 2,
+        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
+        "surveillanceOnly": true
+      },
+      {
+        "wallet": "14GpLKM5JF3J2nvX6A7XRWpwrR4YCcaitjpKonmNWJV4",
+        "tier": "WATCH",
+        "alphaScore": 75.21,
+        "scoreBreakdown": {
+          "alphaDataset": 15,
+          "winRate": 12.5,
+          "roi": 20,
+          "pnl": 8.21,
+          "sample": 9.5,
+          "recency": 10
+        },
+        "winRate": 0.4,
+        "roi": 3.124,
+        "netPnlSol": 11.4886,
+        "tokensTraded": 19,
+        "wins": 4,
+        "losses": 6,
+        "totalSolBought": 3.677569,
+        "totalSolSold": 15.166153,
+        "lastSeen": "2026-11-11T23:56:01+00:00",
+        "ageDays": 0.14,
+        "ranks": {
+          "roi": 22
+        },
+        "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
         "surveillanceOnly": true
       },
@@ -1685,7 +1713,7 @@
         "totalSolBought": 18.093792,
         "totalSolSold": 78.448416,
         "lastSeen": "2026-11-01T17:27:41+00:00",
-        "ageDays": 10.2,
+        "ageDays": 10.41,
         "ranks": {
           "pnl": 49,
           "roi": 20
@@ -1715,10 +1743,10 @@
         "totalSolBought": 88.914761,
         "totalSolSold": 242.790914,
         "lastSeen": "2026-10-21T03:53:24+00:00",
-        "ageDays": 21.76,
+        "ageDays": 21.98,
         "ranks": {
           "pnl": 21,
-          "roi": 59
+          "roi": 60
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1745,7 +1773,7 @@
         "totalSolBought": 10.909236,
         "totalSolSold": 116.608741,
         "lastSeen": "2026-10-29T01:29:13+00:00",
-        "ageDays": 13.86,
+        "ageDays": 14.08,
         "ranks": {
           "pnl": 29,
           "roi": 5
@@ -1775,9 +1803,9 @@
         "totalSolBought": 17.231949,
         "totalSolSold": 31.294618,
         "lastSeen": "2026-10-21T14:14:47+00:00",
-        "ageDays": 21.33,
+        "ageDays": 21.54,
         "ranks": {
-          "win_rate": 78
+          "win_rate": 77
         },
         "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1804,7 +1832,7 @@
         "totalSolBought": 48.90928,
         "totalSolSold": 72.172668,
         "lastSeen": "2026-11-05T21:58:05+00:00",
-        "ageDays": 6.01,
+        "ageDays": 6.22,
         "ranks": {
           "win_rate": 50,
           "pnl": 86
@@ -1834,9 +1862,9 @@
         "totalSolBought": 42.382676,
         "totalSolSold": 85.788951,
         "lastSeen": "2026-10-13T21:28:23+00:00",
-        "ageDays": 29.03,
+        "ageDays": 29.24,
         "ranks": {
-          "pnl": 62
+          "pnl": 63
         },
         "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1863,41 +1891,11 @@
         "totalSolBought": 12.772231,
         "totalSolSold": 29.793559,
         "lastSeen": "2026-11-06T06:35:28+00:00",
-        "ageDays": 5.65,
+        "ageDays": 5.86,
         "ranks": {
-          "roi": 80
+          "roi": 81
         },
         "leaderboardAppearances": 1,
-        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
-        "surveillanceOnly": true
-      },
-      {
-        "wallet": "4b3ZctHLzPBQt3biFbDWp12hf6ADkaruQx4aj9kiDQKh",
-        "tier": "WATCH",
-        "alphaScore": 74.02,
-        "scoreBreakdown": {
-          "alphaDataset": 15,
-          "winRate": 13.02,
-          "roi": 20,
-          "pnl": 15,
-          "sample": 6,
-          "recency": 5
-        },
-        "winRate": 0.4167,
-        "roi": 26.6659,
-        "netPnlSol": 749.0117,
-        "tokensTraded": 12,
-        "wins": 5,
-        "losses": 7,
-        "totalSolBought": 28.088782,
-        "totalSolSold": 777.10047,
-        "lastSeen": "2026-11-02T21:47:43+00:00",
-        "ageDays": 9.02,
-        "ranks": {
-          "pnl": 5,
-          "roi": 2
-        },
-        "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
         "surveillanceOnly": true
       }
@@ -1924,7 +1922,7 @@
         "totalSolBought": 1521.634822,
         "totalSolSold": 7830.074286,
         "lastSeen": "2026-10-20T03:47:04+00:00",
-        "ageDays": 22.77,
+        "ageDays": 22.98,
         "ranks": {
           "win_rate": 9,
           "pnl": 1,
@@ -1955,10 +1953,10 @@
         "totalSolBought": 248.826577,
         "totalSolSold": 545.063563,
         "lastSeen": "2026-10-21T20:18:27+00:00",
-        "ageDays": 21.08,
+        "ageDays": 21.29,
         "ranks": {
           "pnl": 9,
-          "roi": 94
+          "roi": 96
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -1985,11 +1983,11 @@
         "totalSolBought": 41.253062,
         "totalSolSold": 87.979507,
         "lastSeen": "2026-11-09T07:55:22+00:00",
-        "ageDays": 2.6,
+        "ageDays": 2.81,
         "ranks": {
           "win_rate": 69,
-          "pnl": 59,
-          "roi": 99
+          "pnl": 60,
+          "roi": 100
         },
         "leaderboardAppearances": 3,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2016,9 +2014,9 @@
         "totalSolBought": 3.755105,
         "totalSolSold": 11.115485,
         "lastSeen": "2026-11-08T09:30:08+00:00",
-        "ageDays": 3.53,
+        "ageDays": 3.74,
         "ranks": {
-          "roi": 51
+          "roi": 52
         },
         "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2047,9 +2045,9 @@
         "totalSolBought": 35.357088,
         "totalSolSold": 196.929447,
         "lastSeen": "2026-11-06T07:16:46+00:00",
-        "ageDays": 5.62,
+        "ageDays": 5.83,
         "ranks": {
-          "win_rate": 92,
+          "win_rate": 91,
           "pnl": 18,
           "roi": 12
         },
@@ -2078,7 +2076,7 @@
         "totalSolBought": 32.929775,
         "totalSolSold": 211.415631,
         "lastSeen": "2026-10-26T13:39:06+00:00",
-        "ageDays": 16.36,
+        "ageDays": 16.57,
         "ranks": {
           "win_rate": 24,
           "pnl": 14,
@@ -2109,10 +2107,10 @@
         "totalSolBought": 17.286505,
         "totalSolSold": 39.029954,
         "lastSeen": "2026-11-10T12:00:27+00:00",
-        "ageDays": 1.43,
+        "ageDays": 1.64,
         "ranks": {
           "pnl": 90,
-          "roi": 85
+          "roi": 87
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2139,11 +2137,11 @@
         "totalSolBought": 65.304911,
         "totalSolSold": 237.502681,
         "lastSeen": "2026-10-19T03:09:26+00:00",
-        "ageDays": 23.79,
+        "ageDays": 24.01,
         "ranks": {
-          "win_rate": 91,
+          "win_rate": 90,
           "pnl": 15,
-          "roi": 26
+          "roi": 27
         },
         "leaderboardAppearances": 3,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2170,10 +2168,10 @@
         "totalSolBought": 12.477216,
         "totalSolSold": 30.082731,
         "lastSeen": "2026-10-25T08:49:21+00:00",
-        "ageDays": 17.56,
+        "ageDays": 17.77,
         "ranks": {
           "win_rate": 6,
-          "roi": 77
+          "roi": 78
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2200,7 +2198,7 @@
         "totalSolBought": 9098.194453,
         "totalSolSold": 11076.902809,
         "lastSeen": "2026-10-25T17:16:35+00:00",
-        "ageDays": 17.21,
+        "ageDays": 17.42,
         "ranks": {
           "win_rate": 20,
           "pnl": 3
@@ -2230,7 +2228,7 @@
         "totalSolBought": 7089.119431,
         "totalSolSold": 8324.599805,
         "lastSeen": "2026-10-24T10:58:09+00:00",
-        "ageDays": 18.47,
+        "ageDays": 18.68,
         "ranks": {
           "win_rate": 23,
           "pnl": 4
@@ -2260,7 +2258,7 @@
         "totalSolBought": 10.586621,
         "totalSolSold": 21.694629,
         "lastSeen": "2026-10-13T11:01:52+00:00",
-        "ageDays": 29.47,
+        "ageDays": 29.68,
         "ranks": {
           "win_rate": 32
         },
@@ -2289,7 +2287,7 @@
         "totalSolBought": 34.280683,
         "totalSolSold": 115.910513,
         "lastSeen": "2026-10-20T04:55:48+00:00",
-        "ageDays": 22.72,
+        "ageDays": 22.93,
         "ranks": {
           "pnl": 38,
           "roi": 36
@@ -2319,10 +2317,10 @@
         "totalSolBought": 2.608162,
         "totalSolSold": 6.763998,
         "lastSeen": "2026-11-03T18:43:11+00:00",
-        "ageDays": 8.15,
+        "ageDays": 8.36,
         "ranks": {
           "win_rate": 33,
-          "roi": 70
+          "roi": 71
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2349,9 +2347,9 @@
         "totalSolBought": 2.279545,
         "totalSolSold": 6.851781,
         "lastSeen": "2026-11-10T19:09:00+00:00",
-        "ageDays": 1.13,
+        "ageDays": 1.34,
         "ranks": {
-          "roi": 49
+          "roi": 50
         },
         "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2378,7 +2376,7 @@
         "totalSolBought": 41.35749,
         "totalSolSold": 57.711712,
         "lastSeen": "2026-10-20T01:22:23+00:00",
-        "ageDays": 22.87,
+        "ageDays": 23.08,
         "ranks": {
           "win_rate": 41
         },
@@ -2407,7 +2405,7 @@
         "totalSolBought": 2.161727,
         "totalSolSold": 7.379601,
         "lastSeen": "2026-11-11T17:24:33+00:00",
-        "ageDays": 0.2,
+        "ageDays": 0.41,
         "ranks": {
           "roi": 33
         },
@@ -2438,10 +2436,10 @@
         "totalSolBought": 42.131466,
         "totalSolSold": 114.504773,
         "lastSeen": "2026-11-11T16:29:56+00:00",
-        "ageDays": 0.24,
+        "ageDays": 0.45,
         "ranks": {
-          "pnl": 45,
-          "roi": 62
+          "pnl": 46,
+          "roi": 63
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2468,7 +2466,7 @@
         "totalSolBought": 466.827914,
         "totalSolSold": 929.045177,
         "lastSeen": "2026-10-21T20:18:21+00:00",
-        "ageDays": 21.08,
+        "ageDays": 21.29,
         "ranks": {
           "pnl": 7
         },
@@ -2497,7 +2495,7 @@
         "totalSolBought": 121.706647,
         "totalSolSold": 2165.308662,
         "lastSeen": "2026-10-16T21:34:13+00:00",
-        "ageDays": 26.03,
+        "ageDays": 26.24,
         "ranks": {
           "win_rate": 1,
           "pnl": 2,
@@ -2528,7 +2526,7 @@
         "totalSolBought": 0.205777,
         "totalSolSold": 126.672701,
         "lastSeen": "2026-10-28T16:30:19+00:00",
-        "ageDays": 14.24,
+        "ageDays": 14.45,
         "ranks": {
           "win_rate": 14,
           "pnl": 25,
@@ -2559,10 +2557,10 @@
         "totalSolBought": 29.880243,
         "totalSolSold": 105.974066,
         "lastSeen": "2026-10-17T18:42:21+00:00",
-        "ageDays": 25.15,
+        "ageDays": 25.36,
         "ranks": {
           "win_rate": 10,
-          "pnl": 44,
+          "pnl": 45,
           "roi": 29
         },
         "leaderboardAppearances": 3,
@@ -2589,11 +2587,11 @@
         "losses": 34,
         "totalSolBought": 50.538369,
         "totalSolSold": 130.410775,
-        "lastSeen": "2026-11-11T20:18:10+00:00",
-        "ageDays": 0.08,
+        "lastSeen": "2026-11-12T02:19:50+00:00",
+        "ageDays": 0.04,
         "ranks": {
           "pnl": 41,
-          "roi": 72
+          "roi": 73
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2620,10 +2618,10 @@
         "totalSolBought": 134.179993,
         "totalSolSold": 388.416066,
         "lastSeen": "2026-11-09T09:48:27+00:00",
-        "ageDays": 2.52,
+        "ageDays": 2.73,
         "ranks": {
           "pnl": 10,
-          "roi": 54
+          "roi": 55
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2650,7 +2648,7 @@
         "totalSolBought": 10.618571,
         "totalSolSold": 65.375876,
         "lastSeen": "2026-10-15T13:23:41+00:00",
-        "ageDays": 27.37,
+        "ageDays": 27.58,
         "ranks": {
           "win_rate": 39,
           "pnl": 52,
@@ -2681,7 +2679,7 @@
         "totalSolBought": 77.53339,
         "totalSolSold": 158.504867,
         "lastSeen": "2026-10-29T19:12:27+00:00",
-        "ageDays": 13.13,
+        "ageDays": 13.34,
         "ranks": {
           "pnl": 40
         },
@@ -2710,10 +2708,40 @@
         "totalSolBought": 100.929318,
         "totalSolSold": 264.708354,
         "lastSeen": "2026-11-10T08:38:47+00:00",
-        "ageDays": 1.57,
+        "ageDays": 1.78,
         "ranks": {
           "pnl": 17,
-          "roi": 68
+          "roi": 69
+        },
+        "leaderboardAppearances": 2,
+        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
+        "surveillanceOnly": true
+      },
+      {
+        "wallet": "FrbZ92LBMsqPXmNiMXcsycpEaq5Lt6i4mx9LV8yuhhZu",
+        "tier": "WATCH",
+        "alphaScore": 80.74,
+        "scoreBreakdown": {
+          "alphaDataset": 15,
+          "winRate": 8.07,
+          "roi": 20,
+          "pnl": 12.67,
+          "sample": 15,
+          "recency": 10
+        },
+        "winRate": 0.2581,
+        "roi": 1.2762,
+        "netPnlSol": 48.3285,
+        "tokensTraded": 31,
+        "wins": 8,
+        "losses": 23,
+        "totalSolBought": 37.868662,
+        "totalSolSold": 86.197158,
+        "lastSeen": "2026-11-11T16:43:47+00:00",
+        "ageDays": 0.44,
+        "ranks": {
+          "pnl": 57,
+          "roi": 85
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2740,10 +2768,10 @@
         "totalSolBought": 167.611101,
         "totalSolSold": 467.111439,
         "lastSeen": "2026-11-06T02:34:53+00:00",
-        "ageDays": 5.82,
+        "ageDays": 6.03,
         "ranks": {
           "pnl": 8,
-          "roi": 57
+          "roi": 58
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2770,40 +2798,10 @@
         "totalSolBought": 24.556044,
         "totalSolSold": 193.617863,
         "lastSeen": "2026-10-20T03:02:00+00:00",
-        "ageDays": 22.8,
+        "ageDays": 23.01,
         "ranks": {
           "pnl": 16,
           "roi": 8
-        },
-        "leaderboardAppearances": 2,
-        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
-        "surveillanceOnly": true
-      },
-      {
-        "wallet": "FrbZ92LBMsqPXmNiMXcsycpEaq5Lt6i4mx9LV8yuhhZu",
-        "tier": "WATCH",
-        "alphaScore": 79.58,
-        "scoreBreakdown": {
-          "alphaDataset": 15,
-          "winRate": 7.29,
-          "roi": 20,
-          "pnl": 12.29,
-          "sample": 15,
-          "recency": 10
-        },
-        "winRate": 0.2333,
-        "roi": 1.1331,
-        "netPnlSol": 42.9089,
-        "tokensTraded": 31,
-        "wins": 7,
-        "losses": 23,
-        "totalSolBought": 37.868662,
-        "totalSolSold": 80.777595,
-        "lastSeen": "2026-11-11T16:43:47+00:00",
-        "ageDays": 0.23,
-        "ranks": {
-          "pnl": 63,
-          "roi": 98
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2830,7 +2828,7 @@
         "totalSolBought": 0.887421,
         "totalSolSold": 4.704439,
         "lastSeen": "2026-11-11T16:49:52+00:00",
-        "ageDays": 0.23,
+        "ageDays": 0.44,
         "ranks": {
           "win_rate": 3,
           "roi": 13
@@ -2860,10 +2858,10 @@
         "totalSolBought": 2.14789,
         "totalSolSold": 5.650584,
         "lastSeen": "2026-11-11T15:28:21+00:00",
-        "ageDays": 0.28,
+        "ageDays": 0.49,
         "ranks": {
           "win_rate": 43,
-          "roi": 67
+          "roi": 68
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2890,12 +2888,11 @@
         "totalSolBought": 8.231093,
         "totalSolSold": 28.126723,
         "lastSeen": "2026-11-10T19:49:03+00:00",
-        "ageDays": 1.1,
+        "ageDays": 1.31,
         "ranks": {
-          "pnl": 100,
           "roi": 32
         },
-        "leaderboardAppearances": 2,
+        "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
         "surveillanceOnly": true
       },
@@ -2920,10 +2917,10 @@
         "totalSolBought": 71.069906,
         "totalSolSold": 230.706017,
         "lastSeen": "2026-10-14T08:41:45+00:00",
-        "ageDays": 28.56,
+        "ageDays": 28.78,
         "ranks": {
           "pnl": 20,
-          "roi": 39
+          "roi": 40
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2950,10 +2947,10 @@
         "totalSolBought": 60.019022,
         "totalSolSold": 151.154789,
         "lastSeen": "2026-11-02T03:25:18+00:00",
-        "ageDays": 9.78,
+        "ageDays": 10,
         "ranks": {
           "pnl": 34,
-          "roi": 74
+          "roi": 75
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -2980,10 +2977,10 @@
         "totalSolBought": 22.828849,
         "totalSolSold": 90.381425,
         "lastSeen": "2026-10-25T23:46:35+00:00",
-        "ageDays": 16.94,
+        "ageDays": 17.15,
         "ranks": {
           "pnl": 48,
-          "roi": 22
+          "roi": 23
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -3010,10 +3007,10 @@
         "totalSolBought": 21.306067,
         "totalSolSold": 65.305247,
         "lastSeen": "2026-11-09T07:55:18+00:00",
-        "ageDays": 2.6,
+        "ageDays": 2.81,
         "ranks": {
-          "pnl": 61,
-          "roi": 47
+          "pnl": 62,
+          "roi": 48
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -3040,7 +3037,7 @@
         "totalSolBought": 25.79247,
         "totalSolSold": 119.174761,
         "lastSeen": "2026-10-31T19:33:44+00:00",
-        "ageDays": 11.11,
+        "ageDays": 11.32,
         "ranks": {
           "pnl": 33,
           "roi": 18
@@ -3070,10 +3067,10 @@
         "totalSolBought": 48.689309,
         "totalSolSold": 176.378824,
         "lastSeen": "2026-10-19T07:13:39+00:00",
-        "ageDays": 23.63,
+        "ageDays": 23.84,
         "ranks": {
           "pnl": 24,
-          "roi": 27
+          "roi": 28
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -3100,10 +3097,10 @@
         "totalSolBought": 33.995087,
         "totalSolSold": 88.08051,
         "lastSeen": "2026-10-20T00:11:16+00:00",
-        "ageDays": 22.92,
+        "ageDays": 23.13,
         "ranks": {
           "pnl": 53,
-          "roi": 71
+          "roi": 72
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -3130,10 +3127,10 @@
         "totalSolBought": 15.352939,
         "totalSolSold": 57.853527,
         "lastSeen": "2026-11-05T06:26:21+00:00",
-        "ageDays": 6.66,
+        "ageDays": 6.87,
         "ranks": {
           "pnl": 64,
-          "roi": 24
+          "roi": 25
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -3160,12 +3157,41 @@
         "totalSolBought": 435.438221,
         "totalSolSold": 958.081945,
         "lastSeen": "2026-10-13T18:19:49+00:00",
-        "ageDays": 29.16,
+        "ageDays": 29.37,
         "ranks": {
           "pnl": 6,
-          "roi": 92
+          "roi": 94
         },
         "leaderboardAppearances": 2,
+        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
+        "surveillanceOnly": true
+      },
+      {
+        "wallet": "14GpLKM5JF3J2nvX6A7XRWpwrR4YCcaitjpKonmNWJV4",
+        "tier": "WATCH",
+        "alphaScore": 75.21,
+        "scoreBreakdown": {
+          "alphaDataset": 15,
+          "winRate": 12.5,
+          "roi": 20,
+          "pnl": 8.21,
+          "sample": 9.5,
+          "recency": 10
+        },
+        "winRate": 0.4,
+        "roi": 3.124,
+        "netPnlSol": 11.4886,
+        "tokensTraded": 19,
+        "wins": 4,
+        "losses": 6,
+        "totalSolBought": 3.677569,
+        "totalSolSold": 15.166153,
+        "lastSeen": "2026-11-11T23:56:01+00:00",
+        "ageDays": 0.14,
+        "ranks": {
+          "roi": 22
+        },
+        "leaderboardAppearances": 1,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
         "surveillanceOnly": true
       },
@@ -3190,7 +3216,7 @@
         "totalSolBought": 18.093792,
         "totalSolSold": 78.448416,
         "lastSeen": "2026-11-01T17:27:41+00:00",
-        "ageDays": 10.2,
+        "ageDays": 10.41,
         "ranks": {
           "pnl": 49,
           "roi": 20
@@ -3220,10 +3246,10 @@
         "totalSolBought": 88.914761,
         "totalSolSold": 242.790914,
         "lastSeen": "2026-10-21T03:53:24+00:00",
-        "ageDays": 21.76,
+        "ageDays": 21.98,
         "ranks": {
           "pnl": 21,
-          "roi": 59
+          "roi": 60
         },
         "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
@@ -3250,7 +3276,7 @@
         "totalSolBought": 10.909236,
         "totalSolSold": 116.608741,
         "lastSeen": "2026-10-29T01:29:13+00:00",
-        "ageDays": 13.86,
+        "ageDays": 14.08,
         "ranks": {
           "pnl": 29,
           "roi": 5
@@ -3280,41 +3306,11 @@
         "totalSolBought": 17.231949,
         "totalSolSold": 31.294618,
         "lastSeen": "2026-10-21T14:14:47+00:00",
-        "ageDays": 21.33,
+        "ageDays": 21.54,
         "ranks": {
-          "win_rate": 78
+          "win_rate": 77
         },
         "leaderboardAppearances": 1,
-        "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
-        "surveillanceOnly": true
-      },
-      {
-        "wallet": "7yuqR9JAgohMibPrB8rpryCzTrQSU9Fprrsuj2Z5VRf7",
-        "tier": "WATCH",
-        "alphaScore": 74.31,
-        "scoreBreakdown": {
-          "alphaDataset": 15,
-          "winRate": 23.44,
-          "roi": 9.51,
-          "pnl": 10.36,
-          "sample": 6,
-          "recency": 10
-        },
-        "winRate": 0.75,
-        "roi": 0.4756,
-        "netPnlSol": 23.2634,
-        "tokensTraded": 12,
-        "wins": 9,
-        "losses": 3,
-        "totalSolBought": 48.90928,
-        "totalSolSold": 72.172668,
-        "lastSeen": "2026-11-05T21:58:05+00:00",
-        "ageDays": 6.01,
-        "ranks": {
-          "win_rate": 50,
-          "pnl": 86
-        },
-        "leaderboardAppearances": 2,
         "source": "MADEONSOL_ALPHA_FIRST20_BUYERS_30D",
         "surveillanceOnly": true
       }
@@ -3490,12 +3486,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "4z7eu2RaNX4oJCQqidsaoWGXecG319fnYs3Z7iWicBJ4hw821ZUccmxqeFikNb8G6GiWPXARFthjQaFj7gxaYtuB",
-        "blockTime": 1794433949,
+        "signature": "XMr7zLi6CkrKjBJNKZWnMkYVjcy2qQmcAEFPZjr6Jx2J8UwwGCp95E1YEXcH1BhJQ3keXmCwucsTozU41sLQ4A9",
+        "blockTime": 1794450426,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.09861099999398
+            "mint": "5LPUWuxVTfkEhGob1kyWgijbFse4icqqH7VTgY79pump",
+            "delta": 2187602.9985179976
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3505,12 +3501,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3GQ5Cn9FMrMfC6HaQzwioWrDDgjSArTstAvREuF6gTgXJm7eWrznUa1KUFFnizy1eFjYxS3widqPkvpVHWLcinzC",
-        "blockTime": 1794433949,
+        "signature": "5jb4yZWNABqrne83pcGP6crE5eXTa8oRH2JCwdh8YkHkMeeEsXn1YCua8GuUvmTQNve17dT4J5faHdSuYs5Giheo",
+        "blockTime": 1794450409,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.106104000005871
+            "mint": "5LPUWuxVTfkEhGob1kyWgijbFse4icqqH7VTgY79pump",
+            "delta": 1990700.2655850016
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3520,12 +3516,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3UYDnPtBTdPwWXDZ3QkciSgWaJCEppPpvCSyewcsanCrNJjMPsfHG5mxJvw24a7BaVtRMY9ZLiRJDJFJ6tf9JGk2",
-        "blockTime": 1794433948,
+        "signature": "45w22YkHufL6tAqyVZB9vM48yy1gWqx9nTqBLb3L1XzaGkBLSsXsiijg8q3YBsik9VwYQJ5RdLPn8UBEY6xJb5Jd",
+        "blockTime": 1794449850,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.087712000007741
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": -13075388.874309
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3535,12 +3531,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3BG7DaKiVxrvh4JUzRJun8vqsenvD3H8nQXP4mKtfdXePJ3B3P5QdmPYJGtbnbakLgGof9uevpm3Y4s4eqYXUxng",
-        "blockTime": 1794433948,
+        "signature": "5o6YbQtpsQ6ZRc2ZxiFc5CwFrRFQQLuHTDxfYutcHEW5FxhWfjmQPiWesQKFHVvh6i7DF95XVVASfsBvxbgQAk4R",
+        "blockTime": 1794449850,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.161682999925688
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": -13075388.874309
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3550,12 +3546,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "57gJgUX4gwsiFrx7rp8nS6jKBQNjJnEkRQGi2tQQGC3JwSimd8jeiWtLRaziiNbYAQXoDdSJp8fg3oWTAk643zmj",
-        "blockTime": 1794433919,
+        "signature": "5BUwEnnQ7264KXHqwSV8Lj9nR4ShzR33hZU3MU8XRPWKKjG8XCuDXipfXMu7Vt4xRMVvAVJbtLaMubpCmxqVnLpn",
+        "blockTime": 1794449843,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.800560000003316
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1599.732063997537
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3565,12 +3561,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "4v1MF6x6oiko3derYqvr8xZAgj61yocBTLV1pXwNRhbMtHMX3RKgrdBZLtkhxg4ERAXdDUwE3gX4Q3NEeHYRa8ei",
-        "blockTime": 1794433919,
+        "signature": "2mc8gRBNPrguwnMF3fNVdBYPWTfLF5MijnGbd1Tb5mbckbMhJKC575HLM1FJGGiySC54e5nEErNfgVufjZWBHj9H",
+        "blockTime": 1794449843,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.800377000006847
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1573.2546540014446
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3580,12 +3576,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "2KZmdvGtMSCqhhg6gVk2HVrpG9R18GKH6WEjp4hG6wPMuXma1UKxv6x9ZQUqDoTUpumGTxftXGuGvHYt8S7exkxV",
-        "blockTime": 1794433919,
+        "signature": "jYsQBPf4yiEcrDaDxBitFkFnCRQoAaFueF7adgGHw74M8cNfNpKPcawwa3aNsRwfwRLBrocvoMWiGzZTgtU1NbM",
+        "blockTime": 1794449839,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.509117000037804
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "delta": 0.00010000000000331966
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3595,12 +3591,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3ca1cRVjwtUToAB5tyJ6U9XqweNzuo6kyKpYZAMRWB2akMcb34HnnPRn2fwLSXK8urXXdwkWQNbRXD79d9C9Ynx5",
-        "blockTime": 1794433919,
+        "signature": "5VYb6qsDFTeQPyC2gq6edPQqmsURZ3yGz8ds42f8UUj96sKzTyPZDgrRiUmpxoJiESyNPypKEXrsAF91hKg3itif",
+        "blockTime": 1794449838,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.503096999949776
+            "mint": "4ifmbtSq12EbGZQh697bJaqcEHwNKeGsyou5Vrzgpump",
+            "delta": -15383893.026781
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3610,12 +3606,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "4J98NWAtH4AttJJu96breXw5zijyx6EpiFeajerAxQcxxQRYdNKtKAq6hbz3od4f82sMayGoNPpcaFJMFSDP5TjV",
-        "blockTime": 1794433892,
+        "signature": "4dRe3y6tYgerjQDAaHLRQ2rWWYRL23JiutEbi2tk7zosTyZBUYCz6CXWw3SFNk1Be4VK6UXQstvzVhUGNm7BgkcR",
+        "blockTime": 1794449829,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10141.99487100006
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1758.3793050013483
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3625,12 +3621,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "rqFBucCcaBe143qA8voHhhQ1KU2hqCzCn2NYvoDeHa5NFXK2x5zwPyJkX9eQwwxoPNc2yCZsm4DYAPvMQqZ6VGq",
-        "blockTime": 1794433892,
+        "signature": "2YwNVnXEcVz33ATqYveEfFhxEnB8fsnmTjz4CaGPk9EdSCLxi9YreYZZSbitUYvYjCxo5UxndvBFXbyissruxjhM",
+        "blockTime": 1794449829,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10131.292070999974
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1740.6896950006485
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3640,12 +3636,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "57fucD1U797bKahR88aT5vrdeD8xGfJn5Z71d1wv1SMdNzLw3VMkTiyevMmFawcpimswJmdTSJ8mTijiA2iPS3K6",
-        "blockTime": 1794433892,
+        "signature": "5VgS2AUXZmzKtLGpqs8oPXVEfEeCZYDofdr3QSqXW75y9fD8nLawr6T6NZu2PQajhLyzMrCgH2TV4mLqzmPmQ4Y3",
+        "blockTime": 1794449829,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10123.809449000051
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1740.7241089977324
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3655,12 +3651,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "33ZgK3PN9bJymBmYWJdHZLiTtrjGLuEsRCyqusNJJFCwHTgoJRimXTj7HVcWxGWVo7hVjpwCGAxGAgEts1acRdie",
-        "blockTime": 1794433891,
+        "signature": "2z6TE6BJ9yQDdczVatLXC2BmQSQE1yuzB7T6cW5w1hoUhMwnwy5GWDQJXgKP9RLUMADusHZ1t3ExPoF6FPfJuuAw",
+        "blockTime": 1794449815,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10126.852109999978
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 8215303.976806
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3670,12 +3666,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "XitpzGRYVZnrvRiJ4QCPxsub4TBjoFVmeApTCbJXCaYMxoLNhnS2iwMTjQsDsK83Jjym5Lgt4mfXYHNNewcqnC1",
-        "blockTime": 1794433832,
+        "signature": "3P9SkLqSecEAUMwDoKnaV8pSiakBtzSTb4LXF5mLrvodfcsy5RyXdmPZCNxKgitXpNMXMWX3bTi81fhXCwm8JMf6",
+        "blockTime": 1794449813,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 9642.636415999965
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 17927060.991985
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3685,12 +3681,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "61L3w4AFELP4gNMDS55eeWS59sh4AC5MCbZt1f184PUToSGDzopYuhWJbnC3NUouAYcUorRnPuuH5LTNwWK6wfR2",
-        "blockTime": 1794433832,
+        "signature": "4CUZFRnsj7nJghJiYbns9rYyx5747gUdGNJx2aBjikFamLQZiSPdpT6ZBu2LqP9EP2en2HhYCH8kP1iPfJjDJR8e",
+        "blockTime": 1794449738,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 9654.23083200003
+            "mint": "SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb",
+            "delta": -1.043498
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3700,12 +3696,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "2AmgpTcgSitrYiuE9KjpDA4X7sQRER2hMH7MUFZrYCNiNSAE5a9DnBcXSd71Jesg42EmFWT3KsE6hosFMpiiRiaZ",
-        "blockTime": 1794433831,
+        "signature": "2vqyGHovZbBu4ALicZhgFBYq74tR4ZVvr2GEBgFF3RAG19fLSKGGJ2C5xpYQVbyNe79meG4Eh8cUKPeY3rsKfomB",
+        "blockTime": 1794449732,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 9629.383163999999
+            "mint": "SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb",
+            "delta": 0.0007850000000000357
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3715,147 +3711,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3kbwMB9R8be2rG6iZnhtpiwH9ZKdG3Feic7Q88K6XEWoKwVyP92qXaZfgyPtnnvDfgFzTqqv2UWsLZsQGMffGqFY",
-        "blockTime": 1794433748,
+        "signature": "2iw5vM2H7MgLHkQYKtcZu69axvPvjVFLfHDj4JxywjV5hbXk5cHaKyBR3eLXVBYtpeT9fKyvt1e7nnJMMe9vzYhb",
+        "blockTime": 1794449701,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.565781999961473
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "4dqZ9y46A3H8mnAv7xgXMD3vcjQ75cDhVRicNP5T91XcgbapXzshKJgacqGGi18cGPVaFS7Zzw1SNzWrrgAWPW4m",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.525341000058688
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "62NthHLTDuJQALYukUGYjmQ9YM7dM2cyYu1HZA8kCVi3Y7CDJE1NbD7SHUKZjERH1UK6wzcehrjokbxXUz1i5RD3",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.48817299993243
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "24aGmHGHeyyThupC9uUMhxbw48bVf7HP3ha66uc6esoPUqxWNXLdfrHuuFusXGNzf12EKfYt3Fz6nvEsguvTaiym",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.573895000037737
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "5Z7LxAwKQZPWyF6Rx6FGfU37ZsVor8FSDZLTnsGksJPfv4ceVz6GkBoj4pfWP7AT2wiZSnV8uGMV9wyG7pAndVw6",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.603292000014335
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "4KiS4okWYE6w8SVux1Jfu84papXG87otVXWfhTw64UraaCercrMUrsT8dPgPVJVNnHraFWRscSbXM8y6mnzZoh74",
-        "blockTime": 1794433747,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.584412999916822
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "cSxMUvvQLPmnh1GhE8sFbjNNGmY6fc4iFbhFcv6enSCh6ME7mH65of5ySjhnGMu2o7mQMkC7r6xCeL9v2JTCfc8",
-        "blockTime": 1794433742,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.652714000083506
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "4wKFZcNQzCysTarFr3bb3dh57MJ8PjeCLtGpAjgdLZxhBgRg5CN9BZ5GsMZoNXA9dhSNZBNdLCmQLWjJ9ipTCSxH",
-        "blockTime": 1794433741,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.767404999933206
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "47eQMoKDeaFKha5nA6qsXFYvcbhxhkqHukF5pKtQRZZo1zFynuY4j9fx3zJy2xzrqn9CtaRtAWjYEK3ctvLLhCiY",
-        "blockTime": 1794433741,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.767414000001736
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "37RrhsTgQ1AcbjkAaXCeho5xAmNoPzBWwoD9WN1dQif6CsMzeu5fZDFPPGL325Fxz36xcV6MdZJNtWjUK9YCiSJo",
-        "blockTime": 1794433741,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.767423000070266
+            "mint": "HPSpaNgQxqZRwzoW8E9hecgMq4cDoV1CMCfteyu5h53z",
+            "delta": 355.51359699945897
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -3865,18 +3726,18 @@
         "walletLabel": "SOL-GAKE",
         "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
         "classification": "TOKEN_FLOW",
-        "signature": "5qdF4kPfF5uf9PgvrggadiFf9zULFHxuoJyLiXMpMpQbZu7mgWur3YubNE4vqn8RdSmN9KVzuTyd57MFoJhQh3fv",
-        "blockTime": 1794425014,
+        "signature": "5KSBbmdxuU47EBCDZJP8g2UZCHcuj8Vuc1Newy5VgCUErBpyrY1XvnZf7V8ghVj2wrGQu7TbPWBEe669vm7VKNKv",
+        "blockTime": 1794446509,
         "tokenFlows": [
           {
-            "mint": "8mkdKC4krnsGsDDSx7nGioWwZiBgeUrECcJg8Gd4pump",
-            "delta": 10
+            "mint": "B6ESYnfmrFtu6T7yGsa1yCXGB62Z555RjirTKFZzpump",
+            "delta": 19817305.491016
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
       }
     ],
-    "rpcStatus": "PASS",
+    "rpcStatus": "PARTIAL",
     "rpcFailedWallets": 0,
     "feedStatus": "PASS"
   },
@@ -3889,7 +3750,7 @@
   "actionableConvergence": [],
   "cabalCross": {
     "cabal": {
-      "generatedAt": "2026-11-11T23:27:34.009428Z",
+      "generatedAt": "2026-11-12T03:59:32.867857Z",
       "ok": true,
       "coverage": {
         "bucketA": "PASS",
@@ -3898,19 +3759,19 @@
         "bucketD": "EXTERNAL_STAGE0_REQUIRED",
         "bucketE": "PASS",
         "preAccum": "PASS",
-        "broadUniverseCount": 638,
+        "broadUniverseCount": 636,
         "preAccum250kTo2mUniverseCount": 242,
-        "mainEligibleUniverseCount": 638,
-        "mainScannedCount": 594,
-        "mainScanSuccessRatio": 0.931,
-        "executionUniverseCount": 638,
+        "mainEligibleUniverseCount": 636,
+        "mainScannedCount": 597,
+        "mainScanSuccessRatio": 0.9387,
+        "executionUniverseCount": 636,
         "executionVisibleCount": 17,
         "buyCandidateCount": 0,
         "watchCandidateCount": 17,
         "preAccumShortlistCount": 60,
         "preAccumSub2mShortlistCount": 54,
-        "preAccumDeepLiteCompleted": 56,
-        "preAccumDeepLiteSuccessRatio": 0.9333,
+        "preAccumDeepLiteCompleted": 58,
+        "preAccumDeepLiteSuccessRatio": 0.9667,
         "coreRequiredAssets": [
           "AVAX",
           "BTC",
@@ -3937,238 +3798,238 @@
           "GateFallback": "PASS"
         }
       },
-      "stageACount": 387,
+      "stageACount": 351,
       "deepValidatedCount": 30,
       "btcReference": {
         "venue": "KuCoin Spot",
-        "price": 73939.1,
-        "p1": -0.6018540923927285,
-        "p4": -0.7458248707626014,
-        "timestamp": 1794434400000
+        "price": 73798.9,
+        "p1": 0.11150797580465888,
+        "p4": -0.18961550789773352,
+        "timestamp": 1794448800000
       },
       "leaders": [
         {
-          "asset": "HBAR",
-          "price": 0.06502,
-          "stageAScore": 12.7869,
-          "classification": "PRE-ACCUMULATION WATCH",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 1.5574,
-          "rvol4h": 0.5963,
-          "priceChange1hPct": -0.9247,
-          "priceChange4hPct": -1.6551,
-          "priceChange24hPct": -0.3659,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "ETH",
-          "price": 2045.75,
-          "stageAScore": 10.8668,
-          "classification": "PRE-ACCUMULATION WATCH",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 1.1734,
-          "rvol4h": 0.8602,
-          "priceChange1hPct": -0.6433,
-          "priceChange4hPct": -1.2608,
-          "priceChange24hPct": 0.4262,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "BTC",
-          "price": 73721.8,
-          "stageAScore": 10.8388,
-          "classification": "PRE-ACCUMULATION WATCH",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 1.1678,
-          "rvol4h": 0.6651,
-          "priceChange1hPct": -0.6019,
-          "priceChange4hPct": -0.7458,
-          "priceChange24hPct": 0.3414,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
           "asset": "AVAX",
-          "price": 8.444,
-          "stageAScore": 10.1877,
+          "price": 8.608,
+          "stageAScore": 15.2253,
           "classification": "PRE-ACCUMULATION WATCH",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
-          "rvol1h": 1.0375,
-          "rvol4h": 0.8473,
-          "priceChange1hPct": -1.4151,
-          "priceChange4hPct": -1.2204,
-          "priceChange24hPct": 1.7601,
+          "rvol1h": 1.1703,
+          "rvol4h": 1.2287,
+          "priceChange1hPct": 0.7859,
+          "priceChange4hPct": 1.0942,
+          "priceChange24hPct": 1.3566,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
-          "asset": "SOL",
-          "price": 82.85,
-          "stageAScore": 10,
+          "asset": "HBAR",
+          "price": 0.0655,
+          "stageAScore": 11.5668,
           "classification": "PRE-ACCUMULATION WATCH",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
-          "rvol1h": 0.8541,
-          "rvol4h": 0.6514,
-          "priceChange1hPct": -1.23,
-          "priceChange4hPct": -1.7414,
-          "priceChange24hPct": 0.7237,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "ONDO",
-          "price": 0.35599,
-          "stageAScore": 3.2056,
-          "classification": "PRE-MOVE",
-          "executionSignal": "WAIT_CONFIRMATION",
-          "urgency": "NORMAL",
-          "rvol1h": 1.639,
-          "rvol4h": 1.0027,
-          "priceChange1hPct": -1.7903,
-          "priceChange4hPct": -2.6272,
-          "priceChange24hPct": -1.9647,
+          "rvol1h": 0.7314,
+          "rvol4h": 0.7331,
+          "priceChange1hPct": 0.429,
+          "priceChange4hPct": 0.2907,
+          "priceChange24hPct": -0.6065,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
           "asset": "XRP",
-          "price": 1.04633,
-          "stageAScore": 0.0907,
+          "price": 1.04807,
+          "stageAScore": 11.037,
+          "classification": "PRE-ACCUMULATION WATCH",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 0.9522,
+          "rvol4h": 1.1426,
+          "priceChange1hPct": 0.1811,
+          "priceChange4hPct": -0.3139,
+          "priceChange24hPct": -0.529,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "ETH",
+          "price": 2055.31,
+          "stageAScore": 11.0311,
+          "classification": "PRE-ACCUMULATION WATCH",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 0.5078,
+          "rvol4h": 0.9191,
+          "priceChange1hPct": 0.333,
+          "priceChange4hPct": 0.0413,
+          "priceChange24hPct": -0.0427,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "SOL",
+          "price": 83.38,
+          "stageAScore": 11.0112,
+          "classification": "PRE-ACCUMULATION WATCH",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 0.6044,
+          "rvol4h": 0.664,
+          "priceChange1hPct": 0.3367,
+          "priceChange4hPct": -0.0838,
+          "priceChange24hPct": 0.2644,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "ONDO",
+          "price": 0.35674,
+          "stageAScore": 0.5476,
           "classification": "NO SETUP",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
-          "rvol1h": 0.8333,
-          "rvol4h": 1.0227,
-          "priceChange1hPct": -0.6623,
-          "priceChange4hPct": -0.7343,
-          "priceChange24hPct": -0.3619,
+          "rvol1h": 0.5656,
+          "rvol4h": 0.9132,
+          "priceChange1hPct": 0.2042,
+          "priceChange4hPct": -0.17,
+          "priceChange24hPct": -2.9429,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
-          "asset": "PEAQ",
-          "price": 0.02661,
-          "stageAScore": 95.3636,
+          "asset": "BTC",
+          "price": 73796.1,
+          "stageAScore": 0.223,
+          "classification": "NO SETUP",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 0.9953,
+          "rvol4h": 0.969,
+          "priceChange1hPct": 0.1115,
+          "priceChange4hPct": -0.1896,
+          "priceChange24hPct": 0.2067,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "GTC",
+          "price": 0.166,
+          "stageAScore": 99.586,
           "classification": "PRE-ACCUMULATION TRIGGER",
           "executionSignal": "WAIT_CONFIRMATION",
           "urgency": "HIGH",
-          "rvol1h": 11.1427,
-          "rvol4h": 2.8964,
-          "priceChange1hPct": 4.8752,
-          "priceChange4hPct": 6.0147,
-          "priceChange24hPct": 3.1722,
+          "rvol1h": 19.4671,
+          "rvol4h": 20.2899,
+          "priceChange1hPct": 0.9091,
+          "priceChange4hPct": 5.7143,
+          "priceChange24hPct": -0.7747,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
-          "asset": "AMDG",
-          "price": 573.75,
-          "stageAScore": 84.8471,
-          "classification": "PRE-ACCUMULATION TRIGGER",
-          "executionSignal": "WAIT_CONFIRMATION",
-          "urgency": "HIGH",
-          "rvol1h": 9.9673,
-          "rvol4h": 3.3305,
-          "priceChange1hPct": 2.4996,
-          "priceChange4hPct": 1.0923,
-          "priceChange24hPct": 11.1161,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "CTSI",
-          "price": 0.0238,
-          "stageAScore": 84.3431,
+          "asset": "RON",
+          "price": 0.0445,
+          "stageAScore": 86.7068,
           "classification": "PRE-ACCUMULATION WATCH",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
           "rvol1h": 50,
-          "rvol4h": 43.1764,
-          "priceChange1hPct": 0.4115,
-          "priceChange4hPct": -1.6129,
-          "priceChange24hPct": 0,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "BIGTIME",
-          "price": 0.00501,
-          "stageAScore": 82.318,
-          "classification": "PRE-ACCUMULATION WATCH",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 50,
-          "rvol4h": 10.6567,
-          "priceChange1hPct": -0.3899,
-          "priceChange4hPct": -2.4809,
-          "priceChange24hPct": -2.6667,
-          "secondLegWatch": false,
-          "secondLegTrigger": false
-        },
-        {
-          "asset": "TWT",
-          "price": 0.3831,
-          "stageAScore": 82.1336,
-          "classification": "PRE-ACCUMULATION WATCH",
-          "executionSignal": "OBSERVE",
-          "urgency": "NORMAL",
-          "rvol1h": 9.3519,
-          "rvol4h": 20.0454,
-          "priceChange1hPct": -0.5128,
-          "priceChange4hPct": -0.5128,
-          "priceChange24hPct": -0.4618,
+          "rvol4h": 9.5797,
+          "priceChange1hPct": 0.9528,
+          "priceChange4hPct": 1.924,
+          "priceChange24hPct": -1.3741,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
           "asset": "AEVO",
-          "price": 0.01874,
-          "stageAScore": 82.1283,
+          "price": 0.01862,
+          "stageAScore": 72.0806,
           "classification": "PRE-ACCUMULATION WATCH",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
           "rvol1h": 50,
-          "rvol4h": 11.0273,
-          "priceChange1hPct": -1.4721,
-          "priceChange4hPct": 0.1603,
-          "priceChange24hPct": 0.4826,
+          "rvol4h": 6.2318,
+          "priceChange1hPct": 0.3774,
+          "priceChange4hPct": -0.6403,
+          "priceChange24hPct": -1.4815,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
-          "asset": "FLOW",
-          "price": 0.02,
-          "stageAScore": 82,
+          "asset": "GPS",
+          "price": 0.00795,
+          "stageAScore": 65.8335,
           "classification": "PRE-ACCUMULATION WATCH",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
-          "rvol1h": 50,
-          "rvol4h": 12.8728,
-          "priceChange1hPct": -0.9804,
-          "priceChange4hPct": -0.4926,
-          "priceChange24hPct": -1.4634,
+          "rvol1h": 27.9214,
+          "rvol4h": 4.2229,
+          "priceChange1hPct": 0.8883,
+          "priceChange4hPct": -0.625,
+          "priceChange24hPct": -0.1256,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "PROS",
+          "price": 0.5057,
+          "stageAScore": 58.7542,
+          "classification": "PRE-ACCUMULATION WATCH",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 11.913,
+          "rvol4h": 2.8829,
+          "priceChange1hPct": 0.3971,
+          "priceChange4hPct": -1.3076,
+          "priceChange24hPct": -4.0417,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "USDG",
+          "price": 1.0013,
+          "stageAScore": 51.7828,
+          "classification": "PRE-ACCUMULATION WATCH",
+          "executionSignal": "OBSERVE",
+          "urgency": "NORMAL",
+          "rvol1h": 8.355,
+          "rvol4h": 0.6611,
+          "priceChange1hPct": -0.01,
+          "priceChange4hPct": 0.01,
+          "priceChange24hPct": -0.01,
           "secondLegWatch": false,
           "secondLegTrigger": false
         },
         {
           "asset": "UMA",
-          "price": 0.299,
-          "stageAScore": 82,
+          "price": 0.302,
+          "stageAScore": 45.3444,
           "classification": "PRE-ACCUMULATION WATCH",
           "executionSignal": "OBSERVE",
           "urgency": "NORMAL",
-          "rvol1h": 50,
-          "rvol4h": 13.22,
-          "priceChange1hPct": -1.634,
-          "priceChange4hPct": -1.634,
-          "priceChange24hPct": -1.9544,
+          "rvol1h": 0.113,
+          "rvol4h": 43.9622,
+          "priceChange1hPct": 1.0033,
+          "priceChange4hPct": -1.3072,
+          "priceChange24hPct": -1.6287,
+          "secondLegWatch": false,
+          "secondLegTrigger": false
+        },
+        {
+          "asset": "TROLL",
+          "price": 0.03068,
+          "stageAScore": 44.008,
+          "classification": "PRE-ACCUMULATION TRIGGER",
+          "executionSignal": "WAIT_CONFIRMATION",
+          "urgency": "HIGH",
+          "rvol1h": 2.37,
+          "rvol4h": 0.8341,
+          "priceChange1hPct": 2.1305,
+          "priceChange4hPct": 6.0858,
+          "priceChange24hPct": 11.0387,
           "secondLegWatch": false,
           "secondLegTrigger": false
         }
@@ -4225,6 +4086,7 @@
     "No automatic EVM/Base/Arbitrum discovery in V1; current discovery engine is Solana first-20-buyer focused.",
     "No automatic insider/deployer-link graph yet beyond provider bot filtering.",
     "Historical alpha score is a surveillance ranking, not a BUY signal.",
+    "SOLANA_RPC_PARTIAL",
     "BITCOIN_ONCHAIN_WHALE_TRACKING_NOT_IMPLEMENTED",
     "EVM_AUTOMATIC_NEW_WALLET_DISCOVERY_NOT_IMPLEMENTED_V1",
     "INSIDER_DEPLOYER_LINK_GRAPH_NOT_IMPLEMENTED",
@@ -4237,21 +4099,21 @@
     "EARLY_ENTRY_INSIDER_DEPLOYER_SYBIL_GRAPH_PARTIAL"
   ],
   "sourceTimestamps": {
-    "multichain": "2026-11-11T21:53:01.835Z",
-    "ethereum": "2026-11-11T18:34:53.019581Z",
-    "solanaFixed": "2026-11-11T22:12:47.635Z",
-    "discovery": "2026-11-11T22:14:04.796Z",
-    "cabal": "2026-11-11T23:27:34.009428Z",
+    "multichain": "2026-11-12T02:39:23.636Z",
+    "ethereum": "2026-11-12T01:27:31.367711Z",
+    "solanaFixed": "2026-11-12T03:06:38.413Z",
+    "discovery": "2026-11-12T03:18:28.813Z",
+    "cabal": "2026-11-12T03:59:32.867857Z",
     "positions": "2026-09-28T16:15:00+02:00"
   },
   "promotedDiscoveryLive": {
     "schemaVersion": "1.0",
     "module": "whalesPromotedSolanaMonitor",
-    "generatedAt": "2026-11-11T18:07:34.616Z",
+    "generatedAt": "2026-11-12T00:49:53.579Z",
     "status": "PASS",
     "rpcUrl": "https://api.mainnet-beta.solana.com",
     "lookbackMinutes": 180,
-    "promotedWalletCount": 7,
+    "promotedWalletCount": 4,
     "failedWallets": 0,
     "walletSummary": [
       {
@@ -4266,26 +4128,6 @@
       },
       {
         "label": "SOL-DISC-02",
-        "address": "7BpWm8VJvLotBmNejqFgNMMbeh4tCjb2ABBSvycVD5j1",
-        "alphaScore": 93.18,
-        "discoveryTier": "TIER_A",
-        "signaturesSeen": 0,
-        "tokenFlowTransactions": 0,
-        "latestFlowAt": null,
-        "status": "PASS"
-      },
-      {
-        "label": "SOL-DISC-03",
-        "address": "AvtQcVdJXMGpMxs52BGeLSzDVBZh5GuLazmBS843Vt4f",
-        "alphaScore": 91.88,
-        "discoveryTier": "TIER_A",
-        "signaturesSeen": 0,
-        "tokenFlowTransactions": 0,
-        "latestFlowAt": null,
-        "status": "PASS"
-      },
-      {
-        "label": "SOL-DISC-04",
         "address": "6KgsGB3v5XJcXRgpKvqar5ayopZwqxdGgWtqw3Gkc6ZS",
         "alphaScore": 88.94,
         "discoveryTier": "TIER_A",
@@ -4295,17 +4137,7 @@
         "status": "PASS"
       },
       {
-        "label": "SOL-DISC-05",
-        "address": "AbePayq4NiARYEt3a35UEosQ8nSQsvVqtqjNdhpajsLU",
-        "alphaScore": 87.98,
-        "discoveryTier": "TIER_A",
-        "signaturesSeen": 0,
-        "tokenFlowTransactions": 0,
-        "latestFlowAt": null,
-        "status": "PASS"
-      },
-      {
-        "label": "SOL-DISC-06",
+        "label": "SOL-DISC-03",
         "address": "78AJPh7vRrq6ECrnM1Cu6YtMwATuzM7zLigdAbFYim7n",
         "alphaScore": 87.98,
         "discoveryTier": "TIER_A",
@@ -4315,7 +4147,7 @@
         "status": "PASS"
       },
       {
-        "label": "SOL-DISC-07",
+        "label": "SOL-DISC-04",
         "address": "JDTqpP75PWgvZDrt8PS8ZdRjzKanqXX466JMe2H92YwK",
         "alphaScore": 85.33,
         "discoveryTier": "TIER_A",
@@ -4331,11 +4163,11 @@
   "newWalletDiscovery": {
     "status": "PASS",
     "scope": "Wallets come from a first-20-buyer alpha dataset; this is an early-entry universe, not a generic rich-wallet leaderboard.",
-    "uniqueWallets": 232,
+    "uniqueWallets": 233,
     "tierA": 4,
     "tierB": 13,
     "watch": 102,
-    "discovered": 113,
+    "discovered": 114,
     "promotedForSurveillance": 4,
     "promotedWallets": [
       {
@@ -4411,7 +4243,7 @@
   "deepValidation": {
     "status": "PASS",
     "generatedAt": "2026-09-16T08:06:09.029Z",
-    "ageMinutes": 81577.7,
+    "ageMinutes": 81858.3,
     "freshness": "STALE",
     "source": "CABAL_WORKER_EMBEDDED_WHALES_DEEP",
     "sourceGeneratedAt": "2026-09-16T08:06:14.793Z",
@@ -5496,12 +5328,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "4z7eu2RaNX4oJCQqidsaoWGXecG319fnYs3Z7iWicBJ4hw821ZUccmxqeFikNb8G6GiWPXARFthjQaFj7gxaYtuB",
-        "blockTime": 1794433949,
+        "signature": "XMr7zLi6CkrKjBJNKZWnMkYVjcy2qQmcAEFPZjr6Jx2J8UwwGCp95E1YEXcH1BhJQ3keXmCwucsTozU41sLQ4A9",
+        "blockTime": 1794450426,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.09861099999398
+            "mint": "5LPUWuxVTfkEhGob1kyWgijbFse4icqqH7VTgY79pump",
+            "delta": 2187602.9985179976
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5511,12 +5343,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3GQ5Cn9FMrMfC6HaQzwioWrDDgjSArTstAvREuF6gTgXJm7eWrznUa1KUFFnizy1eFjYxS3widqPkvpVHWLcinzC",
-        "blockTime": 1794433949,
+        "signature": "5jb4yZWNABqrne83pcGP6crE5eXTa8oRH2JCwdh8YkHkMeeEsXn1YCua8GuUvmTQNve17dT4J5faHdSuYs5Giheo",
+        "blockTime": 1794450409,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.106104000005871
+            "mint": "5LPUWuxVTfkEhGob1kyWgijbFse4icqqH7VTgY79pump",
+            "delta": 1990700.2655850016
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5526,12 +5358,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3UYDnPtBTdPwWXDZ3QkciSgWaJCEppPpvCSyewcsanCrNJjMPsfHG5mxJvw24a7BaVtRMY9ZLiRJDJFJ6tf9JGk2",
-        "blockTime": 1794433948,
+        "signature": "45w22YkHufL6tAqyVZB9vM48yy1gWqx9nTqBLb3L1XzaGkBLSsXsiijg8q3YBsik9VwYQJ5RdLPn8UBEY6xJb5Jd",
+        "blockTime": 1794449850,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.087712000007741
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": -13075388.874309
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5541,12 +5373,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3BG7DaKiVxrvh4JUzRJun8vqsenvD3H8nQXP4mKtfdXePJ3B3P5QdmPYJGtbnbakLgGof9uevpm3Y4s4eqYXUxng",
-        "blockTime": 1794433948,
+        "signature": "5o6YbQtpsQ6ZRc2ZxiFc5CwFrRFQQLuHTDxfYutcHEW5FxhWfjmQPiWesQKFHVvh6i7DF95XVVASfsBvxbgQAk4R",
+        "blockTime": 1794449850,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 11.161682999925688
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": -13075388.874309
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5556,12 +5388,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "57gJgUX4gwsiFrx7rp8nS6jKBQNjJnEkRQGi2tQQGC3JwSimd8jeiWtLRaziiNbYAQXoDdSJp8fg3oWTAk643zmj",
-        "blockTime": 1794433919,
+        "signature": "5BUwEnnQ7264KXHqwSV8Lj9nR4ShzR33hZU3MU8XRPWKKjG8XCuDXipfXMu7Vt4xRMVvAVJbtLaMubpCmxqVnLpn",
+        "blockTime": 1794449843,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.800560000003316
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1599.732063997537
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5571,12 +5403,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "4v1MF6x6oiko3derYqvr8xZAgj61yocBTLV1pXwNRhbMtHMX3RKgrdBZLtkhxg4ERAXdDUwE3gX4Q3NEeHYRa8ei",
-        "blockTime": 1794433919,
+        "signature": "2mc8gRBNPrguwnMF3fNVdBYPWTfLF5MijnGbd1Tb5mbckbMhJKC575HLM1FJGGiySC54e5nEErNfgVufjZWBHj9H",
+        "blockTime": 1794449843,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.800377000006847
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1573.2546540014446
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5586,12 +5418,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "2KZmdvGtMSCqhhg6gVk2HVrpG9R18GKH6WEjp4hG6wPMuXma1UKxv6x9ZQUqDoTUpumGTxftXGuGvHYt8S7exkxV",
-        "blockTime": 1794433919,
+        "signature": "jYsQBPf4yiEcrDaDxBitFkFnCRQoAaFueF7adgGHw74M8cNfNpKPcawwa3aNsRwfwRLBrocvoMWiGzZTgtU1NbM",
+        "blockTime": 1794449839,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.509117000037804
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "delta": 0.00010000000000331966
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5601,12 +5433,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3ca1cRVjwtUToAB5tyJ6U9XqweNzuo6kyKpYZAMRWB2akMcb34HnnPRn2fwLSXK8urXXdwkWQNbRXD79d9C9Ynx5",
-        "blockTime": 1794433919,
+        "signature": "5VYb6qsDFTeQPyC2gq6edPQqmsURZ3yGz8ds42f8UUj96sKzTyPZDgrRiUmpxoJiESyNPypKEXrsAF91hKg3itif",
+        "blockTime": 1794449838,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10.503096999949776
+            "mint": "4ifmbtSq12EbGZQh697bJaqcEHwNKeGsyou5Vrzgpump",
+            "delta": -15383893.026781
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5616,12 +5448,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "4J98NWAtH4AttJJu96breXw5zijyx6EpiFeajerAxQcxxQRYdNKtKAq6hbz3od4f82sMayGoNPpcaFJMFSDP5TjV",
-        "blockTime": 1794433892,
+        "signature": "4dRe3y6tYgerjQDAaHLRQ2rWWYRL23JiutEbi2tk7zosTyZBUYCz6CXWw3SFNk1Be4VK6UXQstvzVhUGNm7BgkcR",
+        "blockTime": 1794449829,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10141.99487100006
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1758.3793050013483
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5631,12 +5463,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "rqFBucCcaBe143qA8voHhhQ1KU2hqCzCn2NYvoDeHa5NFXK2x5zwPyJkX9eQwwxoPNc2yCZsm4DYAPvMQqZ6VGq",
-        "blockTime": 1794433892,
+        "signature": "2YwNVnXEcVz33ATqYveEfFhxEnB8fsnmTjz4CaGPk9EdSCLxi9YreYZZSbitUYvYjCxo5UxndvBFXbyissruxjhM",
+        "blockTime": 1794449829,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10131.292070999974
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1740.6896950006485
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5646,12 +5478,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "57fucD1U797bKahR88aT5vrdeD8xGfJn5Z71d1wv1SMdNzLw3VMkTiyevMmFawcpimswJmdTSJ8mTijiA2iPS3K6",
-        "blockTime": 1794433892,
+        "signature": "5VgS2AUXZmzKtLGpqs8oPXVEfEeCZYDofdr3QSqXW75y9fD8nLawr6T6NZu2PQajhLyzMrCgH2TV4mLqzmPmQ4Y3",
+        "blockTime": 1794449829,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10123.809449000051
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 1740.7241089977324
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5661,12 +5493,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "33ZgK3PN9bJymBmYWJdHZLiTtrjGLuEsRCyqusNJJFCwHTgoJRimXTj7HVcWxGWVo7hVjpwCGAxGAgEts1acRdie",
-        "blockTime": 1794433891,
+        "signature": "2z6TE6BJ9yQDdczVatLXC2BmQSQE1yuzB7T6cW5w1hoUhMwnwy5GWDQJXgKP9RLUMADusHZ1t3ExPoF6FPfJuuAw",
+        "blockTime": 1794449815,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 10126.852109999978
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 8215303.976806
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5676,12 +5508,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "XitpzGRYVZnrvRiJ4QCPxsub4TBjoFVmeApTCbJXCaYMxoLNhnS2iwMTjQsDsK83Jjym5Lgt4mfXYHNNewcqnC1",
-        "blockTime": 1794433832,
+        "signature": "3P9SkLqSecEAUMwDoKnaV8pSiakBtzSTb4LXF5mLrvodfcsy5RyXdmPZCNxKgitXpNMXMWX3bTi81fhXCwm8JMf6",
+        "blockTime": 1794449813,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 9642.636415999965
+            "mint": "WHgcPaHNigrXdmd5PbYKHsLFAiLj7h8WdZfwaTipump",
+            "delta": 17927060.991985
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5691,12 +5523,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "61L3w4AFELP4gNMDS55eeWS59sh4AC5MCbZt1f184PUToSGDzopYuhWJbnC3NUouAYcUorRnPuuH5LTNwWK6wfR2",
-        "blockTime": 1794433832,
+        "signature": "4CUZFRnsj7nJghJiYbns9rYyx5747gUdGNJx2aBjikFamLQZiSPdpT6ZBu2LqP9EP2en2HhYCH8kP1iPfJjDJR8e",
+        "blockTime": 1794449738,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 9654.23083200003
+            "mint": "SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb",
+            "delta": -1.043498
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5706,12 +5538,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "2AmgpTcgSitrYiuE9KjpDA4X7sQRER2hMH7MUFZrYCNiNSAE5a9DnBcXSd71Jesg42EmFWT3KsE6hosFMpiiRiaZ",
-        "blockTime": 1794433831,
+        "signature": "2vqyGHovZbBu4ALicZhgFBYq74tR4ZVvr2GEBgFF3RAG19fLSKGGJ2C5xpYQVbyNe79meG4Eh8cUKPeY3rsKfomB",
+        "blockTime": 1794449732,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 9629.383163999999
+            "mint": "SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb",
+            "delta": 0.0007850000000000357
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5721,147 +5553,12 @@
         "walletLabel": "SOL-WEST",
         "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
         "classification": "TOKEN_FLOW",
-        "signature": "3kbwMB9R8be2rG6iZnhtpiwH9ZKdG3Feic7Q88K6XEWoKwVyP92qXaZfgyPtnnvDfgFzTqqv2UWsLZsQGMffGqFY",
-        "blockTime": 1794433748,
+        "signature": "2iw5vM2H7MgLHkQYKtcZu69axvPvjVFLfHDj4JxywjV5hbXk5cHaKyBR3eLXVBYtpeT9fKyvt1e7nnJMMe9vzYhb",
+        "blockTime": 1794449701,
         "tokenFlows": [
           {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.565781999961473
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "4dqZ9y46A3H8mnAv7xgXMD3vcjQ75cDhVRicNP5T91XcgbapXzshKJgacqGGi18cGPVaFS7Zzw1SNzWrrgAWPW4m",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.525341000058688
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "62NthHLTDuJQALYukUGYjmQ9YM7dM2cyYu1HZA8kCVi3Y7CDJE1NbD7SHUKZjERH1UK6wzcehrjokbxXUz1i5RD3",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.48817299993243
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "24aGmHGHeyyThupC9uUMhxbw48bVf7HP3ha66uc6esoPUqxWNXLdfrHuuFusXGNzf12EKfYt3Fz6nvEsguvTaiym",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.573895000037737
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "5Z7LxAwKQZPWyF6Rx6FGfU37ZsVor8FSDZLTnsGksJPfv4ceVz6GkBoj4pfWP7AT2wiZSnV8uGMV9wyG7pAndVw6",
-        "blockTime": 1794433748,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.603292000014335
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "4KiS4okWYE6w8SVux1Jfu84papXG87otVXWfhTw64UraaCercrMUrsT8dPgPVJVNnHraFWRscSbXM8y6mnzZoh74",
-        "blockTime": 1794433747,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.584412999916822
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "cSxMUvvQLPmnh1GhE8sFbjNNGmY6fc4iFbhFcv6enSCh6ME7mH65of5ySjhnGMu2o7mQMkC7r6xCeL9v2JTCfc8",
-        "blockTime": 1794433742,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.652714000083506
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "4wKFZcNQzCysTarFr3bb3dh57MJ8PjeCLtGpAjgdLZxhBgRg5CN9BZ5GsMZoNXA9dhSNZBNdLCmQLWjJ9ipTCSxH",
-        "blockTime": 1794433741,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.767404999933206
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "47eQMoKDeaFKha5nA6qsXFYvcbhxhkqHukF5pKtQRZZo1zFynuY4j9fx3zJy2xzrqn9CtaRtAWjYEK3ctvLLhCiY",
-        "blockTime": 1794433741,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.767414000001736
-          }
-        ],
-        "rpcProvider": "https://solana-rpc.publicnode.com"
-      },
-      {
-        "chain": "solana",
-        "walletLabel": "SOL-WEST",
-        "wallet": "JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN",
-        "classification": "TOKEN_FLOW",
-        "signature": "37RrhsTgQ1AcbjkAaXCeho5xAmNoPzBWwoD9WN1dQif6CsMzeu5fZDFPPGL325Fxz36xcV6MdZJNtWjUK9YCiSJo",
-        "blockTime": 1794433741,
-        "tokenFlows": [
-          {
-            "mint": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-            "delta": 8.767423000070266
+            "mint": "HPSpaNgQxqZRwzoW8E9hecgMq4cDoV1CMCfteyu5h53z",
+            "delta": 355.51359699945897
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5871,12 +5568,12 @@
         "walletLabel": "SOL-GAKE",
         "wallet": "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm",
         "classification": "TOKEN_FLOW",
-        "signature": "5qdF4kPfF5uf9PgvrggadiFf9zULFHxuoJyLiXMpMpQbZu7mgWur3YubNE4vqn8RdSmN9KVzuTyd57MFoJhQh3fv",
-        "blockTime": 1794425014,
+        "signature": "5KSBbmdxuU47EBCDZJP8g2UZCHcuj8Vuc1Newy5VgCUErBpyrY1XvnZf7V8ghVj2wrGQu7TbPWBEe669vm7VKNKv",
+        "blockTime": 1794446509,
         "tokenFlows": [
           {
-            "mint": "8mkdKC4krnsGsDDSx7nGioWwZiBgeUrECcJg8Gd4pump",
-            "delta": 10
+            "mint": "B6ESYnfmrFtu6T7yGsa1yCXGB62Z555RjirTKFZzpump",
+            "delta": 19817305.491016
           }
         ],
         "rpcProvider": "https://solana-rpc.publicnode.com"
@@ -5887,7 +5584,7 @@
   "netAccumulation": {
     "schemaVersion": "1.1",
     "module": "whalesNetAccumulationLedger",
-    "generatedAt": "2026-11-12T02:59:10.328Z",
+    "generatedAt": "2026-11-12T04:28:09.571Z",
     "status": "PASS",
     "retentionDays": 30,
     "methodology": "Persistent deduplicated ledger of confirmed BUY/SELL classifications. Includes provider-confirmed trades plus high-confidence wallet-first on-chain swap classifications; raw TOKEN_FLOW remains excluded.",
@@ -48384,42 +48081,6 @@
           "latestEventAt": "2026-11-12T02:17:18.000Z",
           "walletCount": 1,
           "direction": "NET_DISTRIBUTION"
-        },
-        {
-          "chain": "solana",
-          "assetKey": "5qaP7oKUqKffwwo5DaEqDoTtsBLMpdbQTxEkCDaTpump",
-          "assetSymbol": "MAX",
-          "buyCount": 0,
-          "sellCount": 3,
-          "tokenBought": 0,
-          "tokenSold": 572842.336331,
-          "netTokenFlow": -572842.336331,
-          "quoteSpent": 0,
-          "quoteReceived": 9.44097058,
-          "wallets": [
-            "SOL-WEST"
-          ],
-          "latestEventAt": "2026-11-11T21:15:19.000Z",
-          "walletCount": 1,
-          "direction": "NET_DISTRIBUTION"
-        },
-        {
-          "chain": "solana",
-          "assetKey": "SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb",
-          "assetSymbol": "SPCX",
-          "buyCount": 0,
-          "sellCount": 1,
-          "tokenBought": 0,
-          "tokenSold": 0.306132,
-          "netTokenFlow": -0.306132,
-          "quoteSpent": 0,
-          "quoteReceived": 0.4948786,
-          "wallets": [
-            "SOL-WEST"
-          ],
-          "latestEventAt": "2026-11-11T21:15:45.000Z",
-          "walletCount": 1,
-          "direction": "NET_DISTRIBUTION"
         }
       ],
       "24h": [
@@ -55905,7 +55566,7 @@
   },
   "cexFlows": {
     "status": "PARTIAL",
-    "generatedAt": "2026-11-11T23:47:46.371Z",
+    "generatedAt": "2026-11-12T04:28:09.489Z",
     "provider": {
       "name": "eth-labels.com",
       "provenance": "Public Etherscan-derived EVM label dataset",
@@ -55933,22 +55594,22 @@
         "lookbackBlocks": 1800,
         "batchedWalletCount": 11,
         "chunkQueries": 74,
-        "successfulChunks": 36,
-        "failedChunks": 38,
-        "transferLogs": 0,
+        "successfulChunks": 31,
+        "failedChunks": 43,
+        "transferLogs": 1,
         "cexMatches": 0,
         "providersUsed": {
-          "https://1rpc.io/eth": 36
+          "https://1rpc.io/eth": 31
         },
         "lastErrors": [
-          "26394301-26394350:-32603:Internal error",
-          "26394351-26394400:-32603:Internal error",
-          "26394451-26394500:-32603:Internal error",
-          "26394701-26394750:-32603:Internal error",
-          "26394751-26394800:-32603:Internal error",
-          "26394901-26394950:-32603:Internal error",
-          "26394951-26395000:-32603:Internal error",
-          "26395001-26395050:-32603:Internal error"
+          "26395950-26395999:-32603:Internal error",
+          "26396050-26396099:-32603:Internal error",
+          "26396100-26396149:-32603:Internal error",
+          "26396200-26396249:-32603:Internal error",
+          "26396250-26396299:-32603:Internal error",
+          "26396300-26396349:-32603:Internal error",
+          "26396350-26396399:-32603:Internal error",
+          "26396400-26396449:-32603:Internal error"
         ]
       },
       "base": {
@@ -55966,14 +55627,14 @@
           "https://base-rpc.publicnode.com": 2
         },
         "lastErrors": [
-          "56249285-56250284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-          "56250285-56251284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-          "56251285-56252284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-          "56247285-56248284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-          "56248285-56249284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-          "56249285-56250284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-          "56250285-56251284:-32602:eth_getLogs is limited to 0 - 50 blocks range",
-          "56251285-56252284:-32602:eth_getLogs is limited to 0 - 50 blocks range"
+          "56333486-56334485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "56334486-56335485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "56335486-56336485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "56331486-56332485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "56332486-56333485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "56333486-56334485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "56334486-56335485:-32602:eth_getLogs is limited to 0 - 50 blocks range",
+          "56335486-56336485:-32602:eth_getLogs is limited to 0 - 50 blocks range"
         ]
       },
       "arbitrum": {
@@ -55994,8 +55655,8 @@
       }
     },
     "lookupStats": {
-      "calls": 0,
-      "errors": 0,
+      "calls": 1,
+      "errors": 1,
       "cacheHits": 0,
       "capped": 0
     },
